@@ -3,15 +3,39 @@
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
 import type {
-  ExecutionsCancelData,
-  ExecutionsCancelErrors,
-  ExecutionsCancelResponses,
-  ExecutionsGetData,
-  ExecutionsGetErrors,
-  ExecutionsGetResponses,
-  ExecutionsListData,
-  ExecutionsListErrors,
-  ExecutionsListResponses,
+  AgentsCreateData,
+  AgentsCreateErrors,
+  AgentsCreateResponses,
+  AgentsExecutionsCancelData,
+  AgentsExecutionsCancelErrors,
+  AgentsExecutionsCancelResponses,
+  AgentsExecutionsGetData,
+  AgentsExecutionsGetErrors,
+  AgentsExecutionsGetResponses,
+  AgentsExecutionsListData,
+  AgentsExecutionsListErrors,
+  AgentsExecutionsListResponses,
+  AgentsGetData,
+  AgentsGetErrors,
+  AgentsGetResponses,
+  AgentsListData,
+  AgentsListErrors,
+  AgentsListResponses,
+  AgentsRunData,
+  AgentsRunErrors,
+  AgentsRunResponses,
+  AgentsUpdateData,
+  AgentsUpdateErrors,
+  AgentsUpdateResponses,
+  WorkflowsExecutionsCancelData,
+  WorkflowsExecutionsCancelErrors,
+  WorkflowsExecutionsCancelResponses,
+  WorkflowsExecutionsGetData,
+  WorkflowsExecutionsGetErrors,
+  WorkflowsExecutionsGetResponses,
+  WorkflowsExecutionsListData,
+  WorkflowsExecutionsListErrors,
+  WorkflowsExecutionsListResponses,
   WorkflowsGetData,
   WorkflowsGetErrors,
   WorkflowsGetResponses,
@@ -45,44 +69,156 @@ export type Options<
 };
 
 /**
- * Cancel an execution
+ * List agent executions
  *
- * Idempotent. For executions not yet picked up by a worker (status=created/pending), transitions immediately to `cancelled`. For running/waiting executions, stamps `cancelRequestedAt` so the worker observes cancellation between step transitions. Terminal executions are a no-op.
+ * Returns executions for an agent, optionally filtered by status or experiment batch.
  */
-export const executionsCancel = <ThrowOnError extends boolean = false>(
-  options: Options<ExecutionsCancelData, ThrowOnError>
+export const agentsExecutionsList = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsExecutionsListData, ThrowOnError>
 ) =>
-  (options.client ?? client).post<ExecutionsCancelResponses, ExecutionsCancelErrors, ThrowOnError>({
+  (options.client ?? client).get<
+    AgentsExecutionsListResponses,
+    AgentsExecutionsListErrors,
+    ThrowOnError
+  >({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/v1/executions/{executionId}/cancel',
+    url: '/api/v1/agents/{agentId}/executions',
     ...options,
   });
 
 /**
- * Get execution status
+ * Get an agent
  *
- * Returns the current status, completion timestamps, and (when terminal) the result or error for a single execution. Pass `includeSteps=true` for the per-step artifact payload (heavier; intended for debugging).
+ * Returns one agent by id or slug.
  */
-export const executionsGet = <ThrowOnError extends boolean = false>(
-  options: Options<ExecutionsGetData, ThrowOnError>
+export const agentsGet = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsGetData, ThrowOnError>
 ) =>
-  (options.client ?? client).get<ExecutionsGetResponses, ExecutionsGetErrors, ThrowOnError>({
+  (options.client ?? client).get<AgentsGetResponses, AgentsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/v1/executions/{executionId}',
+    url: '/api/v1/agents/{agentId}',
     ...options,
   });
 
 /**
- * List executions
+ * Update an agent
  *
- * Returns executions across the tenant, optionally filtered by workflow, status, date range, or eval example. Paginated.
+ * Updates mutable agent metadata and configuration.
  */
-export const executionsList = <ThrowOnError extends boolean = false>(
-  options?: Options<ExecutionsListData, ThrowOnError>
+export const agentsUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsUpdateData, ThrowOnError>
 ) =>
-  (options?.client ?? client).get<ExecutionsListResponses, ExecutionsListErrors, ThrowOnError>({
+  (options.client ?? client).patch<AgentsUpdateResponses, AgentsUpdateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/v1/executions',
+    url: '/api/v1/agents/{agentId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * Execute an agent
+ *
+ * Enqueues an agent execution. Returns 202 with `{ executionId }` by default. Pass `wait_for_completion=<seconds>` to hold the connection until the execution reaches a terminal state. File inputs are uploaded as multipart/form-data.
+ */
+export const agentsRun = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsRunData, ThrowOnError>
+) =>
+  (options.client ?? client).post<AgentsRunResponses, AgentsRunErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/{agentId}/run',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * Cancel agent execution
+ *
+ * Requests cancellation for one agent execution by id.
+ */
+export const agentsExecutionsCancel = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsExecutionsCancelData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    AgentsExecutionsCancelResponses,
+    AgentsExecutionsCancelErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/executions/{executionId}/cancel',
+    ...options,
+  });
+
+/**
+ * Get agent execution
+ *
+ * Returns one agent execution by id.
+ */
+export const agentsExecutionsGet = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsExecutionsGetData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    AgentsExecutionsGetResponses,
+    AgentsExecutionsGetErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/executions/{executionId}',
+    ...options,
+  });
+
+/**
+ * List agents
+ *
+ * Returns agents the API key has access to, with pagination and basic execution stats.
+ */
+export const agentsList = <ThrowOnError extends boolean = false>(
+  options?: Options<AgentsListData, ThrowOnError>
+) =>
+  (options?.client ?? client).get<AgentsListResponses, AgentsListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents',
+    ...options,
+  });
+
+/**
+ * Create an agent
+ *
+ * Creates a new agent and initializes its workspace files.
+ */
+export const agentsCreate = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsCreateData, ThrowOnError>
+) =>
+  (options.client ?? client).post<AgentsCreateResponses, AgentsCreateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * List workflow executions
+ *
+ * Returns executions for a workflow, optionally filtered by status, date range, or eval example. Paginated.
+ */
+export const workflowsExecutionsList = <ThrowOnError extends boolean = false>(
+  options: Options<WorkflowsExecutionsListData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    WorkflowsExecutionsListResponses,
+    WorkflowsExecutionsListErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/workflows/{id}/executions',
     ...options,
   });
 
@@ -96,7 +232,7 @@ export const workflowsGet = <ThrowOnError extends boolean = false>(
 ) =>
   (options.client ?? client).get<WorkflowsGetResponses, WorkflowsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/v1/workflows/{id}',
+    url: '/api/v1/workflows/{id}',
     ...options,
   });
 
@@ -110,7 +246,7 @@ export const workflowsRun = <ThrowOnError extends boolean = false>(
 ) =>
   (options.client ?? client).post<WorkflowsRunResponses, WorkflowsRunErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/v1/workflows/{id}/run',
+    url: '/api/v1/workflows/{id}/run',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -132,7 +268,43 @@ export const workflowsVersionsList = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/v1/workflows/{id}/versions',
+    url: '/api/v1/workflows/{id}/versions',
+    ...options,
+  });
+
+/**
+ * Cancel a workflow execution
+ *
+ * Idempotent. Created/pending executions transition immediately to `cancelled`; running/waiting executions receive a cancellation request for the worker to observe.
+ */
+export const workflowsExecutionsCancel = <ThrowOnError extends boolean = false>(
+  options: Options<WorkflowsExecutionsCancelData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    WorkflowsExecutionsCancelResponses,
+    WorkflowsExecutionsCancelErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/workflows/executions/{executionId}/cancel',
+    ...options,
+  });
+
+/**
+ * Get workflow execution status
+ *
+ * Returns the current status, completion timestamps, and result or error for a workflow execution. Pass `includeSteps=true` for the per-step artifact payload.
+ */
+export const workflowsExecutionsGet = <ThrowOnError extends boolean = false>(
+  options: Options<WorkflowsExecutionsGetData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    WorkflowsExecutionsGetResponses,
+    WorkflowsExecutionsGetErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/workflows/executions/{executionId}',
     ...options,
   });
 
@@ -146,6 +318,6 @@ export const workflowsList = <ThrowOnError extends boolean = false>(
 ) =>
   (options?.client ?? client).get<WorkflowsListResponses, WorkflowsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/v1/workflows',
+    url: '/api/v1/workflows',
     ...options,
   });

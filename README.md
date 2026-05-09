@@ -1,21 +1,32 @@
 # @eigenpal/sdk
 
-Official TypeScript SDK for the [EigenPal](https://eigenpal.com) API.
+Trigger EigenPal workflows from TypeScript.
+
+[![npm](https://img.shields.io/npm/v/@eigenpal/sdk?color=3B5BDB&labelColor=555&label=npm)](https://www.npmjs.com/package/@eigenpal/sdk)
+[![downloads](https://img.shields.io/npm/dm/@eigenpal/sdk?color=3B5BDB&labelColor=555&label=downloads)](https://www.npmjs.com/package/@eigenpal/sdk)
+[![license](https://img.shields.io/badge/license-Apache--2.0-3B5BDB?labelColor=555)](https://github.com/eigenpal/sdk-typescript/blob/main/LICENSE)
+[![docs](https://img.shields.io/badge/docs-eigenpal%2Fsdk-3B5BDB?labelColor=555)](https://github.com/eigenpal/sdk-typescript)
+
+## Install
 
 ```bash
-npm install @eigenpal/sdk
+npm i @eigenpal/sdk
 ```
 
-```ts
-import { Eigenpal } from '@eigenpal/sdk';
+Requires a TypeScript-aware runtime: Bun, Deno, Node 22+ (native TS), `tsx`, Next.js, Vite, or any modern bundler. Plain `node script.js` won't work — see [Configuration](./docs/configuration.md#typescript-runtime).
 
-const client = new Eigenpal({
-  apiKey: process.env.EIGENPAL_API_KEY,
-});
+Get an API key at **app.eigenpal.com → Settings → API Keys**.
+
+## Quick start
+
+```ts
+import { EigenpalClient, EigenpalValidationError } from '@eigenpal/sdk';
+
+const client = new EigenpalClient({ apiKey: process.env.EIGENPAL_API_KEY });
 
 // Pass a File / Blob / { content, filename, mimeType }. The SDK uploads
 // the request as multipart/form-data, no base64 needed.
-const result = await client.executions.runAndWait('extract-invoice', {
+const result = await client.workflows.executions.runAndWait('extract-invoice', {
   contract_document: file,
 });
 console.log(result.status, result.result);
@@ -26,7 +37,7 @@ console.log(result.status, result.result);
 Generate an API key from the dashboard under **Settings → API Keys**, then pass it explicitly:
 
 ```ts
-const client = new Eigenpal({ apiKey: process.env.EIGENPAL_API_KEY });
+const client = new EigenpalClient({ apiKey: process.env.EIGENPAL_API_KEY });
 ```
 
 The `apiKey` constructor option always wins. If you omit it, the SDK falls back to `process.env.EIGENPAL_API_KEY` for convenience, handy in scripts where you'd be writing exactly the line above.
@@ -36,7 +47,7 @@ The `apiKey` constructor option always wins. If you omit it, the SDK falls back 
 Point the SDK at your own deployment via `baseUrl`:
 
 ```ts
-const client = new Eigenpal({
+const client = new EigenpalClient({
   apiKey: process.env.EIGENPAL_API_KEY,
   baseUrl: process.env.EIGENPAL_BASE_URL ?? 'https://eigenpal.acme.internal',
 });
@@ -63,7 +74,7 @@ const result = await client.workflows.run(
 console.log(result.status, result.result);
 
 // Long-running: client-side polling, default 5min cap.
-const final = await client.executions.runAndWait('extract-invoice', {
+const final = await client.workflows.executions.runAndWait('extract-invoice', {
   contract_document: file,
 });
 ```
@@ -95,17 +106,16 @@ await client.workflows.run('extract-invoice', {
 ## Execution polling
 
 ```ts
-const status = await client.executions.get(executionId);
+const status = await client.workflows.executions.get(executionId);
 //   { executionId, status, result?, error?, createdAt, completedAt? }
 
-const list = await client.executions.list({
-  workflowId: 'extract-invoice',
-  status: 'failed',
+const list = await client.workflows.executions.list('extract-invoice', {
+  status: ['failed', 'cancelled'],
   fromDate: 'now()-7d',
   limit: 50,
 });
 
-await client.executions.cancel(executionId);
+await client.workflows.executions.cancel(executionId);
 ```
 
 ## Workflows
@@ -114,6 +124,20 @@ await client.executions.cancel(executionId);
 await client.workflows.list({ search: 'invoice', limit: 20 });
 await client.workflows.get('extract-invoice');
 await client.workflows.versions('extract-invoice');
+```
+
+## Agents
+
+```ts
+await client.agents.list({ search: 'invoice' });
+await client.agents.get('invoice-agent');
+
+const { executionId } = await client.agents.run('invoice-agent', {
+  invoice: file,
+});
+
+await client.agents.executions.get(executionId);
+await client.agents.executions.cancel(executionId);
 ```
 
 ## Errors
@@ -131,48 +155,36 @@ Every non-2xx response throws a typed subclass of `EigenpalError`:
 | timeout / abort | `EigenpalTimeoutError`    |                                                      |
 
 ```ts
-import { Eigenpal, EigenpalValidationError } from '@eigenpal/sdk';
+import { EigenpalClient, EigenpalValidationError } from '@eigenpal/sdk';
+
+const client = new EigenpalClient({ apiKey: process.env.EIGENPAL_API_KEY });
 
 try {
-  await client.workflows.run('extract-invoice');
+  // First arg accepts the workflow slug ('extract-invoice') or id ('wf_abc123').
+  const result = await client.workflows.executions.runAndWait('extract-invoice', {
+    language: 'en',
+  });
+  console.log(result.status, result.result);
 } catch (err) {
   if (err instanceof EigenpalValidationError) {
-    for (const issue of err.issues) {
-      console.error(`${issue.field}: ${issue.message}`);
-    }
+    for (const issue of err.issues) console.error(`${issue.field}: ${issue.message}`);
   }
   throw err;
 }
 ```
 
-## Configuration
+For file inputs, see [docs/files.md](./docs/files.md).
 
-```ts
-new Eigenpal({
-  apiKey: 'eg_…', // or EIGENPAL_API_KEY
-  baseUrl: 'https://app.eigenpal.com', // or EIGENPAL_BASE_URL
-  timeoutMs: 60_000, // per-request timeout
-  maxRetries: 3, // 5xx / 429 / network
-  defaultHeaders: {
-    // merged into every request
-    'X-Trace-Id': '…',
-  },
-});
-```
+## Reference
 
-The SDK retries on 5xx, 429 (honoring `Retry-After`), and network errors. 4xx errors are surfaced immediately as typed exceptions and are not retried.
-
-## TypeScript
-
-The full request/response types are exported:
-
-```ts
-import type {
-  WorkflowSummary,
-  ExecutionStatusResponse,
-  ListWorkflowsResponse,
-} from '@eigenpal/sdk';
-```
+| Topic                                     | What's in it                                       |
+| ----------------------------------------- | -------------------------------------------------- |
+| [Workflows](./docs/workflows.md)          | List, get, trigger runs, pin versions.             |
+| [Executions](./docs/executions.md)        | Status, polling, cancel, run-and-wait.             |
+| [File inputs](./docs/files.md)            | Multipart upload from File, Blob, Buffer, or path. |
+| [Errors](./docs/errors.md)                | Typed exceptions, retries, request ids.            |
+| [Configuration](./docs/configuration.md)  | API key, baseUrl, timeouts, headers.               |
+| [Full API reference](./docs/reference.md) | Every method, generated from the OpenAPI spec.     |
 
 ## License
 

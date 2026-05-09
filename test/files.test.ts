@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { Eigenpal } from '../src';
+import { EigenpalClient } from '../src';
 
 /**
  * Tests for multipart file upload — exercises the `-F`-style path the SDK
@@ -38,7 +38,7 @@ async function captureRequest(): Promise<{
 describe('multipart file upload', () => {
   test('Blob input switches to multipart/form-data', async () => {
     const { fetch, captured } = await captureRequest();
-    const client = new Eigenpal({
+    const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
       fetch,
@@ -58,7 +58,7 @@ describe('multipart file upload', () => {
 
   test('File input preserves filename', async () => {
     const { fetch, captured } = await captureRequest();
-    const client = new Eigenpal({
+    const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
       fetch,
@@ -76,7 +76,7 @@ describe('multipart file upload', () => {
 
   test('explicit FileDescriptor works with raw bytes', async () => {
     const { fetch, captured } = await captureRequest();
-    const client = new Eigenpal({
+    const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
       fetch,
@@ -99,7 +99,7 @@ describe('multipart file upload', () => {
 
   test('no files → JSON body, no multipart switch', async () => {
     const { fetch, captured } = await captureRequest();
-    const client = new Eigenpal({
+    const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
       fetch,
@@ -114,7 +114,7 @@ describe('multipart file upload', () => {
 
   test('multiple files all appear in the form data', async () => {
     const { fetch, captured } = await captureRequest();
-    const client = new Eigenpal({
+    const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
       fetch,

@@ -1,15 +1,16 @@
 import { EigenpalError, EigenpalTimeoutError, errorFromResponse } from './errors';
 import { createClient, createConfig, type Client, type Config } from './generated/client';
 import type { ApiErrorEnvelope } from './generated/types.gen';
-import { ExecutionsResource } from './resources/executions';
+import { AgentsResource } from './resources/agents';
 import { WorkflowsResource } from './resources/workflows';
+import { buildTelemetryHeaders } from './telemetry';
 
 export interface EigenpalOptions {
   /**
    * API key issued from Settings → API Keys (`eg_…`).
    *
    * Falls back to the `EIGENPAL_API_KEY` environment variable when omitted,
-   * so most users only need `new Eigenpal()`.
+   * so most users only need `new EigenpalClient()`.
    */
   apiKey?: string;
   /**
@@ -31,7 +32,6 @@ export interface EigenpalOptions {
 const DEFAULT_BASE_URL = 'https://app.eigenpal.com';
 const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_MAX_RETRIES = 3;
-const SDK_VERSION = '0.0.0-placeholder';
 
 /**
  * Result shape returned by hey-api operation calls. We let hey-api default
@@ -49,13 +49,13 @@ export interface OperationResult<T> {
 }
 
 /**
- * The Eigenpal SDK client.
+ * The EigenPal SDK client.
  *
  * ```ts
- * import { Eigenpal } from '@eigenpal/sdk';
+ * import { EigenpalClient } from '@eigenpal/sdk';
  *
  * // Reads EIGENPAL_API_KEY from env automatically.
- * const client = new Eigenpal();
+ * const client = new EigenpalClient();
  *
  * // Async — enqueue and poll later.
  * const { executionId } = await client.workflows.run('wf_abc', { language: 'en' });
@@ -65,15 +65,15 @@ export interface OperationResult<T> {
  *   waitForCompletion: 60,
  * });
  *
- * // Client-side polling for long-running runs (default 5min cap).
- * const final = await client.executions.runAndWait('wf_abc', { language: 'en' });
+ * // Client-side polling for long-running executions (default 5min cap).
+ * const final = await client.workflows.executions.runAndWait('wf_abc', { language: 'en' });
  * ```
  */
-export class Eigenpal {
+export class EigenpalClient {
   /** Workflow operations: `list`, `get`, `versions`, `run`. */
   public readonly workflows: WorkflowsResource;
-  /** Execution operations: `list`, `get`, `cancel`, `runAndWait`. */
-  public readonly executions: ExecutionsResource;
+  /** Agent operations: `list`, `get`, `create`, `run`, `executions`. */
+  public readonly agents: AgentsResource;
 
   /** Underlying hey-api client. Use `getRawClient()` for advanced cases. */
   private readonly client: Client;
@@ -84,7 +84,7 @@ export class Eigenpal {
     const apiKey = options.apiKey ?? readEnv('EIGENPAL_API_KEY');
     if (!apiKey) {
       throw new EigenpalError(
-        'Missing API key. Pass `new Eigenpal({ apiKey })` or set the EIGENPAL_API_KEY environment variable.',
+        'Missing API key. Pass `new EigenpalClient({ apiKey })` or set the EIGENPAL_API_KEY environment variable.',
         { status: 0 }
       );
     }
@@ -97,7 +97,10 @@ export class Eigenpal {
       baseUrl,
       headers: {
         Authorization: `Bearer ${apiKey}`,
-        'User-Agent': `eigenpal-sdk-js/${SDK_VERSION}`,
+        // SDK telemetry headers (X-Eigenpal-Sdk-*) + a richer User-Agent.
+        // User-supplied defaultHeaders override these so callers can opt out
+        // of telemetry by passing their own User-Agent / X-Eigenpal-Sdk.
+        ...buildTelemetryHeaders(),
         ...(options.defaultHeaders ?? {}),
       },
     });
@@ -112,7 +115,7 @@ export class Eigenpal {
     this.installTimeoutInterceptor();
 
     this.workflows = new WorkflowsResource(this.client, this._request.bind(this));
-    this.executions = new ExecutionsResource(this.client, this._request.bind(this));
+    this.agents = new AgentsResource(this.client, this._request.bind(this));
   }
 
   /** Expose the underlying hey-api client for advanced use (custom interceptors, etc.). */
@@ -133,12 +136,24 @@ export class Eigenpal {
       try {
         const result = await call();
         const response = result.response;
+        const status = response?.status ?? 0;
+        // Guard against misconfigured `baseUrl` pointed at an HTML host
+        // (e.g. `https://eigenpal.com` instead of `https://app.eigenpal.com`).
+        // Fires for both 2xx and non-2xx so a 4xx with HTML surfaces a typed
+        // baseUrl-pointing error instead of a misleading NotFoundError or a
+        // downstream JSON-parse crash. 0.4.10 shipped with this footgun.
+        //
+        // Don't run on retriable statuses — a 503 maintenance page from a
+        // CDN is transient and should consume retry budget, not throw on
+        // attempt zero. Only fire when we're about to surface the response
+        // as a final result or final error.
+        const willRetry = isRetriableStatus(status) && attempt < this.maxRetries;
+        if (response && !willRetry) assertJsonResponse(response);
         if (response && response.ok && result.data !== undefined) {
           return result.data;
         }
         // Non-2xx (or response missing — treat as opaque failure).
-        const status = response?.status ?? 0;
-        if (isRetriableStatus(status) && attempt < this.maxRetries) {
+        if (willRetry) {
           await sleep(retryDelay(response, attempt));
           continue;
         }
@@ -146,7 +161,7 @@ export class Eigenpal {
         const retryAfter = parseRetryAfter(response?.headers.get('retry-after') ?? null);
         throw errorFromResponse(status, envelope, retryAfter);
       } catch (err) {
-        // Re-throw mapped Eigenpal errors as-is.
+        // Re-throw mapped EigenpalError subclasses as-is.
         if (err instanceof EigenpalError) throw err;
         // Network/abort error — retry if budget allows. AbortSignal aborts
         // surface as DOMException — we treat them as terminal (don't retry).
@@ -179,6 +194,22 @@ export class Eigenpal {
       return new Request(req, { signal: ctrl.signal });
     });
   }
+}
+
+function assertJsonResponse(response: Response): void {
+  // 204 No Content has no body — accept silently.
+  if (response.status === 204) return;
+  const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+  // Match `application/json`, `application/problem+json`, etc. Empty
+  // Content-Type is tolerated since some proxies strip it on small bodies.
+  if (contentType === '' || contentType.includes('json')) return;
+  throw new EigenpalError(
+    `Expected a JSON response from the API but got Content-Type "${contentType}". ` +
+      `This usually means \`baseUrl\` points at a non-API host (e.g. the marketing site or ` +
+      `a misconfigured proxy). Set \`baseUrl\` to your EigenPal instance root, ` +
+      `e.g. "https://app.eigenpal.com".`,
+    { status: response.status }
+  );
 }
 
 function isRetriableStatus(status: number): boolean {

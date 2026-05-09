@@ -126,3 +126,30 @@ export function buildMultipart(args: {
 
   return { formData: fd, fileCount };
 }
+
+/**
+ * Build multipart for agent runs. Agent run endpoints consume `_json` as the
+ * input object itself, unlike workflow runs where `_json` is a sidecar with
+ * `{ input, overrides, trigger }`.
+ */
+export function buildAgentMultipart(input?: Record<string, unknown>): MultipartParts {
+  const fd = new FormData();
+  const inputScalars: Record<string, unknown> = {};
+  let fileCount = 0;
+
+  for (const [key, value] of Object.entries(input ?? {})) {
+    if (isFileInput(value)) {
+      const { blob, filename } = toBlobAndFilename(value);
+      fd.append(key, blob, filename);
+      fileCount += 1;
+    } else {
+      inputScalars[key] = value;
+    }
+  }
+
+  if (Object.keys(inputScalars).length > 0) {
+    fd.append('_json', JSON.stringify(inputScalars));
+  }
+
+  return { formData: fd, fileCount };
+}

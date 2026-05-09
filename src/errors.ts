@@ -25,7 +25,12 @@ export class EigenpalError extends Error {
 
 export class EigenpalAuthError extends EigenpalError {
   constructor(envelope?: ApiErrorEnvelope) {
-    super('Missing or invalid API key', { status: 401, envelope });
+    super(
+      envelope?.issues?.[0]?.message ??
+        'Invalid or missing API key. Generate one at app.eigenpal.com → Settings → API Keys; ' +
+          'pass it as `new EigenpalClient({ apiKey })` or set EIGENPAL_API_KEY.',
+      { status: 401, envelope }
+    );
     this.name = 'EigenpalAuthError';
   }
 }
@@ -85,7 +90,7 @@ export class EigenpalTimeoutError extends EigenpalError {
 
 /**
  * Map an HTTP response into the appropriate typed error. Used by the
- * `Eigenpal` facade to wrap raw fetch errors before they bubble to user
+ * `EigenpalClient` facade to wrap raw fetch errors before they bubble to user
  * code.
  */
 export function errorFromResponse(

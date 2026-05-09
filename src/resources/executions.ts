@@ -2,25 +2,24 @@ import type { OperationResult } from '../client';
 import { EigenpalTimeoutError } from '../errors';
 import type { Client } from '../generated/client';
 import {
-  executionsCancel,
-  executionsGet,
-  executionsList,
+  workflowsExecutionsCancel,
+  workflowsExecutionsGet,
+  workflowsExecutionsList,
   workflowsRun,
 } from '../generated/sdk.gen';
 import type {
-  CancelExecutionResponse,
+  CancelWorkflowExecutionResponse,
   ExecutionStatus,
-  ExecutionStatusResponse,
-  ListExecutionsResponse,
+  ListWorkflowExecutionsResponse,
   RunWorkflowResponse,
+  WorkflowExecutionStatusResponse,
 } from '../generated/types.gen';
 import { buildMultipart, hasFileInput } from '../lib/files';
 import type { WorkflowInput } from './workflows';
 
 export interface ListExecutionsOptions {
-  workflowId?: string;
-  /** Comma-separated list of execution statuses. */
-  status?: string;
+  /** Execution status, or an array of statuses. */
+  status?: string | string[];
   /** ISO timestamp or relative expression like `"now()-7d"`. */
   fromDate?: string;
   toDate?: string;
@@ -59,11 +58,11 @@ const DEFAULT_RUN_AND_WAIT_TIMEOUT_MS = 5 * 60 * 1000;
 type Dispatch = <T>(call: () => Promise<OperationResult<T>>) => Promise<T>;
 
 /**
- * Execution resource — read execution status, list executions, cancel
- * in-flight runs, and the convenience `runAndWait` helper that wraps a
- * workflow trigger + client-side poll loop. Reached via `client.executions`.
+ * Workflow execution resource — read execution status, list executions, cancel
+ * in-flight executions, and the convenience `runAndWait` helper that wraps a
+ * workflow trigger + client-side poll loop. Reached via `client.workflows.executions`.
  */
-export class ExecutionsResource {
+export class WorkflowExecutionsResource {
   constructor(
     private readonly client: Client,
     private readonly dispatch: Dispatch
@@ -73,31 +72,44 @@ export class ExecutionsResource {
   async get(
     executionId: string,
     options: { includeSteps?: boolean; signal?: AbortSignal } = {}
-  ): Promise<ExecutionStatusResponse> {
-    return this.dispatch<ExecutionStatusResponse>(
+  ): Promise<WorkflowExecutionStatusResponse> {
+    return this.dispatch<WorkflowExecutionStatusResponse>(
       () =>
-        executionsGet({
+        workflowsExecutionsGet({
           client: this.client,
           path: { executionId },
           query: options.includeSteps ? { includeSteps: 'true' } : {},
           signal: options.signal,
-        }) as Promise<OperationResult<ExecutionStatusResponse>>
+        }) as Promise<OperationResult<WorkflowExecutionStatusResponse>>
     );
   }
 
   /** List executions, paginated. */
-  async list(options: ListExecutionsOptions = {}): Promise<ListExecutionsResponse> {
-    const { signal, ...query } = options;
-    return this.dispatch(() => executionsList({ client: this.client, query, signal }));
+  async list(
+    workflowId: string,
+    options: ListExecutionsOptions = {}
+  ): Promise<ListWorkflowExecutionsResponse> {
+    const { signal, status, ...rest } = options;
+    // Wire format takes comma-separated lists; idiomatic JS callers can
+    // pass a string[] and we serialize.
+    const query = {
+      ...rest,
+      ...(status !== undefined
+        ? { status: Array.isArray(status) ? status.join(',') : status }
+        : {}),
+    };
+    return this.dispatch(() =>
+      workflowsExecutionsList({ client: this.client, path: { id: workflowId }, query, signal })
+    );
   }
 
   /** Cancel an execution. Idempotent. */
   async cancel(
     executionId: string,
     options: { signal?: AbortSignal } = {}
-  ): Promise<CancelExecutionResponse> {
+  ): Promise<CancelWorkflowExecutionResponse> {
     return this.dispatch(() =>
-      executionsCancel({
+      workflowsExecutionsCancel({
         client: this.client,
         path: { executionId },
         signal: options.signal,
@@ -128,7 +140,7 @@ export class ExecutionsResource {
       ? await this.dispatch<RunWorkflowResponse>(() => {
           const { formData } = buildMultipart({ input, overrides: options.overrides });
           return this.client.post({
-            url: '/v1/workflows/{id}/run',
+            url: '/api/v1/workflows/{id}/run',
             path: { id: workflowId },
             query: triggerQuery,
             body: formData,

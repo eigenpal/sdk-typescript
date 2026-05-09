@@ -4,11 +4,13 @@
  * Lists workflows, picks the first one, triggers a run, and polls until the
  * execution reaches a terminal state.
  */
-import { Eigenpal, EigenpalError } from '../src';
+import { EigenpalClient, EigenpalError } from '../src';
 
 async function main() {
-  const client = new Eigenpal({
+  const client = new EigenpalClient({
+    // eslint-disable-next-line no-process-env
     apiKey: process.env.EIGENPAL_API_KEY,
+    // eslint-disable-next-line no-process-env
     baseUrl: process.env.EIGENPAL_BASE_URL, // for self-hosted; defaults to cloud
   });
 
@@ -18,9 +20,9 @@ async function main() {
     return;
   }
   const workflow = workflows[0];
-  console.log(`Triggering ${workflow.id} (${workflow.currentVersion?.definition})`);
+  console.log(`Triggering ${workflow.id} @ version ${workflow.version ?? '<unreleased>'}`);
 
-  const result = await client.executions.runAndWait(
+  const result = await client.workflows.executions.runAndWait(
     workflow.id,
     /* inputs: */ {},
     { timeoutMs: 5 * 60_000 }

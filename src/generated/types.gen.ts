@@ -4,6 +4,33 @@ export type ClientOptions = {
   baseUrl: 'https://app.eigenpal.com' | (string & {});
 };
 
+export type PatchAgentBody = {
+  name?: string;
+  description?: string;
+  config?: {
+    [key: string]: unknown;
+  };
+};
+
+export type RunAgentBody = {
+  input?: {
+    [key: string]: unknown;
+  };
+  _metadata?: {
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+};
+
+export type CreateAgentBody = {
+  name: string;
+  slug: string;
+  description?: string;
+  config?: {
+    [key: string]: unknown;
+  };
+};
+
 export type RunWorkflowBody = {
   /**
    * Workflow inputs keyed by input name
@@ -27,16 +54,26 @@ export type RunWorkflowBody = {
   trigger?: 'api' | 'cli';
 };
 
-export type CancelExecutionResponse = {
-  executionId: string;
-  /**
-   * Outcome. `cancelled` (transitioned), `cancellation-requested` (worker will observe), or `already-terminal` (no-op).
-   */
-  status: 'cancelled' | 'cancellation-requested' | 'already-terminal';
-  /**
-   * Status at the moment of the cancel request
-   */
-  wasStatus: ExecutionStatus;
+export type ListAgentExecutionsResponse = {
+  executions: Array<AgentExecutionSummary>;
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type AgentExecutionSummary = {
+  id: string;
+  status: ExecutionStatus;
+  model?: string | null;
+  output?: unknown | null;
+  schemaValid?: boolean | null;
+  error?: string | null;
+  exampleId?: string | null;
+  batchId?: string | null;
+  createdAt: string;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  [key: string]: unknown;
 };
 
 export type ExecutionStatus =
@@ -85,38 +122,94 @@ export type ApiErrorIssue = {
   severity: 'error' | 'warning';
 };
 
-export type ExecutionStatusResponse = {
-  executionId: string;
-  status: ExecutionStatus;
-  /**
-   * ISO-8601 creation timestamp
-   */
+export type GetAgentResponse = {
+  agent: AgentSummary;
+};
+
+export type AgentSummary = {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string | null;
+  config?: {
+    [key: string]: unknown;
+  };
   createdAt: string;
-  /**
-   * ISO-8601 completion timestamp; only set in terminal states
-   */
-  completedAt?: string | null;
-  /**
-   * Workflow output (status=completed)
-   */
-  result?: unknown | null;
-  /**
-   * Error message (status=failed)
-   */
+  updatedAt?: string;
+  stats?: {
+    exampleCount?: number;
+    totalExecutions?: number;
+    lastExecutionAt?: string | null;
+    avgDurationMs?: number | null;
+    avgCredits?: number | null;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+};
+
+export type PatchAgentResponse = {
+  agent: AgentSummary;
+};
+
+export type RunAgentResponse = {
+  executionId: string;
+  status?: ExecutionStatus | 'timeout';
+  output?: unknown;
+  schemaValid?: boolean | null;
   error?: string | null;
+  cost?: {
+    [key: string]: unknown;
+  };
+};
+
+export type CancelAgentExecutionResponse = {
+  execution: AgentExecutionSummary;
+};
+
+export type AgentExecutionResponse = {
+  execution: AgentExecutionSummary;
+};
+
+export type ListAgentsResponse = {
+  data: Array<AgentSummary>;
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type CreateAgentResponse = {
+  agent: AgentSummary;
+};
+
+export type ListWorkflowExecutionsResponse = {
+  data: Array<ExecutionSummary>;
+  total: number;
+  limit: number;
+  offset: number;
 };
 
 export type ExecutionSummary = {
   id: string;
-  tenantId: string;
   workflowId: string;
-  versionId?: string | null;
   status: ExecutionStatus;
-  triggerType?: string;
+  /**
+   * "api" | "scheduled" | "manual" | …
+   */
+  triggerType?: string | null;
+  /**
+   * Original input map. Useful for replay.
+   */
   triggerInput?: unknown | null;
+  /**
+   * Workflow output (status=completed).
+   */
   result?: unknown | null;
+  /**
+   * Error message (status=failed).
+   */
   error?: string | null;
   createdAt: string;
+  startedAt?: string | null;
   completedAt?: string | null;
   /**
    * Owning workflow (null when the workflow has been deleted)
@@ -125,32 +218,23 @@ export type ExecutionSummary = {
     id: string;
     name: string;
   } | null;
-  [key: string]: unknown;
-};
-
-export type ListExecutionsResponse = {
-  data: Array<ExecutionSummary>;
-  total: number;
-  limit: number;
-  offset: number;
 };
 
 export type WorkflowSummary = {
+  /**
+   * Workflow id (e.g. wf_abc123).
+   */
   id: string;
-  tenantId: string;
-  isBlock?: boolean;
+  /**
+   * Human-readable workflow name from the YAML (e.g. "extract-invoice"). Null when no version is published yet.
+   */
+  name?: string | null;
+  /**
+   * Current release tag (e.g. "1.2.4"). Null until a version is published.
+   */
+  version?: string | null;
   createdAt: string;
   updatedAt?: string;
-  currentVersion?: {
-    id?: string;
-    version?: string | null;
-    yamlContent?: string;
-    definition?: unknown;
-    message?: string | null;
-    createdAt?: string;
-    [key: string]: unknown;
-  } | null;
-  [key: string]: unknown;
 };
 
 export type RunWorkflowResponse = {
@@ -180,15 +264,57 @@ export type ListVersionsResponse = {
 };
 
 export type WorkflowVersion = {
+  /**
+   * Version id (e.g. wfh_xyz). Stable for SDK pinning.
+   */
   id: string;
   workflowId: string;
+  /**
+   * Release tag for this version.
+   */
   version?: string | null;
+  /**
+   * Workflow YAML at this version.
+   */
   yamlContent?: string;
-  definition?: unknown;
-  message?: string | null;
+  /**
+   * True when this is the workflow’s currently published version.
+   */
+  isCurrent?: boolean;
   createdAt?: string;
-  isCurrentVersion?: boolean;
-  [key: string]: unknown;
+};
+
+export type CancelWorkflowExecutionResponse = {
+  executionId: string;
+  /**
+   * Outcome. `cancelled` (transitioned), `cancellation-requested` (worker will observe), or `already-terminal` (no-op).
+   */
+  status: 'cancelled' | 'cancellation-requested' | 'already-terminal';
+  /**
+   * Status at the moment of the cancel request
+   */
+  wasStatus: ExecutionStatus;
+};
+
+export type WorkflowExecutionStatusResponse = {
+  executionId: string;
+  status: ExecutionStatus;
+  /**
+   * ISO-8601 creation timestamp
+   */
+  createdAt: string;
+  /**
+   * ISO-8601 completion timestamp; only set in terminal states
+   */
+  completedAt?: string | null;
+  /**
+   * Workflow output (status=completed)
+   */
+  result?: unknown | null;
+  /**
+   * Error message (status=failed)
+   */
+  error?: string | null;
 };
 
 export type ListWorkflowsResponse = {
@@ -198,19 +324,242 @@ export type ListWorkflowsResponse = {
   offset: number;
 };
 
-export type ExecutionsCancelData = {
+export type AgentsExecutionsListData = {
   body?: never;
   path: {
     /**
-     * Execution id to cancel
+     * Agent id or slug
+     */
+    agentId: string;
+  };
+  query?: {
+    /**
+     * Execution status filter
+     */
+    status?: string;
+    /**
+     * Experiment batch id filter
+     */
+    batchId?: string;
+    limit?: number;
+    offset?: number;
+  };
+  url: '/api/v1/agents/{agentId}/executions';
+};
+
+export type AgentsExecutionsListErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsExecutionsListError =
+  AgentsExecutionsListErrors[keyof AgentsExecutionsListErrors];
+
+export type AgentsExecutionsListResponses = {
+  /**
+   * List of agent executions
+   */
+  200: ListAgentExecutionsResponse;
+};
+
+export type AgentsExecutionsListResponse =
+  AgentsExecutionsListResponses[keyof AgentsExecutionsListResponses];
+
+export type AgentsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Agent id or slug
+     */
+    agentId: string;
+  };
+  query?: {
+    /**
+     * Comma-separated optional sections, e.g. files,dataset
+     */
+    include?: string;
+  };
+  url: '/api/v1/agents/{agentId}';
+};
+
+export type AgentsGetErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsGetError = AgentsGetErrors[keyof AgentsGetErrors];
+
+export type AgentsGetResponses = {
+  /**
+   * Agent
+   */
+  200: GetAgentResponse;
+};
+
+export type AgentsGetResponse = AgentsGetResponses[keyof AgentsGetResponses];
+
+export type AgentsUpdateData = {
+  body: PatchAgentBody;
+  path: {
+    /**
+     * Agent id or slug
+     */
+    agentId: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/{agentId}';
+};
+
+export type AgentsUpdateErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsUpdateError = AgentsUpdateErrors[keyof AgentsUpdateErrors];
+
+export type AgentsUpdateResponses = {
+  /**
+   * Updated agent
+   */
+  200: PatchAgentResponse;
+};
+
+export type AgentsUpdateResponse = AgentsUpdateResponses[keyof AgentsUpdateResponses];
+
+export type AgentsRunData = {
+  body: RunAgentBody;
+  path: {
+    /**
+     * Agent id or slug
+     */
+    agentId: string;
+  };
+  query?: {
+    /**
+     * Seconds to hold the connection waiting for completion (max 600). Omit for async.
+     */
+    wait_for_completion?: number;
+  };
+  url: '/api/v1/agents/{agentId}/run';
+};
+
+export type AgentsRunErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsRunError = AgentsRunErrors[keyof AgentsRunErrors];
+
+export type AgentsRunResponses = {
+  /**
+   * Execution accepted
+   */
+  202: RunAgentResponse;
+};
+
+export type AgentsRunResponse = AgentsRunResponses[keyof AgentsRunResponses];
+
+export type AgentsExecutionsCancelData = {
+  body?: never;
+  path: {
+    /**
+     * Execution id
      */
     executionId: string;
   };
   query?: never;
-  url: '/v1/executions/{executionId}/cancel';
+  url: '/api/v1/agents/executions/{executionId}/cancel';
 };
 
-export type ExecutionsCancelErrors = {
+export type AgentsExecutionsCancelErrors = {
   /**
    * Validation error. Request shape did not match the spec.
    */
@@ -237,35 +586,37 @@ export type ExecutionsCancelErrors = {
   500: ApiErrorEnvelope;
 };
 
-export type ExecutionsCancelError = ExecutionsCancelErrors[keyof ExecutionsCancelErrors];
+export type AgentsExecutionsCancelError =
+  AgentsExecutionsCancelErrors[keyof AgentsExecutionsCancelErrors];
 
-export type ExecutionsCancelResponses = {
+export type AgentsExecutionsCancelResponses = {
   /**
-   * Cancellation outcome
+   * Cancelled agent execution
    */
-  200: CancelExecutionResponse;
+  200: CancelAgentExecutionResponse;
 };
 
-export type ExecutionsCancelResponse = ExecutionsCancelResponses[keyof ExecutionsCancelResponses];
+export type AgentsExecutionsCancelResponse =
+  AgentsExecutionsCancelResponses[keyof AgentsExecutionsCancelResponses];
 
-export type ExecutionsGetData = {
+export type AgentsExecutionsGetData = {
   body?: never;
   path: {
     /**
-     * Execution id (e.g. exec_xyz)
+     * Execution id
      */
     executionId: string;
   };
   query?: {
     /**
-     * When "true", returns the full per-step execution payload instead of the summary
+     * Comma-separated optional sections, e.g. files
      */
-    includeSteps?: 'true' | 'false';
+    include?: string;
   };
-  url: '/v1/executions/{executionId}';
+  url: '/api/v1/agents/executions/{executionId}';
 };
 
-export type ExecutionsGetErrors = {
+export type AgentsExecutionsGetErrors = {
   /**
    * Validation error. Request shape did not match the spec.
    */
@@ -292,25 +643,124 @@ export type ExecutionsGetErrors = {
   500: ApiErrorEnvelope;
 };
 
-export type ExecutionsGetError = ExecutionsGetErrors[keyof ExecutionsGetErrors];
+export type AgentsExecutionsGetError = AgentsExecutionsGetErrors[keyof AgentsExecutionsGetErrors];
 
-export type ExecutionsGetResponses = {
+export type AgentsExecutionsGetResponses = {
   /**
-   * Execution status (or full per-step payload when includeSteps=true)
+   * Agent execution
    */
-  200: ExecutionStatusResponse | ExecutionSummary;
+  200: AgentExecutionResponse;
 };
 
-export type ExecutionsGetResponse = ExecutionsGetResponses[keyof ExecutionsGetResponses];
+export type AgentsExecutionsGetResponse =
+  AgentsExecutionsGetResponses[keyof AgentsExecutionsGetResponses];
 
-export type ExecutionsListData = {
+export type AgentsListData = {
   body?: never;
   path?: never;
   query?: {
     /**
-     * Comma-separated list of workflow ids to filter by
+     * Substring match against agent fields
      */
-    workflowId?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  };
+  url: '/api/v1/agents';
+};
+
+export type AgentsListErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsListError = AgentsListErrors[keyof AgentsListErrors];
+
+export type AgentsListResponses = {
+  /**
+   * Paginated list of agents
+   */
+  200: ListAgentsResponse;
+};
+
+export type AgentsListResponse = AgentsListResponses[keyof AgentsListResponses];
+
+export type AgentsCreateData = {
+  body: CreateAgentBody;
+  path?: never;
+  query?: never;
+  url: '/api/v1/agents';
+};
+
+export type AgentsCreateErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsCreateError = AgentsCreateErrors[keyof AgentsCreateErrors];
+
+export type AgentsCreateResponses = {
+  /**
+   * Created agent
+   */
+  201: CreateAgentResponse;
+};
+
+export type AgentsCreateResponse = AgentsCreateResponses[keyof AgentsCreateResponses];
+
+export type WorkflowsExecutionsListData = {
+  body?: never;
+  path: {
+    /**
+     * Workflow id (e.g. wf_abc123)
+     */
+    id: string;
+  };
+  query?: {
     /**
      * Comma-separated list of execution statuses to filter by
      */
@@ -330,10 +780,10 @@ export type ExecutionsListData = {
     limit?: number;
     offset?: number;
   };
-  url: '/v1/executions';
+  url: '/api/v1/workflows/{id}/executions';
 };
 
-export type ExecutionsListErrors = {
+export type WorkflowsExecutionsListErrors = {
   /**
    * Validation error. Request shape did not match the spec.
    */
@@ -360,16 +810,18 @@ export type ExecutionsListErrors = {
   500: ApiErrorEnvelope;
 };
 
-export type ExecutionsListError = ExecutionsListErrors[keyof ExecutionsListErrors];
+export type WorkflowsExecutionsListError =
+  WorkflowsExecutionsListErrors[keyof WorkflowsExecutionsListErrors];
 
-export type ExecutionsListResponses = {
+export type WorkflowsExecutionsListResponses = {
   /**
-   * Paginated list of executions
+   * Paginated list of workflow executions
    */
-  200: ListExecutionsResponse;
+  200: ListWorkflowExecutionsResponse;
 };
 
-export type ExecutionsListResponse = ExecutionsListResponses[keyof ExecutionsListResponses];
+export type WorkflowsExecutionsListResponse =
+  WorkflowsExecutionsListResponses[keyof WorkflowsExecutionsListResponses];
 
 export type WorkflowsGetData = {
   body?: never;
@@ -380,7 +832,7 @@ export type WorkflowsGetData = {
     id: string;
   };
   query?: never;
-  url: '/v1/workflows/{id}';
+  url: '/api/v1/workflows/{id}';
 };
 
 export type WorkflowsGetErrors = {
@@ -439,7 +891,7 @@ export type WorkflowsRunData = {
      */
     wait_for_completion?: number;
   };
-  url: '/v1/workflows/{id}/run';
+  url: '/api/v1/workflows/{id}/run';
 };
 
 export type WorkflowsRunErrors = {
@@ -473,7 +925,7 @@ export type WorkflowsRunError = WorkflowsRunErrors[keyof WorkflowsRunErrors];
 
 export type WorkflowsRunResponses = {
   /**
-   * Execution accepted. Body always includes `executionId`. When `wait_for_completion` is set and the run completes within the window, `status`/`result`/`error` are also returned; otherwise poll `/v1/executions/{executionId}` for status.
+   * Execution accepted. Body always includes `executionId`. When `wait_for_completion` is set and the execution completes within the window, `status`/`result`/`error` are also returned; otherwise poll `/api/v1/workflows/executions/{executionId}` for status.
    */
   201: RunWorkflowResponse;
 };
@@ -498,7 +950,7 @@ export type WorkflowsVersionsListData = {
      */
     offset?: number;
   };
-  url: '/v1/workflows/{id}/versions';
+  url: '/api/v1/workflows/{id}/versions';
 };
 
 export type WorkflowsVersionsListErrors = {
@@ -541,6 +993,115 @@ export type WorkflowsVersionsListResponses = {
 export type WorkflowsVersionsListResponse =
   WorkflowsVersionsListResponses[keyof WorkflowsVersionsListResponses];
 
+export type WorkflowsExecutionsCancelData = {
+  body?: never;
+  path: {
+    /**
+     * Execution id to cancel
+     */
+    executionId: string;
+  };
+  query?: never;
+  url: '/api/v1/workflows/executions/{executionId}/cancel';
+};
+
+export type WorkflowsExecutionsCancelErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type WorkflowsExecutionsCancelError =
+  WorkflowsExecutionsCancelErrors[keyof WorkflowsExecutionsCancelErrors];
+
+export type WorkflowsExecutionsCancelResponses = {
+  /**
+   * Cancellation outcome
+   */
+  200: CancelWorkflowExecutionResponse;
+};
+
+export type WorkflowsExecutionsCancelResponse =
+  WorkflowsExecutionsCancelResponses[keyof WorkflowsExecutionsCancelResponses];
+
+export type WorkflowsExecutionsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Execution id (e.g. exec_xyz)
+     */
+    executionId: string;
+  };
+  query?: {
+    /**
+     * When "true", returns the full per-step execution payload instead of the summary
+     */
+    includeSteps?: 'true' | 'false';
+  };
+  url: '/api/v1/workflows/executions/{executionId}';
+};
+
+export type WorkflowsExecutionsGetErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type WorkflowsExecutionsGetError =
+  WorkflowsExecutionsGetErrors[keyof WorkflowsExecutionsGetErrors];
+
+export type WorkflowsExecutionsGetResponses = {
+  /**
+   * Workflow execution status or full per-step payload
+   */
+  200: WorkflowExecutionStatusResponse | ExecutionSummary;
+};
+
+export type WorkflowsExecutionsGetResponse =
+  WorkflowsExecutionsGetResponses[keyof WorkflowsExecutionsGetResponses];
+
 export type WorkflowsListData = {
   body?: never;
   path?: never;
@@ -566,7 +1127,7 @@ export type WorkflowsListData = {
      */
     offset?: number;
   };
-  url: '/v1/workflows';
+  url: '/api/v1/workflows';
 };
 
 export type WorkflowsListErrors = {

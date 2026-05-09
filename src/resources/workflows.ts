@@ -13,6 +13,7 @@ import type {
   WorkflowSummary,
 } from '../generated/types.gen';
 import { buildMultipart, hasFileInput } from '../lib/files';
+import { WorkflowExecutionsResource } from './executions';
 
 /**
  * Workflow inputs keyed by name as declared in the workflow YAML.
@@ -58,10 +59,14 @@ type Dispatch = <T>(call: () => Promise<OperationResult<T>>) => Promise<T>;
  * workflows. Reached via `client.workflows`.
  */
 export class WorkflowsResource {
+  public readonly executions: WorkflowExecutionsResource;
+
   constructor(
     private readonly client: Client,
     private readonly dispatch: Dispatch
-  ) {}
+  ) {
+    this.executions = new WorkflowExecutionsResource(client, dispatch);
+  }
 
   /**
    * Execute a workflow.
@@ -71,7 +76,8 @@ export class WorkflowsResource {
    * @param options — `version`, `waitForCompletion`, `overrides`.
    *
    * - With no `waitForCompletion`, returns immediately with `{ executionId }`.
-   *   Poll via `client.executions.get(id)` or use `client.executions.runAndWait`.
+   *   Poll via `client.workflows.executions.get(id)` or use
+   *   `client.workflows.executions.runAndWait`.
    * - With `waitForCompletion: 60`, the server holds the connection up to 60
    *   seconds. The response also includes `status`, `result`, and `error`
    *   when the run finishes within the window.
@@ -94,7 +100,7 @@ export class WorkflowsResource {
       return this.dispatch<RunWorkflowResponse>(
         () =>
           this.client.post({
-            url: '/v1/workflows/{id}/run',
+            url: '/api/v1/workflows/{id}/run',
             path: { id: workflowId },
             query,
             body: formData,
