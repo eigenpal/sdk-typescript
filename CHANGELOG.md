@@ -1,6 +1,6 @@
 # @eigenpal/sdk
 
-## 0.4.15
+## 0.4.16
 
 ### Major Changes
 
