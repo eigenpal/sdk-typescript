@@ -1,6 +1,6 @@
 # @eigenpal/sdk
 
-## 0.4.17
+## 0.5.1
 
 ### Major Changes
 
@@ -8,6 +8,7 @@
 
 ### Patch Changes
 
+- 5909b21: Add execution-scoped agent feedback filters and expected artifact management to the API, CLI, and SDKs.
 - 9905f7f: Fix the published SDKs so the README's default `baseUrl` works. 0.4.10
   shipped paths under `/v1/...` while the actual Next.js routes live at
   `/api/v1/...`, so every call from a freshly installed SDK either hit

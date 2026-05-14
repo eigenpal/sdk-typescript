@@ -53,6 +53,9 @@ export type { ListExecutionsOptions, RunAndWaitOptions } from './resources/execu
 // Re-export the canonical generated types so users can type their own
 // callbacks and helpers without reaching into `./generated`.
 export type {
+  AgentExecutionExpectedArtifacts,
+  AgentExecutionFeedback,
+  AgentExecutionFeedbackDetail,
   AgentExecutionResponse,
   AgentExecutionSummary,
   AgentSummary,
