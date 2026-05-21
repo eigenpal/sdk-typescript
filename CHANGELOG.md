@@ -1,10 +1,14 @@
 # @eigenpal/sdk
 
-## 0.5.4
+## 0.5.5
 
 ### Major Changes
 
 - c15ce88: Rename agent API calls to `/v1/agents` and scope execution helpers under their owning workflow or agent.
+
+### Minor Changes
+
+- d1d3260: `client.workflows.run` (and agent runs) now accept a Node readable stream (`fs.createReadStream('contract.pdf')`) as a file input, inferring the upload filename from the stream's path. Adds a `toFile(content, filename, mimeType?)` helper for attaching a filename to raw bytes (`Buffer`, `ArrayBuffer`, or `Blob`). Streams are drained to bytes before the request is sent, so a retried request can replay the body.
 
 ### Patch Changes
 

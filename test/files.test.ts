@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'bun:test';
-import { EigenpalClient } from '../src';
+import { Readable } from 'node:stream';
+import { EigenpalClient, toFile } from '../src';
 
 /**
  * Tests for multipart file upload — exercises the `-F`-style path the SDK
- * takes whenever `workflows.run`'s input contains a `File`, `Blob`, or
- * `{ content, filename, mimeType }` descriptor.
+ * takes whenever `workflows.run`'s input contains a Node readable stream, a
+ * `File` / `Blob`, or a `{ content, filename, mimeType }` descriptor.
  */
 
 interface CapturedRequest {
@@ -110,6 +111,45 @@ describe('multipart file upload', () => {
 
     expect(captured[0]?.contentType).toBe('application/json');
     expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({ input: { language: 'en' } });
+  });
+
+  test('Node readable stream uploads as multipart with the filename from its path', async () => {
+    const { fetch, captured } = await captureRequest();
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch,
+      maxRetries: 0,
+    });
+
+    // A `fs.createReadStream`-shaped value: async-iterable readable + `path`.
+    const stream = Readable.from([new Uint8Array([0x25, 0x50, 0x44, 0x46])]);
+    (stream as unknown as { path: string }).path = '/tmp/uploads/contract.pdf';
+    await client.workflows.run('wf_xyz', { contract_document: stream });
+
+    expect(captured[0]?.contentType).toMatch(/^multipart\/form-data/);
+    // Filename is the basename of the stream's path.
+    expect(captured[0]?.body).toContain('filename="contract.pdf"');
+    expect(captured[0]?.body).toContain('Content-Type: application/pdf');
+  });
+
+  test('toFile attaches a filename + inferred MIME type to raw bytes', async () => {
+    const { fetch, captured } = await captureRequest();
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch,
+      maxRetries: 0,
+    });
+
+    await client.workflows.run('wf_xyz', {
+      contract: toFile(new Uint8Array([0x25, 0x50, 0x44, 0x46]), 'contract.pdf'),
+    });
+
+    expect(captured[0]?.contentType).toMatch(/^multipart\/form-data/);
+    expect(captured[0]?.body).toContain('filename="contract.pdf"');
+    // MIME type inferred from the `.pdf` extension.
+    expect(captured[0]?.body).toContain('Content-Type: application/pdf');
   });
 
   test('multiple files all appear in the form data', async () => {

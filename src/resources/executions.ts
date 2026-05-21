@@ -136,10 +136,14 @@ export class WorkflowExecutionsResource {
 
     // Trigger async — we don't ask the server to wait, since we're polling.
     const triggerQuery = options.version ? { version: options.version } : {};
-    const runResult = hasFileInput(input)
-      ? await this.dispatch<RunWorkflowResponse>(() => {
-          const { formData } = buildMultipart({ input, overrides: options.overrides });
-          return this.client.post({
+    let runResult: RunWorkflowResponse;
+    if (hasFileInput(input)) {
+      // Build the multipart body once, up front — `dispatch` may retry the
+      // POST, and a drained stream cannot be replayed.
+      const { formData } = await buildMultipart({ input, overrides: options.overrides });
+      runResult = await this.dispatch<RunWorkflowResponse>(
+        () =>
+          this.client.post({
             url: '/api/v1/workflows/{id}/run',
             path: { id: workflowId },
             query: triggerQuery,
@@ -147,20 +151,22 @@ export class WorkflowExecutionsResource {
             bodySerializer: null,
             headers: { 'Content-Type': null },
             signal: options.signal,
-          }) as Promise<OperationResult<RunWorkflowResponse>>;
+          }) as Promise<OperationResult<RunWorkflowResponse>>
+      );
+    } else {
+      runResult = await this.dispatch<RunWorkflowResponse>(() =>
+        workflowsRun({
+          client: this.client,
+          path: { id: workflowId },
+          query: triggerQuery,
+          body: {
+            ...(input !== undefined ? { input } : {}),
+            ...(options.overrides ? { overrides: options.overrides } : {}),
+          },
+          signal: options.signal,
         })
-      : await this.dispatch<RunWorkflowResponse>(() =>
-          workflowsRun({
-            client: this.client,
-            path: { id: workflowId },
-            query: triggerQuery,
-            body: {
-              ...(input !== undefined ? { input } : {}),
-              ...(options.overrides ? { overrides: options.overrides } : {}),
-            },
-            signal: options.signal,
-          })
-        );
+      );
+    }
 
     const { executionId } = runResult;
 

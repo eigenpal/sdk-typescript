@@ -32,7 +32,8 @@ export {
   EigenpalValidationError,
 } from './errors';
 
-export type { FileDescriptor, FileInput } from './lib/files';
+export { toFile } from './lib/files';
+export type { FileDescriptor, FileInput, NodeReadableStream } from './lib/files';
 export type {
   ListAgentExecutionsOptions,
   ListAgentsOptions,

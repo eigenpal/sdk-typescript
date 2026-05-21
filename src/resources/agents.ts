@@ -409,7 +409,7 @@ export class AgentsResource {
         : {};
 
     if (hasFileInput(input)) {
-      const { formData } = buildAgentMultipart(input);
+      const { formData } = await buildAgentMultipart(input);
       return this.dispatch<RunAgentResponse>(
         () =>
           this.client.post({

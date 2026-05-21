@@ -96,7 +96,7 @@ export class WorkflowsResource {
 
     // File-bearing input → multipart/form-data (no base64 overhead).
     if (hasFileInput(input)) {
-      const { formData } = buildMultipart({ input, overrides: options.overrides });
+      const { formData } = await buildMultipart({ input, overrides: options.overrides });
       return this.dispatch<RunWorkflowResponse>(
         () =>
           this.client.post({
