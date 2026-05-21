@@ -564,11 +564,12 @@ Returns agents the API key has access to, with pagination and basic execution st
 
 **Query parameters**
 
-| Name     | Type     | Description                                    |
-| -------- | -------- | ---------------------------------------------- |
-| `search` | `string` | (optional)Substring match against agent fields |
-| `limit`  | `number` | (optional)                                     |
-| `offset` | `number` | (optional)                                     |
+| Name              | Type      | Description                                    |
+| ----------------- | --------- | ---------------------------------------------- |
+| `search`          | `string`  | (optional)Substring match against agent fields |
+| `limit`           | `number`  | (optional)                                     |
+| `offset`          | `number`  | (optional)                                     |
+| `includeArchived` | `boolean` | (optional)                                     |
 
 **Response**
 

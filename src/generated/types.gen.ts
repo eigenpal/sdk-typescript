@@ -185,6 +185,9 @@ export type AgentSummary = {
   slug: string;
   name: string;
   description?: string | null;
+  sourceIntegrity?: 'healthy' | 'source_missing' | 'unregistered';
+  latestVersion?: string | null;
+  latestCommit?: string | null;
   config?: {
     [key: string]: unknown;
   };
@@ -1497,6 +1500,7 @@ export type AgentsListData = {
     search?: string;
     limit?: number;
     offset?: number;
+    includeArchived?: boolean;
   };
   url: '/api/v1/agents';
 };
