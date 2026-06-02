@@ -514,7 +514,7 @@ export const workflowsExecutionsList = <ThrowOnError extends boolean = false>(
 /**
  * Get a workflow by id
  *
- * Returns the workflow with its current version (definition + YAML content).
+ * Returns the workflow summary plus the current version YAML. Use `versions list` for historical YAML.
  */
 export const workflowsGet = <ThrowOnError extends boolean = false>(
   options: Options<WorkflowsGetData, ThrowOnError>

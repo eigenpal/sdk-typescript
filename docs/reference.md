@@ -636,7 +636,7 @@ Returns executions for a workflow, optionally filtered by status, date range, or
 
 Get a workflow by id
 
-Returns the workflow with its current version (definition + YAML content).
+Returns the workflow summary plus the current version YAML. Use `versions list` for historical YAML.
 
 **Path parameters**
 
@@ -647,7 +647,7 @@ Returns the workflow with its current version (definition + YAML content).
 **Response**
 
 ```ts
-// WorkflowSummary
+// WorkflowDetail
 ```
 
 ### `client.workflows.run`

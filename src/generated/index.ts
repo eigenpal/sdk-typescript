@@ -168,6 +168,7 @@ export type {
   RunWorkflowBody,
   RunWorkflowResponse,
   UpdateAgentExecutionFeedbackBody,
+  WorkflowDetail,
   WorkflowExecutionStatusResponse,
   WorkflowSummary,
   WorkflowVersion,

@@ -75,6 +75,7 @@ export type {
   RunAgentResponse,
   RunWorkflowBody,
   RunWorkflowResponse,
+  WorkflowDetail,
   WorkflowExecutionStatusResponse,
   WorkflowSummary,
   WorkflowVersion,

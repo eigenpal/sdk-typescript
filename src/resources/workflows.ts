@@ -10,7 +10,7 @@ import type {
   ListVersionsResponse,
   ListWorkflowsResponse,
   RunWorkflowResponse,
-  WorkflowSummary,
+  WorkflowDetail,
 } from '../generated/types.gen';
 import { buildMultipart, hasFileInput } from '../lib/files';
 import { WorkflowExecutionsResource } from './executions';
@@ -135,8 +135,8 @@ export class WorkflowsResource {
     return this.dispatch(() => workflowsList({ client: this.client, query, signal }));
   }
 
-  /** Get a single workflow by id. */
-  async get(workflowId: string, options: { signal?: AbortSignal } = {}): Promise<WorkflowSummary> {
+  /** Get a single workflow by id. Includes the current version's YAML. */
+  async get(workflowId: string, options: { signal?: AbortSignal } = {}): Promise<WorkflowDetail> {
     return this.dispatch(() =>
       workflowsGet({ client: this.client, path: { id: workflowId }, signal: options.signal })
     );

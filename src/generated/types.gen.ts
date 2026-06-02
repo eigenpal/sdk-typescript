@@ -309,6 +309,10 @@ export type ExecutionSummary = {
   startedAt?: string | null;
   completedAt?: string | null;
   /**
+   * Total wall-clock duration in milliseconds. Only set after the execution reaches a terminal status.
+   */
+  durationMs?: number | null;
+  /**
    * Owning workflow (null when the workflow has been deleted)
    */
   workflow?: {
@@ -317,7 +321,7 @@ export type ExecutionSummary = {
   } | null;
 };
 
-export type WorkflowSummary = {
+export type WorkflowDetail = {
   /**
    * Workflow id (e.g. wf_abc123).
    */
@@ -332,6 +336,10 @@ export type WorkflowSummary = {
   version?: string | null;
   createdAt: string;
   updatedAt?: string;
+  /**
+   * YAML for the current version. Null until a version is published. Heavy; only returned on single-workflow GET, not on list.
+   */
+  yamlContent?: string | null;
 };
 
 export type RunWorkflowResponse = {
@@ -419,6 +427,23 @@ export type ListWorkflowsResponse = {
   total: number;
   limit: number;
   offset: number;
+};
+
+export type WorkflowSummary = {
+  /**
+   * Workflow id (e.g. wf_abc123).
+   */
+  id: string;
+  /**
+   * Human-readable workflow name from the YAML (e.g. "extract-invoice"). Null when no version is published yet.
+   */
+  name?: string | null;
+  /**
+   * Current release tag (e.g. "1.2.4"). Null until a version is published.
+   */
+  version?: string | null;
+  createdAt: string;
+  updatedAt?: string;
 };
 
 export type AgentsExecutionsListData = {
@@ -1702,9 +1727,9 @@ export type WorkflowsGetError = WorkflowsGetErrors[keyof WorkflowsGetErrors];
 
 export type WorkflowsGetResponses = {
   /**
-   * Workflow with current version
+   * Workflow summary with current YAML content
    */
-  200: WorkflowSummary;
+  200: WorkflowDetail;
 };
 
 export type WorkflowsGetResponse = WorkflowsGetResponses[keyof WorkflowsGetResponses];
