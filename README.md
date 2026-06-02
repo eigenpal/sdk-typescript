@@ -136,8 +136,8 @@ const { executionId } = await client.agents.run('invoice-agent', {
   invoice: file,
 });
 
-await client.agents.executions.get(executionId);
-await client.agents.executions.cancel(executionId);
+await client.agents.runs.get(runId);
+await client.agents.runs.cancel(runId);
 ```
 
 ## Errors

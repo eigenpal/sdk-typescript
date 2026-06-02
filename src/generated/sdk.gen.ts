@@ -6,54 +6,13 @@ import type {
   AgentsCreateData,
   AgentsCreateErrors,
   AgentsCreateResponses,
-  AgentsExecutionsCancelData,
-  AgentsExecutionsCancelErrors,
-  AgentsExecutionsCancelResponses,
-  AgentsExecutionsExpectedCreateData,
-  AgentsExecutionsExpectedCreateErrors,
-  AgentsExecutionsExpectedCreateResponses,
-  AgentsExecutionsExpectedDeleteData,
-  AgentsExecutionsExpectedDeleteErrors,
-  AgentsExecutionsExpectedDeleteResponses,
-  AgentsExecutionsExpectedDownloadData,
-  AgentsExecutionsExpectedDownloadErrors,
-  AgentsExecutionsExpectedDownloadResponses,
-  AgentsExecutionsExpectedListData,
-  AgentsExecutionsExpectedListErrors,
-  AgentsExecutionsExpectedListResponses,
-  AgentsExecutionsExpectedRenameData,
-  AgentsExecutionsExpectedRenameErrors,
-  AgentsExecutionsExpectedRenameResponses,
-  AgentsExecutionsFeedbackDeleteData,
-  AgentsExecutionsFeedbackDeleteErrors,
-  AgentsExecutionsFeedbackDeleteResponses,
-  AgentsExecutionsFeedbackGetData,
-  AgentsExecutionsFeedbackGetErrors,
-  AgentsExecutionsFeedbackGetResponses,
-  AgentsExecutionsFeedbackUpdateData,
-  AgentsExecutionsFeedbackUpdateErrors,
-  AgentsExecutionsFeedbackUpdateResponses,
-  AgentsExecutionsFilesDownloadData,
-  AgentsExecutionsFilesDownloadErrors,
-  AgentsExecutionsFilesDownloadResponses,
-  AgentsExecutionsGetData,
-  AgentsExecutionsGetErrors,
-  AgentsExecutionsGetResponses,
-  AgentsExecutionsListData,
-  AgentsExecutionsListErrors,
-  AgentsExecutionsListResponses,
-  AgentsExecutionsRerunData,
-  AgentsExecutionsRerunErrors,
-  AgentsExecutionsRerunResponses,
   AgentsFilesListOrGetData,
   AgentsFilesListOrGetErrors,
   AgentsFilesListOrGetResponses,
   AgentsFilesPutData,
   AgentsFilesPutErrors,
-  AgentsFilesPutResponses,
   AgentsFilesUploadBatchData,
   AgentsFilesUploadBatchErrors,
-  AgentsFilesUploadBatchResponses,
   AgentsGetData,
   AgentsGetErrors,
   AgentsGetResponses,
@@ -63,9 +22,69 @@ import type {
   AgentsRunData,
   AgentsRunErrors,
   AgentsRunResponses,
+  AgentsRunsCancelData,
+  AgentsRunsCancelErrors,
+  AgentsRunsCancelResponses,
+  AgentsRunsExpectedCreateData,
+  AgentsRunsExpectedCreateErrors,
+  AgentsRunsExpectedCreateResponses,
+  AgentsRunsExpectedDeleteData,
+  AgentsRunsExpectedDeleteErrors,
+  AgentsRunsExpectedDeleteResponses,
+  AgentsRunsExpectedDownloadData,
+  AgentsRunsExpectedDownloadErrors,
+  AgentsRunsExpectedDownloadResponses,
+  AgentsRunsExpectedListData,
+  AgentsRunsExpectedListErrors,
+  AgentsRunsExpectedListResponses,
+  AgentsRunsExpectedRenameData,
+  AgentsRunsExpectedRenameErrors,
+  AgentsRunsExpectedRenameResponses,
+  AgentsRunsFeedbackDeleteData,
+  AgentsRunsFeedbackDeleteErrors,
+  AgentsRunsFeedbackDeleteResponses,
+  AgentsRunsFeedbackGetData,
+  AgentsRunsFeedbackGetErrors,
+  AgentsRunsFeedbackGetResponses,
+  AgentsRunsFeedbackUpdateData,
+  AgentsRunsFeedbackUpdateErrors,
+  AgentsRunsFeedbackUpdateResponses,
+  AgentsRunsFilesDownloadData,
+  AgentsRunsFilesDownloadErrors,
+  AgentsRunsFilesDownloadResponses,
+  AgentsRunsGetData,
+  AgentsRunsGetErrors,
+  AgentsRunsGetResponses,
+  AgentsRunsListData,
+  AgentsRunsListErrors,
+  AgentsRunsListResponses,
+  AgentsRunsRerunData,
+  AgentsRunsRerunErrors,
+  AgentsRunsRerunResponses,
   AgentsUpdateData,
   AgentsUpdateErrors,
   AgentsUpdateResponses,
+  AutomationsSyncData,
+  AutomationsSyncErrors,
+  AutomationsSyncResponses,
+  SourceLockfilePreviewData,
+  SourceLockfilePreviewErrors,
+  SourceLockfilePreviewResponses,
+  SourceRawData,
+  SourceRawErrors,
+  SourceRawResponses,
+  SourceReleasesData,
+  SourceReleasesErrors,
+  SourceReleasesResponses,
+  SourceRepositoryData,
+  SourceRepositoryErrors,
+  SourceRepositoryResponses,
+  SourceSecretsDecryptData,
+  SourceSecretsDecryptErrors,
+  SourceSecretsDecryptResponses,
+  SourceSecretsEncryptData,
+  SourceSecretsEncryptErrors,
+  SourceSecretsEncryptResponses,
   WorkflowsExecutionsCancelData,
   WorkflowsExecutionsCancelErrors,
   WorkflowsExecutionsCancelResponses,
@@ -108,27 +127,9 @@ export type Options<
 };
 
 /**
- * List agent executions
+ * List or download agent source files
  *
- * Returns executions for an agent, optionally filtered by status or experiment batch.
- */
-export const agentsExecutionsList = <ThrowOnError extends boolean = false>(
-  options: Options<AgentsExecutionsListData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
-    AgentsExecutionsListResponses,
-    AgentsExecutionsListErrors,
-    ThrowOnError
-  >({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/{agentId}/executions',
-    ...options,
-  });
-
-/**
- * List or download agent files
- *
- * Lists live agent files, or returns one file when `path` is provided.
+ * Lists or reads files from the agent Git package (`agents/{slug}/` on organization source). Runtime artifacts (runs, dataset) are not served here.
  */
 export const agentsFilesListOrGet = <ThrowOnError extends boolean = false>(
   options: Options<AgentsFilesListOrGetData, ThrowOnError>
@@ -144,18 +145,14 @@ export const agentsFilesListOrGet = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * Upload agent files
+ * Upload agent files (deprecated)
  *
- * Uploads multiple files into the live agent namespace.
+ * Agent source is Git-backed. Use Git push or the builder instead.
  */
 export const agentsFilesUploadBatch = <ThrowOnError extends boolean = false>(
   options: Options<AgentsFilesUploadBatchData, ThrowOnError>
 ) =>
-  (options.client ?? client).post<
-    AgentsFilesUploadBatchResponses,
-    AgentsFilesUploadBatchErrors,
-    ThrowOnError
-  >({
+  (options.client ?? client).post<unknown, AgentsFilesUploadBatchErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/agents/{agentId}/files',
     ...options,
@@ -166,14 +163,14 @@ export const agentsFilesUploadBatch = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * Upload one agent file
+ * Upload one agent file (deprecated)
  *
- * Uploads one file into the live agent namespace at the safe relative `path` query parameter.
+ * Agent source is Git-backed. Use Git push or the builder instead.
  */
 export const agentsFilesPut = <ThrowOnError extends boolean = false>(
   options: Options<AgentsFilesPutData, ThrowOnError>
 ) =>
-  (options.client ?? client).put<AgentsFilesPutResponses, AgentsFilesPutErrors, ThrowOnError>({
+  (options.client ?? client).put<unknown, AgentsFilesPutErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/agents/{agentId}/files',
     ...options,
@@ -216,9 +213,9 @@ export const agentsUpdate = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * Execute an agent
+ * Run an agent
  *
- * Enqueues an agent execution. Returns 202 with `{ executionId }` by default. Pass `wait_for_completion=<seconds>` to hold the connection until the execution reaches a terminal state. File inputs are uploaded as multipart/form-data.
+ * Enqueues an agent run. Returns 202 with `{ runId }` by default. Pass `wait_for_completion=<seconds>` to hold the connection until the run reaches a terminal state. File inputs are uploaded as multipart/form-data.
  */
 export const agentsRun = <ThrowOnError extends boolean = false>(
   options: Options<AgentsRunData, ThrowOnError>
@@ -234,237 +231,23 @@ export const agentsRun = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * Cancel agent execution
+ * List agent runs
  *
- * Requests cancellation for one agent execution by id.
+ * Returns runs for an agent, optionally filtered by status or experiment batch.
  */
-export const agentsExecutionsCancel = <ThrowOnError extends boolean = false>(
-  options: Options<AgentsExecutionsCancelData, ThrowOnError>
+export const agentsRunsList = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsRunsListData, ThrowOnError>
 ) =>
-  (options.client ?? client).post<
-    AgentsExecutionsCancelResponses,
-    AgentsExecutionsCancelErrors,
-    ThrowOnError
-  >({
+  (options.client ?? client).get<AgentsRunsListResponses, AgentsRunsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/executions/{executionId}/cancel',
-    ...options,
-  });
-
-/**
- * Delete an expected file
- *
- * Deletes one expected file attached to an agent execution.
- */
-export const agentsExecutionsExpectedDelete = <ThrowOnError extends boolean = false>(
-  options: Options<AgentsExecutionsExpectedDeleteData, ThrowOnError>
-) =>
-  (options.client ?? client).delete<
-    AgentsExecutionsExpectedDeleteResponses,
-    AgentsExecutionsExpectedDeleteErrors,
-    ThrowOnError
-  >({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/executions/{executionId}/expected/{filename}',
-    ...options,
-  });
-
-/**
- * Download an expected file
- *
- * Downloads one expected file attached to an agent execution.
- */
-export const agentsExecutionsExpectedDownload = <ThrowOnError extends boolean = false>(
-  options: Options<AgentsExecutionsExpectedDownloadData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
-    AgentsExecutionsExpectedDownloadResponses,
-    AgentsExecutionsExpectedDownloadErrors,
-    ThrowOnError
-  >({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/executions/{executionId}/expected/{filename}',
-    ...options,
-  });
-
-/**
- * Rename an expected file
- *
- * Renames one expected file attached to an agent execution.
- */
-export const agentsExecutionsExpectedRename = <ThrowOnError extends boolean = false>(
-  options: Options<AgentsExecutionsExpectedRenameData, ThrowOnError>
-) =>
-  (options.client ?? client).patch<
-    AgentsExecutionsExpectedRenameResponses,
-    AgentsExecutionsExpectedRenameErrors,
-    ThrowOnError
-  >({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/executions/{executionId}/expected/{filename}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-
-/**
- * List execution expected artifacts
- *
- * Returns structured expected JSON and expected file names for one execution.
- */
-export const agentsExecutionsExpectedList = <ThrowOnError extends boolean = false>(
-  options: Options<AgentsExecutionsExpectedListData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
-    AgentsExecutionsExpectedListResponses,
-    AgentsExecutionsExpectedListErrors,
-    ThrowOnError
-  >({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/executions/{executionId}/expected',
-    ...options,
-  });
-
-/**
- * Create an expected file
- *
- * Uploads an expected file with multipart/form-data, or copies a generated output file into expected artifacts with JSON.
- */
-export const agentsExecutionsExpectedCreate = <ThrowOnError extends boolean = false>(
-  options: Options<AgentsExecutionsExpectedCreateData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
-    AgentsExecutionsExpectedCreateResponses,
-    AgentsExecutionsExpectedCreateErrors,
-    ThrowOnError
-  >({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/executions/{executionId}/expected',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-
-/**
- * Clear execution feedback
- *
- * Deletes feedback, structured expected JSON, and expected files from one execution.
- */
-export const agentsExecutionsFeedbackDelete = <ThrowOnError extends boolean = false>(
-  options: Options<AgentsExecutionsFeedbackDeleteData, ThrowOnError>
-) =>
-  (options.client ?? client).delete<
-    AgentsExecutionsFeedbackDeleteResponses,
-    AgentsExecutionsFeedbackDeleteErrors,
-    ThrowOnError
-  >({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/executions/{executionId}/feedback',
-    ...options,
-  });
-
-/**
- * Get execution feedback
- *
- * Returns feedback and expected artifacts attached to one agent execution.
- */
-export const agentsExecutionsFeedbackGet = <ThrowOnError extends boolean = false>(
-  options: Options<AgentsExecutionsFeedbackGetData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
-    AgentsExecutionsFeedbackGetResponses,
-    AgentsExecutionsFeedbackGetErrors,
-    ThrowOnError
-  >({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/executions/{executionId}/feedback',
-    ...options,
-  });
-
-/**
- * Update execution feedback
- *
- * Updates the feedback body, rating, status, or structured expected JSON attached to one execution.
- */
-export const agentsExecutionsFeedbackUpdate = <ThrowOnError extends boolean = false>(
-  options: Options<AgentsExecutionsFeedbackUpdateData, ThrowOnError>
-) =>
-  (options.client ?? client).patch<
-    AgentsExecutionsFeedbackUpdateResponses,
-    AgentsExecutionsFeedbackUpdateErrors,
-    ThrowOnError
-  >({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/executions/{executionId}/feedback',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-
-/**
- * Download an execution file
- *
- * Downloads an input file, output file, issues.md, or trace.jsonl attached to an agent execution.
- */
-export const agentsExecutionsFilesDownload = <ThrowOnError extends boolean = false>(
-  options: Options<AgentsExecutionsFilesDownloadData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
-    AgentsExecutionsFilesDownloadResponses,
-    AgentsExecutionsFilesDownloadErrors,
-    ThrowOnError
-  >({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/executions/{executionId}/files/{kind}/{filename}',
-    ...options,
-  });
-
-/**
- * Rerun agent execution
- *
- * Creates a new execution for the same agent using a previous execution's stored input snapshot.
- */
-export const agentsExecutionsRerun = <ThrowOnError extends boolean = false>(
-  options: Options<AgentsExecutionsRerunData, ThrowOnError>
-) =>
-  (options.client ?? client).post<
-    AgentsExecutionsRerunResponses,
-    AgentsExecutionsRerunErrors,
-    ThrowOnError
-  >({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/executions/{executionId}/rerun',
-    ...options,
-  });
-
-/**
- * Get agent execution
- *
- * Returns one agent execution by id.
- */
-export const agentsExecutionsGet = <ThrowOnError extends boolean = false>(
-  options: Options<AgentsExecutionsGetData, ThrowOnError>
-) =>
-  (options.client ?? client).get<
-    AgentsExecutionsGetResponses,
-    AgentsExecutionsGetErrors,
-    ThrowOnError
-  >({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/executions/{executionId}',
+    url: '/api/v1/agents/{agentId}/runs',
     ...options,
   });
 
 /**
  * List agents
  *
- * Returns agents the API key has access to, with pagination and basic execution stats.
+ * Returns agents the caller has access to, with pagination and basic execution stats. Accepts session cookies or API keys.
  */
 export const agentsList = <ThrowOnError extends boolean = false>(
   options?: Options<AgentsListData, ThrowOnError>
@@ -478,7 +261,7 @@ export const agentsList = <ThrowOnError extends boolean = false>(
 /**
  * Create an agent
  *
- * Creates a new agent and initializes its workspace files.
+ * Creates a new agent, registers it in the automation table, and scaffolds its Git source package. Accepts session cookies or API keys.
  */
 export const agentsCreate = <ThrowOnError extends boolean = false>(
   options: Options<AgentsCreateData, ThrowOnError>
@@ -486,6 +269,340 @@ export const agentsCreate = <ThrowOnError extends boolean = false>(
   (options.client ?? client).post<AgentsCreateResponses, AgentsCreateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/agents',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * Cancel agent run
+ *
+ * Requests cancellation for one agent run by id.
+ */
+export const agentsRunsCancel = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsRunsCancelData, ThrowOnError>
+) =>
+  (options.client ?? client).post<AgentsRunsCancelResponses, AgentsRunsCancelErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/runs/{runId}/cancel',
+    ...options,
+  });
+
+/**
+ * Delete an expected file
+ *
+ * Deletes one expected file attached to an agent run.
+ */
+export const agentsRunsExpectedDelete = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsRunsExpectedDeleteData, ThrowOnError>
+) =>
+  (options.client ?? client).delete<
+    AgentsRunsExpectedDeleteResponses,
+    AgentsRunsExpectedDeleteErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/runs/{runId}/expected/{filename}',
+    ...options,
+  });
+
+/**
+ * Download an expected file
+ *
+ * Downloads one expected file attached to an agent run.
+ */
+export const agentsRunsExpectedDownload = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsRunsExpectedDownloadData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    AgentsRunsExpectedDownloadResponses,
+    AgentsRunsExpectedDownloadErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/runs/{runId}/expected/{filename}',
+    ...options,
+  });
+
+/**
+ * Rename an expected file
+ *
+ * Renames one expected file attached to an agent run.
+ */
+export const agentsRunsExpectedRename = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsRunsExpectedRenameData, ThrowOnError>
+) =>
+  (options.client ?? client).patch<
+    AgentsRunsExpectedRenameResponses,
+    AgentsRunsExpectedRenameErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/runs/{runId}/expected/{filename}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * List run expected artifacts
+ *
+ * Returns structured expected JSON and expected file names for one run.
+ */
+export const agentsRunsExpectedList = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsRunsExpectedListData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    AgentsRunsExpectedListResponses,
+    AgentsRunsExpectedListErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/runs/{runId}/expected',
+    ...options,
+  });
+
+/**
+ * Create an expected file
+ *
+ * Uploads an expected file with multipart/form-data, or copies a generated output file into expected artifacts with JSON.
+ */
+export const agentsRunsExpectedCreate = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsRunsExpectedCreateData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    AgentsRunsExpectedCreateResponses,
+    AgentsRunsExpectedCreateErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/runs/{runId}/expected',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * Clear run feedback
+ *
+ * Deletes feedback, structured expected JSON, and expected files from one run.
+ */
+export const agentsRunsFeedbackDelete = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsRunsFeedbackDeleteData, ThrowOnError>
+) =>
+  (options.client ?? client).delete<
+    AgentsRunsFeedbackDeleteResponses,
+    AgentsRunsFeedbackDeleteErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/runs/{runId}/feedback',
+    ...options,
+  });
+
+/**
+ * Get run feedback
+ *
+ * Returns feedback and expected artifacts attached to one agent run.
+ */
+export const agentsRunsFeedbackGet = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsRunsFeedbackGetData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    AgentsRunsFeedbackGetResponses,
+    AgentsRunsFeedbackGetErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/runs/{runId}/feedback',
+    ...options,
+  });
+
+/**
+ * Update run feedback
+ *
+ * Updates the feedback body, rating, status, or structured expected JSON attached to one run.
+ */
+export const agentsRunsFeedbackUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsRunsFeedbackUpdateData, ThrowOnError>
+) =>
+  (options.client ?? client).patch<
+    AgentsRunsFeedbackUpdateResponses,
+    AgentsRunsFeedbackUpdateErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/runs/{runId}/feedback',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * Download a run file
+ *
+ * Downloads an input file, output file, issues.md, trace.jsonl, or eigenpal.lock attached to an agent run.
+ */
+export const agentsRunsFilesDownload = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsRunsFilesDownloadData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    AgentsRunsFilesDownloadResponses,
+    AgentsRunsFilesDownloadErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/runs/{runId}/files/{kind}/{filename}',
+    ...options,
+  });
+
+/**
+ * Rerun agent run
+ *
+ * Creates a new run for the same agent using a previous run's stored input snapshot.
+ */
+export const agentsRunsRerun = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsRunsRerunData, ThrowOnError>
+) =>
+  (options.client ?? client).post<AgentsRunsRerunResponses, AgentsRunsRerunErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/runs/{runId}/rerun',
+    ...options,
+  });
+
+/**
+ * Get agent run
+ *
+ * Returns one agent run by id.
+ */
+export const agentsRunsGet = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsRunsGetData, ThrowOnError>
+) =>
+  (options.client ?? client).get<AgentsRunsGetResponses, AgentsRunsGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/runs/{runId}',
+    ...options,
+  });
+
+/**
+ * Sync an automation from latest source
+ *
+ * Reconciles lightweight automation metadata from the latest released Git source package. This does not enqueue executions.
+ */
+export const automationsSync = <ThrowOnError extends boolean = false>(
+  options: Options<AutomationsSyncData, ThrowOnError>
+) =>
+  (options.client ?? client).post<AutomationsSyncResponses, AutomationsSyncErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{automation}/sync',
+    ...options,
+  });
+
+/**
+ * Preview a source lockfile
+ *
+ * Resolves a package ref and returns the would-be eigenpal.lock without enqueueing or writing runtime artifacts.
+ */
+export const sourceLockfilePreview = <ThrowOnError extends boolean = false>(
+  options: Options<SourceLockfilePreviewData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    SourceLockfilePreviewResponses,
+    SourceLockfilePreviewErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/source/lockfile',
+    ...options,
+  });
+
+/**
+ * Preview a raw Git source file
+ *
+ * Reads a raw file from the organization Git repository for metadata previews.
+ */
+export const sourceRaw = <ThrowOnError extends boolean = false>(
+  options: Options<SourceRawData, ThrowOnError>
+) =>
+  (options.client ?? client).get<SourceRawResponses, SourceRawErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/source/raw',
+    ...options,
+  });
+
+/**
+ * List Git source package releases
+ *
+ * Lists package-scoped Git release tags, or returns one exact version when requested.
+ */
+export const sourceReleases = <ThrowOnError extends boolean = false>(
+  options: Options<SourceReleasesData, ThrowOnError>
+) =>
+  (options.client ?? client).get<SourceReleasesResponses, SourceReleasesErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/source/releases',
+    ...options,
+  });
+
+/**
+ * Get organization Git source repository
+ *
+ * Returns the authenticated organization Git remote used by hidden source CLI commands.
+ */
+export const sourceRepository = <ThrowOnError extends boolean = false>(
+  options?: Options<SourceRepositoryData, ThrowOnError>
+) =>
+  (options?.client ?? client).get<SourceRepositoryResponses, SourceRepositoryErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/source/repository',
+    ...options,
+  });
+
+/**
+ * Decrypt a Git-backed source secret
+ *
+ * Decrypts one or more encrypted source secret values for the authenticated tenant. Single-secret requests require an execution id and are checked against that execution lockfile graph; batch `secrets[]` requests are tenant-scoped for local CLI use.
+ */
+export const sourceSecretsDecrypt = <ThrowOnError extends boolean = false>(
+  options: Options<SourceSecretsDecryptData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    SourceSecretsDecryptResponses,
+    SourceSecretsDecryptErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/source/secrets/decrypt',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * Encrypt a Git-backed source secret
+ *
+ * Encrypts one or more plaintext secret values for the authenticated tenant using the organization active decrypt key. Organization decrypt keys never leave the server; callers send plaintext over TLS with normal app authentication.
+ */
+export const sourceSecretsEncrypt = <ThrowOnError extends boolean = false>(
+  options: Options<SourceSecretsEncryptData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    SourceSecretsEncryptResponses,
+    SourceSecretsEncryptErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/source/secrets/encrypt',
     ...options,
     headers: {
       'Content-Type': 'application/json',

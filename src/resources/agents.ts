@@ -3,43 +3,42 @@ import { EigenpalError } from '../errors';
 import type { Client } from '../generated/client';
 import {
   agentsCreate,
-  agentsExecutionsCancel,
-  agentsExecutionsExpectedCreate,
-  agentsExecutionsExpectedDelete,
-  agentsExecutionsExpectedDownload,
-  agentsExecutionsExpectedList,
-  agentsExecutionsExpectedRename,
-  agentsExecutionsFeedbackDelete,
-  agentsExecutionsFeedbackGet,
-  agentsExecutionsFeedbackUpdate,
-  agentsExecutionsFilesDownload,
-  agentsExecutionsGet,
-  agentsExecutionsList,
-  agentsExecutionsRerun,
   agentsFilesListOrGet,
   agentsFilesPut,
   agentsFilesUploadBatch,
   agentsGet,
   agentsList,
   agentsRun,
+  agentsRunsCancel,
+  agentsRunsExpectedCreate,
+  agentsRunsExpectedDelete,
+  agentsRunsExpectedDownload,
+  agentsRunsExpectedList,
+  agentsRunsExpectedRename,
+  agentsRunsFeedbackDelete,
+  agentsRunsFeedbackGet,
+  agentsRunsFeedbackUpdate,
+  agentsRunsFilesDownload,
+  agentsRunsGet,
+  agentsRunsList,
+  agentsRunsRerun,
   agentsUpdate,
 } from '../generated/sdk.gen';
 import type {
   AgentExecutionExpectedArtifacts,
   AgentExecutionFeedbackDetail,
-  AgentExecutionResponse,
-  AgentFileBody,
-  AgentFilesBody,
+  AgentRunResponse,
+  CancelAgentExecutionResponse,
   CopyAgentExecutionOutputToExpectedBody,
   CreateAgentBody,
   CreateAgentResponse,
   GetAgentResponse,
-  ListAgentExecutionsResponse,
+  ListAgentRunsResponse,
   ListAgentsResponse,
   PatchAgentBody,
   PatchAgentResponse,
   RenameExpectedFileBody,
-  RerunAgentExecutionResponse,
+  RerunAgentRunResponse,
   RunAgentResponse,
   UpdateAgentExecutionFeedbackBody,
 } from '../generated/types.gen';
@@ -57,14 +56,15 @@ export interface ListAgentsOptions {
 
 export interface RunAgentOptions {
   waitForCompletion?: number;
+  sourceRef?: string;
   signal?: AbortSignal;
 }
 
-export interface ListAgentExecutionsOptions {
+export interface ListAgentRunsOptions {
   status?: string;
   batchId?: string;
-  exampleName?: string;
-  exampleNameContains?: string;
+  exampleId?: string;
+  exampleIdContains?: string;
   createdAfter?: string;
   createdBefore?: string;
   completedAfter?: string;
@@ -87,7 +87,7 @@ export interface ListAgentExecutionsOptions {
   promotedExampleName?: string;
   sinceLastResolved?: boolean;
   include?: string;
-  sort?: 'createdAt' | 'completedAt' | 'status' | 'exampleName';
+  sort?: 'createdAt' | 'completedAt' | 'status' | 'exampleId';
   order?: 'asc' | 'desc';
   scanLimit?: number;
   limit?: number;
@@ -97,31 +97,28 @@ export interface ListAgentExecutionsOptions {
 
 export type AgentExecutionFileKind = 'input' | 'output' | 'issues' | 'trace';
 
-export class AgentExecutionsResource {
+export class AgentRunsResource {
   constructor(
     private readonly client: Client,
     private readonly dispatch: Dispatch
   ) {}
 
-  async list(
-    agentId: string,
-    options: ListAgentExecutionsOptions = {}
-  ): Promise<ListAgentExecutionsResponse> {
+  async list(agentId: string, options: ListAgentRunsOptions = {}): Promise<ListAgentRunsResponse> {
     const { signal, ...query } = options;
     return this.dispatch(() =>
-      agentsExecutionsList({ client: this.client, path: { agentId }, query, signal })
+      agentsRunsList({ client: this.client, path: { agentId }, query, signal })
     );
   }
 
   async get(
-    executionId: string,
+    runId: string,
     options: { include?: string; signal?: AbortSignal } = {}
-  ): Promise<AgentExecutionResponse> {
+  ): Promise<AgentRunResponse> {
     const { signal, include } = options;
     return this.dispatch(() =>
-      agentsExecutionsGet({
+      agentsRunsGet({
         client: this.client,
-        path: { executionId },
+        path: { runId },
         query: include ? { include } : {},
         signal,
       })
@@ -129,53 +126,53 @@ export class AgentExecutionsResource {
   }
 
   async cancel(
-    executionId: string,
+    runId: string,
     options: { signal?: AbortSignal } = {}
-  ): Promise<AgentExecutionResponse> {
+  ): Promise<CancelAgentExecutionResponse> {
     return this.dispatch(() =>
-      agentsExecutionsCancel({
+      agentsRunsCancel({
         client: this.client,
-        path: { executionId },
+        path: { runId },
         signal: options.signal,
       })
     );
   }
 
   async rerun(
-    executionId: string,
+    runId: string,
     options: { signal?: AbortSignal } = {}
-  ): Promise<RerunAgentExecutionResponse> {
+  ): Promise<RerunAgentRunResponse> {
     return this.dispatch(() =>
-      agentsExecutionsRerun({
+      agentsRunsRerun({
         client: this.client,
-        path: { executionId },
+        path: { runId },
         signal: options.signal,
       })
     );
   }
 
   async getFeedback(
-    executionId: string,
+    runId: string,
     options: { signal?: AbortSignal } = {}
   ): Promise<AgentExecutionFeedbackDetail> {
     return this.dispatch(() =>
-      agentsExecutionsFeedbackGet({
+      agentsRunsFeedbackGet({
         client: this.client,
-        path: { executionId },
+        path: { runId },
         signal: options.signal,
       })
     );
   }
 
   async updateFeedback(
-    executionId: string,
+    runId: string,
     body: UpdateAgentExecutionFeedbackBody,
     options: { signal?: AbortSignal } = {}
   ): Promise<AgentExecutionFeedbackDetail> {
     return this.dispatch(() =>
-      agentsExecutionsFeedbackUpdate({
+      agentsRunsFeedbackUpdate({
         client: this.client,
-        path: { executionId },
+        path: { runId },
         body,
         signal: options.signal,
       })
@@ -183,40 +180,40 @@ export class AgentExecutionsResource {
   }
 
   async clearFeedback(
-    executionId: string,
+    runId: string,
     options: { signal?: AbortSignal } = {}
   ): Promise<AgentExecutionFeedbackDetail> {
     return this.dispatch(() =>
-      agentsExecutionsFeedbackDelete({
+      agentsRunsFeedbackDelete({
         client: this.client,
-        path: { executionId },
+        path: { runId },
         signal: options.signal,
       })
     );
   }
 
   async listExpected(
-    executionId: string,
+    runId: string,
     options: { signal?: AbortSignal } = {}
   ): Promise<AgentExecutionExpectedArtifacts> {
     return this.dispatch(() =>
-      agentsExecutionsExpectedList({
+      agentsRunsExpectedList({
         client: this.client,
-        path: { executionId },
+        path: { runId },
         signal: options.signal,
       })
     );
   }
 
   async copyOutputToExpected(
-    executionId: string,
+    runId: string,
     body: CopyAgentExecutionOutputToExpectedBody,
     options: { signal?: AbortSignal } = {}
   ): Promise<{ name: string }> {
     return this.dispatch(() =>
-      agentsExecutionsExpectedCreate({
+      agentsRunsExpectedCreate({
         client: this.client,
-        path: { executionId },
+        path: { runId },
         body,
         signal: options.signal,
       })
@@ -224,15 +221,15 @@ export class AgentExecutionsResource {
   }
 
   async renameExpected(
-    executionId: string,
+    runId: string,
     filename: string,
     body: RenameExpectedFileBody,
     options: { signal?: AbortSignal } = {}
   ): Promise<{ name: string }> {
     return this.dispatch(() =>
-      agentsExecutionsExpectedRename({
+      agentsRunsExpectedRename({
         client: this.client,
-        path: { executionId, filename },
+        path: { runId, filename },
         body,
         signal: options.signal,
       })
@@ -240,21 +237,21 @@ export class AgentExecutionsResource {
   }
 
   async deleteExpected(
-    executionId: string,
+    runId: string,
     filename: string,
     options: { signal?: AbortSignal } = {}
   ): Promise<void> {
     await this.dispatch(() =>
-      agentsExecutionsExpectedDelete({
+      agentsRunsExpectedDelete({
         client: this.client,
-        path: { executionId, filename },
+        path: { runId, filename },
         signal: options.signal,
       })
     );
   }
 
   async uploadExpected(
-    executionId: string,
+    runId: string,
     file: Blob,
     options: { name?: string; signal?: AbortSignal } = {}
   ): Promise<{ name: string }> {
@@ -264,8 +261,8 @@ export class AgentExecutionsResource {
     return this.dispatch(
       () =>
         this.client.post({
-          url: '/api/v1/agents/executions/{executionId}/expected',
-          path: { executionId },
+          url: '/api/v1/agents/runs/{runId}/expected',
+          path: { runId },
           body: formData,
           bodySerializer: null,
           headers: { 'Content-Type': null },
@@ -275,15 +272,15 @@ export class AgentExecutionsResource {
   }
 
   async downloadExpected(
-    executionId: string,
+    runId: string,
     filename: string,
     options: { signal?: AbortSignal } = {}
   ): Promise<Blob> {
     return this.downloadBlob(
       () =>
-        agentsExecutionsExpectedDownload({
+        agentsRunsExpectedDownload({
           client: this.client,
-          path: { executionId, filename },
+          path: { runId, filename },
           parseAs: 'blob',
           signal: options.signal,
         }) as Promise<OperationResult<Blob>>
@@ -291,16 +288,16 @@ export class AgentExecutionsResource {
   }
 
   async downloadFile(
-    executionId: string,
+    runId: string,
     kind: AgentExecutionFileKind,
     filename: string,
     options: { signal?: AbortSignal } = {}
   ): Promise<Blob> {
     return this.downloadBlob(
       () =>
-        agentsExecutionsFilesDownload({
+        agentsRunsFilesDownload({
           client: this.client,
-          path: { executionId, kind, filename },
+          path: { runId, kind, filename },
           parseAs: 'blob',
           signal: options.signal,
         }) as Promise<OperationResult<Blob>>
@@ -319,13 +316,13 @@ export class AgentExecutionsResource {
 }
 
 export class AgentsResource {
-  public readonly executions: AgentExecutionsResource;
+  public readonly runs: AgentRunsResource;
 
   constructor(
     private readonly client: Client,
     private readonly dispatch: Dispatch
   ) {
-    this.executions = new AgentExecutionsResource(client, dispatch);
+    this.runs = new AgentRunsResource(client, dispatch);
   }
 
   async list(options: ListAgentsOptions = {}): Promise<ListAgentsResponse> {
@@ -352,9 +349,9 @@ export class AgentsResource {
   async putFile(
     agentId: string,
     path: string,
-    body: AgentFileBody,
+    body: Record<string, unknown>,
     options: { signal?: AbortSignal } = {}
-  ): Promise<{ ok: boolean; path: string }> {
+  ): Promise<unknown> {
     return this.dispatch(() =>
       agentsFilesPut({
         client: this.client,
@@ -368,9 +365,9 @@ export class AgentsResource {
 
   async uploadFiles(
     agentId: string,
-    body: AgentFilesBody,
+    body: Record<string, unknown>,
     options: { signal?: AbortSignal } = {}
-  ): Promise<{ ok: boolean; files: string[] }> {
+  ): Promise<unknown> {
     return this.dispatch(() =>
       agentsFilesUploadBatch({
         client: this.client,
@@ -403,10 +400,12 @@ export class AgentsResource {
     input?: WorkflowInput,
     options: RunAgentOptions = {}
   ): Promise<RunAgentResponse> {
-    const query =
-      options.waitForCompletion !== undefined
+    const query = {
+      ...(options.waitForCompletion !== undefined
         ? { wait_for_completion: options.waitForCompletion }
-        : {};
+        : {}),
+      ...(options.sourceRef !== undefined ? { sourceRef: options.sourceRef } : {}),
+    };
 
     if (hasFileInput(input)) {
       const { formData } = await buildAgentMultipart(input);
@@ -429,7 +428,10 @@ export class AgentsResource {
         client: this.client,
         path: { agentId },
         query,
-        body: { ...(input !== undefined ? { input } : {}) },
+        body: {
+          ...(input !== undefined ? { input } : {}),
+          ...(options.sourceRef !== undefined ? { sourceRef: options.sourceRef } : {}),
+        },
         signal: options.signal,
       })
     );

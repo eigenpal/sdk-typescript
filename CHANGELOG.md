@@ -1,5 +1,12 @@
 # @eigenpal/sdk
 
+## 0.6.0
+
+### Patch Changes
+
+- 2aeeaf2: Complete the agent Git cutover with pluralized agent CLI commands, source-ref run support, lockfile metadata, and regenerated SDK/docs surfaces.
+- 2aeeaf2: Expose Git-backed agent source refs and public source automation APIs consistently across CLI docs and SDK facades.
+
 ## 0.5.9
 
 ### Major Changes

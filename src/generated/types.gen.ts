@@ -4,21 +4,6 @@ export type ClientOptions = {
   baseUrl: 'https://app.eigenpal.com' | (string & {});
 };
 
-export type AgentFileBody = {
-  content?: string;
-  contentBase64?: string;
-  contentType?: string;
-};
-
-export type AgentFilesBody = {
-  files: Array<{
-    path: string;
-    content?: string;
-    contentBase64?: string;
-    contentType?: string;
-  }>;
-};
-
 export type PatchAgentBody = {
   name?: string;
   description?: string;
@@ -34,7 +19,20 @@ export type RunAgentBody = {
   _metadata?: {
     [key: string]: unknown;
   };
+  /**
+   * Git source ref to resolve for this run. Defaults to latest. Supports latest, main, exact versions/tags such as 1.2.3, semver ranges such as 1.2.x or 1.x, and exact commit SHAs.
+   */
+  sourceRef?: string;
   [key: string]: unknown;
+};
+
+export type CreateAgentBody = {
+  name: string;
+  slug: string;
+  description?: string;
+  config?: {
+    [key: string]: unknown;
+  };
 };
 
 export type RenameExpectedFileBody = {
@@ -56,13 +54,42 @@ export type UpdateAgentExecutionFeedbackBody = {
   expected?: unknown | null;
 };
 
-export type CreateAgentBody = {
-  name: string;
-  slug: string;
-  description?: string;
-  config?: {
-    [key: string]: unknown;
+export type SourceSecretsDecryptBody = {
+  organizationId?: string;
+  executionId?: string;
+  sourcePath?: string;
+  sourceCommit?: string;
+  secretName?: string;
+  encrypted?: {
+    algorithm: 'aes-256-gcm';
+    keyId: string;
+    nonce: string;
+    ciphertext: string;
+    tag: string;
   };
+  secrets?: Array<{
+    sourcePath: string;
+    secretName: string;
+    encrypted: {
+      algorithm: 'aes-256-gcm';
+      keyId: string;
+      nonce: string;
+      ciphertext: string;
+      tag: string;
+    };
+  }>;
+};
+
+export type SourceSecretsEncryptBody = {
+  organizationId?: string;
+  sourcePath?: string;
+  secretName?: string;
+  plaintext?: string;
+  secrets?: Array<{
+    sourcePath: string;
+    secretName: string;
+    plaintext: string;
+  }>;
 };
 
 export type RunWorkflowBody = {
@@ -87,59 +114,6 @@ export type RunWorkflowBody = {
    */
   trigger?: 'api' | 'cli';
 };
-
-export type ListAgentExecutionsResponse = {
-  executions: Array<AgentExecutionSummary>;
-  total: number;
-  limit: number;
-  offset: number;
-  scanLimited?: boolean;
-  noResolvedAnchor?: boolean;
-};
-
-export type AgentExecutionSummary = {
-  id: string;
-  status: ExecutionStatus;
-  model?: string | null;
-  output?: unknown | null;
-  schemaValid?: boolean | null;
-  error?: string | null;
-  exampleId?: string | null;
-  batchId?: string | null;
-  createdAt: string;
-  startedAt?: string | null;
-  completedAt?: string | null;
-  feedback?: {
-    rating?: 'pass' | 'fail' | 'partial' | null;
-    status?: 'open' | 'resolved' | 'ignored' | null;
-    createdAt?: string | null;
-    createdBy?: string | null;
-    createdByEmail?: string | null;
-    updatedAt?: string | null;
-    resolvedAt?: string | null;
-    resolvedBy?: string | null;
-    resolvedByEmail?: string | null;
-    resolvedBySessionId?: string | null;
-    promotedExampleName?: string | null;
-    body: string;
-  } | null;
-  expected?: unknown | null;
-  expectedFiles?: Array<{
-    name: string;
-  }>;
-  [key: string]: unknown;
-};
-
-export type ExecutionStatus =
-  | 'created'
-  | 'pending'
-  | 'running'
-  | 'waiting'
-  | 'finalizing'
-  | 'completed'
-  | 'failed'
-  | 'cancelled'
-  | 'rejected';
 
 export type ApiErrorEnvelope = {
   issues: Array<ApiErrorIssue>;
@@ -209,7 +183,7 @@ export type PatchAgentResponse = {
 };
 
 export type RunAgentResponse = {
-  executionId: string;
+  runId: string;
   status?: ExecutionStatus | 'timeout';
   output?: unknown;
   schemaValid?: boolean | null;
@@ -219,8 +193,78 @@ export type RunAgentResponse = {
   };
 };
 
+export type ExecutionStatus =
+  | 'created'
+  | 'pending'
+  | 'running'
+  | 'waiting'
+  | 'finalizing'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'rejected';
+
+export type ListAgentRunsResponse = {
+  runs: Array<AgentExecutionSummary>;
+  total: number;
+  limit: number;
+  offset: number;
+  scanLimited?: boolean;
+  noResolvedAnchor?: boolean;
+};
+
+export type AgentExecutionSummary = {
+  id: string;
+  status: ExecutionStatus;
+  model?: string | null;
+  output?: unknown | null;
+  schemaValid?: boolean | null;
+  error?: string | null;
+  requestedSourceRef?: string | null;
+  resolvedGitRef?: string | null;
+  resolvedGitTag?: string | null;
+  resolvedCommitSha?: string | null;
+  exampleId?: string | null;
+  batchId?: string | null;
+  createdAt: string;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  feedback?: {
+    rating?: 'pass' | 'fail' | 'partial' | null;
+    status?: 'open' | 'resolved' | 'ignored' | null;
+    createdAt?: string | null;
+    createdBy?: string | null;
+    createdByEmail?: string | null;
+    updatedAt?: string | null;
+    resolvedAt?: string | null;
+    resolvedBy?: string | null;
+    resolvedByEmail?: string | null;
+    resolvedBySessionId?: string | null;
+    promotedExampleName?: string | null;
+    body: string;
+  } | null;
+  expected?: unknown | null;
+  expectedFiles?: Array<{
+    name: string;
+  }>;
+  [key: string]: unknown;
+};
+
+export type ListAgentsResponse = {
+  data: Array<AgentSummary>;
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type CreateAgentResponse = {
+  agent: AgentSummary;
+  sourceRecovered?: boolean;
+  recoveryKind?: 'existing' | 'legacy_hydrate' | 'minimal_scaffold';
+};
+
 export type CancelAgentExecutionResponse = {
-  execution: AgentExecutionSummary;
+  run: AgentExecutionSummary;
 };
 
 export type RenameExpectedFileResponse = {
@@ -257,25 +301,84 @@ export type AgentExecutionFeedback = {
   body: string;
 };
 
-export type RerunAgentExecutionResponse = {
-  executionId: string;
-  sourceExecutionId: string;
+export type RerunAgentRunResponse = {
+  runId: string;
+  sourceRunId: string;
   status: ExecutionStatus;
 };
 
-export type AgentExecutionResponse = {
-  execution: AgentExecutionSummary;
+export type AgentRunResponse = {
+  run: AgentExecutionSummary;
 };
 
-export type ListAgentsResponse = {
-  data: Array<AgentSummary>;
-  total: number;
-  limit: number;
-  offset: number;
+export type AutomationSyncResponse = {
+  automation: {
+    id: string;
+    type: 'agent' | 'workflow';
+    slug: string;
+    status: 'active' | 'archived';
+    updatedAt: string;
+  };
+  release: {
+    version: string;
+    tag: string;
+    commit: string;
+  };
+  warnings: Array<string>;
 };
 
-export type CreateAgentResponse = {
-  agent: AgentSummary;
+export type SourceLockfileResponse = {
+  lockfileVersion: 1;
+  eigenpalVersion: string;
+  inputHash: string;
+  root: Schema0;
+};
+
+export type RawSourceResponse = {
+  ref: string;
+  path: string;
+  contentType: string;
+  content: string;
+};
+
+export type SourceReleasesResponse = {
+  packagePath: string;
+  releases: Array<{
+    version: string;
+    tag: string;
+    commit: string;
+  }>;
+};
+
+export type SourceRepositoryResponse = {
+  gitRepositoryPath: string;
+  remoteUrl: string;
+};
+
+export type SourceSecretsDecryptResponse = {
+  plaintext?: string;
+  secrets?: {
+    [key: string]: string;
+  };
+};
+
+export type SourceSecretsEncryptResponse = {
+  encrypted?: {
+    algorithm: 'aes-256-gcm';
+    keyId: string;
+    nonce: string;
+    ciphertext: string;
+    tag: string;
+  };
+  secrets?: {
+    [key: string]: {
+      algorithm: 'aes-256-gcm';
+      keyId: string;
+      nonce: string;
+      ciphertext: string;
+      tag: string;
+    };
+  };
 };
 
 export type ListWorkflowExecutionsResponse = {
@@ -446,116 +549,14 @@ export type WorkflowSummary = {
   updatedAt?: string;
 };
 
-export type AgentsExecutionsListData = {
-  body?: never;
-  path: {
-    /**
-     * Agent id or slug
-     */
-    agentId: string;
-  };
-  query?: {
-    /**
-     * Execution status filter
-     */
-    status?: string;
-    /**
-     * Experiment batch id filter
-     */
-    batchId?: string;
-    /**
-     * Exact dataset example name filter
-     */
-    exampleName?: string;
-    /**
-     * Substring match on example name
-     */
-    exampleNameContains?: string;
-    /**
-     * Only executions created at/after this ISO timestamp
-     */
-    createdAfter?: string;
-    /**
-     * Only executions created at/before this ISO timestamp
-     */
-    createdBefore?: string;
-    /**
-     * Only executions completed at/after this ISO timestamp
-     */
-    completedAfter?: string;
-    /**
-     * Only executions completed at/before this ISO timestamp
-     */
-    completedBefore?: string;
-    feedbackStatus?: 'open' | 'resolved' | 'ignored';
-    feedbackRating?: 'pass' | 'fail' | 'partial' | 'none';
-    hasFeedback?: boolean;
-    noFeedback?: boolean;
-    hasExpected?: boolean;
-    hasExpectedJson?: boolean;
-    hasExpectedFiles?: boolean;
-    feedbackBodyContains?: string;
-    feedbackCreatedAfter?: string;
-    feedbackCreatedBefore?: string;
-    feedbackUpdatedAfter?: string;
-    feedbackUpdatedBefore?: string;
-    feedbackResolvedAfter?: string;
-    feedbackResolvedBefore?: string;
-    promotedToExample?: boolean;
-    promotedExampleName?: string;
-    sinceLastResolved?: boolean;
-    /**
-     * Comma-separated extra parts: feedback, expected, files
-     */
-    include?: string;
-    sort?: 'createdAt' | 'completedAt' | 'status' | 'exampleName';
-    order?: 'asc' | 'desc';
-    scanLimit?: number;
-    limit?: number;
-    offset?: number;
-  };
-  url: '/api/v1/agents/{agentId}/executions';
+export type Schema0 = {
+  packagePath: string;
+  requestedRef: string;
+  resolvedRef: string;
+  resolvedTag?: string;
+  commit: string;
+  dependencies: Array<Schema0>;
 };
-
-export type AgentsExecutionsListErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type AgentsExecutionsListError =
-  AgentsExecutionsListErrors[keyof AgentsExecutionsListErrors];
-
-export type AgentsExecutionsListResponses = {
-  /**
-   * List of agent executions
-   */
-  200: ListAgentExecutionsResponse;
-};
-
-export type AgentsExecutionsListResponse =
-  AgentsExecutionsListResponses[keyof AgentsExecutionsListResponses];
 
 export type AgentsFilesListOrGetData = {
   body?: never;
@@ -568,6 +569,10 @@ export type AgentsFilesListOrGetData = {
   query?: {
     path?: string;
     prefix?: string;
+    /**
+     * Git ref (default main)
+     */
+    ref?: string;
   };
   url: '/api/v1/agents/{agentId}/files';
 };
@@ -604,13 +609,15 @@ export type AgentsFilesListOrGetError =
 
 export type AgentsFilesListOrGetResponses = {
   /**
-   * Agent files or one file payload
+   * Agent source files or one file payload
    */
   200: unknown;
 };
 
 export type AgentsFilesUploadBatchData = {
-  body: AgentFilesBody;
+  body: {
+    [key: string]: unknown;
+  };
   path: {
     /**
      * Agent id or slug
@@ -639,6 +646,12 @@ export type AgentsFilesUploadBatchErrors = {
    */
   404: ApiErrorEnvelope;
   /**
+   * Git-backed source — S3 writes disabled
+   */
+  409: {
+    error: string;
+  };
+  /**
    * Rate limit exceeded
    */
   429: ApiErrorEnvelope;
@@ -651,21 +664,10 @@ export type AgentsFilesUploadBatchErrors = {
 export type AgentsFilesUploadBatchError =
   AgentsFilesUploadBatchErrors[keyof AgentsFilesUploadBatchErrors];
 
-export type AgentsFilesUploadBatchResponses = {
-  /**
-   * Uploaded files
-   */
-  200: {
-    ok: boolean;
-    files: Array<string>;
-  };
-};
-
-export type AgentsFilesUploadBatchResponse =
-  AgentsFilesUploadBatchResponses[keyof AgentsFilesUploadBatchResponses];
-
 export type AgentsFilesPutData = {
-  body: AgentFileBody;
+  body: {
+    [key: string]: unknown;
+  };
   path: {
     /**
      * Agent id or slug
@@ -675,6 +677,10 @@ export type AgentsFilesPutData = {
   query?: {
     path?: string;
     prefix?: string;
+    /**
+     * Git ref (default main)
+     */
+    ref?: string;
   };
   url: '/api/v1/agents/{agentId}/files';
 };
@@ -697,6 +703,12 @@ export type AgentsFilesPutErrors = {
    */
   404: ApiErrorEnvelope;
   /**
+   * Git-backed source — S3 writes disabled
+   */
+  409: {
+    error: string;
+  };
+  /**
    * Rate limit exceeded
    */
   429: ApiErrorEnvelope;
@@ -707,18 +719,6 @@ export type AgentsFilesPutErrors = {
 };
 
 export type AgentsFilesPutError = AgentsFilesPutErrors[keyof AgentsFilesPutErrors];
-
-export type AgentsFilesPutResponses = {
-  /**
-   * Uploaded file
-   */
-  200: {
-    ok: boolean;
-    path: string;
-  };
-};
-
-export type AgentsFilesPutResponse = AgentsFilesPutResponses[keyof AgentsFilesPutResponses];
 
 export type AgentsGetData = {
   body?: never;
@@ -838,6 +838,10 @@ export type AgentsRunData = {
      * Seconds to hold the connection waiting for completion (max 600). Omit for async.
      */
     wait_for_completion?: number;
+    /**
+     * Git source ref to resolve for this run. Defaults to latest. Supports latest, main, exact versions/tags such as 1.2.3, semver ranges such as 1.2.x or 1.x, and exact commit SHAs.
+     */
+    sourceRef?: string;
   };
   url: '/api/v1/agents/{agentId}/run';
 };
@@ -873,6 +877,10 @@ export type AgentsRunError = AgentsRunErrors[keyof AgentsRunErrors];
 
 export type AgentsRunResponses = {
   /**
+   * Execution completed while waiting
+   */
+  200: RunAgentResponse;
+  /**
    * Execution accepted
    */
   202: RunAgentResponse;
@@ -880,603 +888,82 @@ export type AgentsRunResponses = {
 
 export type AgentsRunResponse = AgentsRunResponses[keyof AgentsRunResponses];
 
-export type AgentsExecutionsCancelData = {
+export type AgentsRunsListData = {
   body?: never;
   path: {
     /**
-     * Execution id
+     * Agent id or slug
      */
-    executionId: string;
-  };
-  query?: never;
-  url: '/api/v1/agents/executions/{executionId}/cancel';
-};
-
-export type AgentsExecutionsCancelErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type AgentsExecutionsCancelError =
-  AgentsExecutionsCancelErrors[keyof AgentsExecutionsCancelErrors];
-
-export type AgentsExecutionsCancelResponses = {
-  /**
-   * Cancelled agent execution
-   */
-  200: CancelAgentExecutionResponse;
-};
-
-export type AgentsExecutionsCancelResponse =
-  AgentsExecutionsCancelResponses[keyof AgentsExecutionsCancelResponses];
-
-export type AgentsExecutionsExpectedDeleteData = {
-  body?: never;
-  path: {
-    /**
-     * Execution id
-     */
-    executionId: string;
-    /**
-     * Expected artifact path
-     */
-    filename: string;
-  };
-  query?: never;
-  url: '/api/v1/agents/executions/{executionId}/expected/{filename}';
-};
-
-export type AgentsExecutionsExpectedDeleteErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type AgentsExecutionsExpectedDeleteError =
-  AgentsExecutionsExpectedDeleteErrors[keyof AgentsExecutionsExpectedDeleteErrors];
-
-export type AgentsExecutionsExpectedDeleteResponses = {
-  /**
-   * Expected file deleted
-   */
-  204: void;
-};
-
-export type AgentsExecutionsExpectedDeleteResponse =
-  AgentsExecutionsExpectedDeleteResponses[keyof AgentsExecutionsExpectedDeleteResponses];
-
-export type AgentsExecutionsExpectedDownloadData = {
-  body?: never;
-  path: {
-    /**
-     * Execution id
-     */
-    executionId: string;
-    /**
-     * Expected artifact path
-     */
-    filename: string;
-  };
-  query?: never;
-  url: '/api/v1/agents/executions/{executionId}/expected/{filename}';
-};
-
-export type AgentsExecutionsExpectedDownloadErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type AgentsExecutionsExpectedDownloadError =
-  AgentsExecutionsExpectedDownloadErrors[keyof AgentsExecutionsExpectedDownloadErrors];
-
-export type AgentsExecutionsExpectedDownloadResponses = {
-  /**
-   * Expected file bytes
-   */
-  200: unknown;
-};
-
-export type AgentsExecutionsExpectedRenameData = {
-  body: RenameExpectedFileBody;
-  path: {
-    /**
-     * Execution id
-     */
-    executionId: string;
-    /**
-     * Expected artifact path
-     */
-    filename: string;
-  };
-  query?: never;
-  url: '/api/v1/agents/executions/{executionId}/expected/{filename}';
-};
-
-export type AgentsExecutionsExpectedRenameErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type AgentsExecutionsExpectedRenameError =
-  AgentsExecutionsExpectedRenameErrors[keyof AgentsExecutionsExpectedRenameErrors];
-
-export type AgentsExecutionsExpectedRenameResponses = {
-  /**
-   * Renamed expected file
-   */
-  200: RenameExpectedFileResponse;
-};
-
-export type AgentsExecutionsExpectedRenameResponse =
-  AgentsExecutionsExpectedRenameResponses[keyof AgentsExecutionsExpectedRenameResponses];
-
-export type AgentsExecutionsExpectedListData = {
-  body?: never;
-  path: {
-    /**
-     * Execution id
-     */
-    executionId: string;
-  };
-  query?: never;
-  url: '/api/v1/agents/executions/{executionId}/expected';
-};
-
-export type AgentsExecutionsExpectedListErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type AgentsExecutionsExpectedListError =
-  AgentsExecutionsExpectedListErrors[keyof AgentsExecutionsExpectedListErrors];
-
-export type AgentsExecutionsExpectedListResponses = {
-  /**
-   * Expected artifacts
-   */
-  200: AgentExecutionExpectedArtifacts;
-};
-
-export type AgentsExecutionsExpectedListResponse =
-  AgentsExecutionsExpectedListResponses[keyof AgentsExecutionsExpectedListResponses];
-
-export type AgentsExecutionsExpectedCreateData = {
-  body: CopyAgentExecutionOutputToExpectedBody;
-  path: {
-    /**
-     * Execution id
-     */
-    executionId: string;
-  };
-  query?: never;
-  url: '/api/v1/agents/executions/{executionId}/expected';
-};
-
-export type AgentsExecutionsExpectedCreateErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type AgentsExecutionsExpectedCreateError =
-  AgentsExecutionsExpectedCreateErrors[keyof AgentsExecutionsExpectedCreateErrors];
-
-export type AgentsExecutionsExpectedCreateResponses = {
-  /**
-   * Expected file created
-   */
-  201: {
-    name: string;
-  };
-};
-
-export type AgentsExecutionsExpectedCreateResponse =
-  AgentsExecutionsExpectedCreateResponses[keyof AgentsExecutionsExpectedCreateResponses];
-
-export type AgentsExecutionsFeedbackDeleteData = {
-  body?: never;
-  path: {
-    /**
-     * Execution id
-     */
-    executionId: string;
-  };
-  query?: never;
-  url: '/api/v1/agents/executions/{executionId}/feedback';
-};
-
-export type AgentsExecutionsFeedbackDeleteErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type AgentsExecutionsFeedbackDeleteError =
-  AgentsExecutionsFeedbackDeleteErrors[keyof AgentsExecutionsFeedbackDeleteErrors];
-
-export type AgentsExecutionsFeedbackDeleteResponses = {
-  /**
-   * Cleared execution feedback
-   */
-  200: AgentExecutionFeedbackDetail;
-};
-
-export type AgentsExecutionsFeedbackDeleteResponse =
-  AgentsExecutionsFeedbackDeleteResponses[keyof AgentsExecutionsFeedbackDeleteResponses];
-
-export type AgentsExecutionsFeedbackGetData = {
-  body?: never;
-  path: {
-    /**
-     * Execution id
-     */
-    executionId: string;
-  };
-  query?: never;
-  url: '/api/v1/agents/executions/{executionId}/feedback';
-};
-
-export type AgentsExecutionsFeedbackGetErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type AgentsExecutionsFeedbackGetError =
-  AgentsExecutionsFeedbackGetErrors[keyof AgentsExecutionsFeedbackGetErrors];
-
-export type AgentsExecutionsFeedbackGetResponses = {
-  /**
-   * Execution feedback
-   */
-  200: AgentExecutionFeedbackDetail;
-};
-
-export type AgentsExecutionsFeedbackGetResponse =
-  AgentsExecutionsFeedbackGetResponses[keyof AgentsExecutionsFeedbackGetResponses];
-
-export type AgentsExecutionsFeedbackUpdateData = {
-  body: UpdateAgentExecutionFeedbackBody;
-  path: {
-    /**
-     * Execution id
-     */
-    executionId: string;
-  };
-  query?: never;
-  url: '/api/v1/agents/executions/{executionId}/feedback';
-};
-
-export type AgentsExecutionsFeedbackUpdateErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type AgentsExecutionsFeedbackUpdateError =
-  AgentsExecutionsFeedbackUpdateErrors[keyof AgentsExecutionsFeedbackUpdateErrors];
-
-export type AgentsExecutionsFeedbackUpdateResponses = {
-  /**
-   * Updated execution feedback
-   */
-  200: AgentExecutionFeedbackDetail;
-};
-
-export type AgentsExecutionsFeedbackUpdateResponse =
-  AgentsExecutionsFeedbackUpdateResponses[keyof AgentsExecutionsFeedbackUpdateResponses];
-
-export type AgentsExecutionsFilesDownloadData = {
-  body?: never;
-  path: {
-    executionId: string;
-    kind: 'input' | 'output' | 'issues' | 'trace';
-    filename: string;
-  };
-  query?: never;
-  url: '/api/v1/agents/executions/{executionId}/files/{kind}/{filename}';
-};
-
-export type AgentsExecutionsFilesDownloadErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type AgentsExecutionsFilesDownloadError =
-  AgentsExecutionsFilesDownloadErrors[keyof AgentsExecutionsFilesDownloadErrors];
-
-export type AgentsExecutionsFilesDownloadResponses = {
-  /**
-   * Execution file bytes
-   */
-  200: unknown;
-};
-
-export type AgentsExecutionsRerunData = {
-  body?: never;
-  path: {
-    /**
-     * Source execution id
-     */
-    executionId: string;
-  };
-  query?: never;
-  url: '/api/v1/agents/executions/{executionId}/rerun';
-};
-
-export type AgentsExecutionsRerunErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type AgentsExecutionsRerunError =
-  AgentsExecutionsRerunErrors[keyof AgentsExecutionsRerunErrors];
-
-export type AgentsExecutionsRerunResponses = {
-  /**
-   * Rerun accepted
-   */
-  202: RerunAgentExecutionResponse;
-};
-
-export type AgentsExecutionsRerunResponse =
-  AgentsExecutionsRerunResponses[keyof AgentsExecutionsRerunResponses];
-
-export type AgentsExecutionsGetData = {
-  body?: never;
-  path: {
-    /**
-     * Execution id
-     */
-    executionId: string;
+    agentId: string;
   };
   query?: {
     /**
-     * Comma-separated optional sections, e.g. feedback,expected,files
+     * Run status filter
+     */
+    status?: string;
+    /**
+     * Experiment batch id filter
+     */
+    batchId?: string;
+    /**
+     * Exact dataset example id (folder name) filter
+     */
+    exampleId?: string;
+    /**
+     * Substring match on dataset example id
+     */
+    exampleIdContains?: string;
+    /**
+     * Only runs created at/after this ISO timestamp
+     */
+    createdAfter?: string;
+    /**
+     * Only runs created at/before this ISO timestamp
+     */
+    createdBefore?: string;
+    /**
+     * Only runs completed at/after this ISO timestamp
+     */
+    completedAfter?: string;
+    /**
+     * Only runs completed at/before this ISO timestamp
+     */
+    completedBefore?: string;
+    /**
+     * Filter by the source ref requested when the run was created
+     */
+    sourceRef?: string;
+    feedbackStatus?: 'open' | 'resolved' | 'ignored';
+    feedbackRating?: 'pass' | 'fail' | 'partial' | 'none';
+    hasFeedback?: boolean;
+    noFeedback?: boolean;
+    hasExpected?: boolean;
+    hasExpectedJson?: boolean;
+    hasExpectedFiles?: boolean;
+    feedbackBodyContains?: string;
+    feedbackCreatedAfter?: string;
+    feedbackCreatedBefore?: string;
+    feedbackUpdatedAfter?: string;
+    feedbackUpdatedBefore?: string;
+    feedbackResolvedAfter?: string;
+    feedbackResolvedBefore?: string;
+    promotedToExample?: boolean;
+    promotedExampleName?: string;
+    sinceLastResolved?: boolean;
+    /**
+     * Comma-separated extra parts: feedback, expected, files
      */
     include?: string;
+    sort?: 'createdAt' | 'completedAt' | 'status' | 'exampleId';
+    order?: 'asc' | 'desc';
+    scanLimit?: number;
+    limit?: number;
+    offset?: number;
   };
-  url: '/api/v1/agents/executions/{executionId}';
+  url: '/api/v1/agents/{agentId}/runs';
 };
 
-export type AgentsExecutionsGetErrors = {
+export type AgentsRunsListErrors = {
   /**
    * Validation error. Request shape did not match the spec.
    */
@@ -1503,17 +990,16 @@ export type AgentsExecutionsGetErrors = {
   500: ApiErrorEnvelope;
 };
 
-export type AgentsExecutionsGetError = AgentsExecutionsGetErrors[keyof AgentsExecutionsGetErrors];
+export type AgentsRunsListError = AgentsRunsListErrors[keyof AgentsRunsListErrors];
 
-export type AgentsExecutionsGetResponses = {
+export type AgentsRunsListResponses = {
   /**
-   * Agent execution
+   * List of agent runs
    */
-  200: AgentExecutionResponse;
+  200: ListAgentRunsResponse;
 };
 
-export type AgentsExecutionsGetResponse =
-  AgentsExecutionsGetResponses[keyof AgentsExecutionsGetResponses];
+export type AgentsRunsListResponse = AgentsRunsListResponses[keyof AgentsRunsListResponses];
 
 export type AgentsListData = {
   body?: never;
@@ -1523,6 +1009,10 @@ export type AgentsListData = {
      * Substring match against agent fields
      */
     search?: string;
+    /**
+     * Return a single agent by slug
+     */
+    slug?: string;
     limit?: number;
     offset?: number;
     includeArchived?: boolean;
@@ -1612,6 +1102,967 @@ export type AgentsCreateResponses = {
 };
 
 export type AgentsCreateResponse = AgentsCreateResponses[keyof AgentsCreateResponses];
+
+export type AgentsRunsCancelData = {
+  body?: never;
+  path: {
+    /**
+     * Run id
+     */
+    runId: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/runs/{runId}/cancel';
+};
+
+export type AgentsRunsCancelErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsRunsCancelError = AgentsRunsCancelErrors[keyof AgentsRunsCancelErrors];
+
+export type AgentsRunsCancelResponses = {
+  /**
+   * Cancelled agent run
+   */
+  200: CancelAgentExecutionResponse;
+};
+
+export type AgentsRunsCancelResponse = AgentsRunsCancelResponses[keyof AgentsRunsCancelResponses];
+
+export type AgentsRunsExpectedDeleteData = {
+  body?: never;
+  path: {
+    /**
+     * Run id
+     */
+    runId: string;
+    /**
+     * Expected artifact path
+     */
+    filename: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/runs/{runId}/expected/{filename}';
+};
+
+export type AgentsRunsExpectedDeleteErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsRunsExpectedDeleteError =
+  AgentsRunsExpectedDeleteErrors[keyof AgentsRunsExpectedDeleteErrors];
+
+export type AgentsRunsExpectedDeleteResponses = {
+  /**
+   * Expected file deleted
+   */
+  204: void;
+};
+
+export type AgentsRunsExpectedDeleteResponse =
+  AgentsRunsExpectedDeleteResponses[keyof AgentsRunsExpectedDeleteResponses];
+
+export type AgentsRunsExpectedDownloadData = {
+  body?: never;
+  path: {
+    /**
+     * Run id
+     */
+    runId: string;
+    /**
+     * Expected artifact path
+     */
+    filename: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/runs/{runId}/expected/{filename}';
+};
+
+export type AgentsRunsExpectedDownloadErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsRunsExpectedDownloadError =
+  AgentsRunsExpectedDownloadErrors[keyof AgentsRunsExpectedDownloadErrors];
+
+export type AgentsRunsExpectedDownloadResponses = {
+  /**
+   * Expected file bytes
+   */
+  200: unknown;
+};
+
+export type AgentsRunsExpectedRenameData = {
+  body: RenameExpectedFileBody;
+  path: {
+    /**
+     * Run id
+     */
+    runId: string;
+    /**
+     * Expected artifact path
+     */
+    filename: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/runs/{runId}/expected/{filename}';
+};
+
+export type AgentsRunsExpectedRenameErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsRunsExpectedRenameError =
+  AgentsRunsExpectedRenameErrors[keyof AgentsRunsExpectedRenameErrors];
+
+export type AgentsRunsExpectedRenameResponses = {
+  /**
+   * Renamed expected file
+   */
+  200: RenameExpectedFileResponse;
+};
+
+export type AgentsRunsExpectedRenameResponse =
+  AgentsRunsExpectedRenameResponses[keyof AgentsRunsExpectedRenameResponses];
+
+export type AgentsRunsExpectedListData = {
+  body?: never;
+  path: {
+    /**
+     * Run id
+     */
+    runId: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/runs/{runId}/expected';
+};
+
+export type AgentsRunsExpectedListErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsRunsExpectedListError =
+  AgentsRunsExpectedListErrors[keyof AgentsRunsExpectedListErrors];
+
+export type AgentsRunsExpectedListResponses = {
+  /**
+   * Expected artifacts
+   */
+  200: AgentExecutionExpectedArtifacts;
+};
+
+export type AgentsRunsExpectedListResponse =
+  AgentsRunsExpectedListResponses[keyof AgentsRunsExpectedListResponses];
+
+export type AgentsRunsExpectedCreateData = {
+  body: CopyAgentExecutionOutputToExpectedBody;
+  path: {
+    /**
+     * Run id
+     */
+    runId: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/runs/{runId}/expected';
+};
+
+export type AgentsRunsExpectedCreateErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsRunsExpectedCreateError =
+  AgentsRunsExpectedCreateErrors[keyof AgentsRunsExpectedCreateErrors];
+
+export type AgentsRunsExpectedCreateResponses = {
+  /**
+   * Expected file created
+   */
+  201: {
+    name: string;
+  };
+};
+
+export type AgentsRunsExpectedCreateResponse =
+  AgentsRunsExpectedCreateResponses[keyof AgentsRunsExpectedCreateResponses];
+
+export type AgentsRunsFeedbackDeleteData = {
+  body?: never;
+  path: {
+    /**
+     * Run id
+     */
+    runId: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/runs/{runId}/feedback';
+};
+
+export type AgentsRunsFeedbackDeleteErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsRunsFeedbackDeleteError =
+  AgentsRunsFeedbackDeleteErrors[keyof AgentsRunsFeedbackDeleteErrors];
+
+export type AgentsRunsFeedbackDeleteResponses = {
+  /**
+   * Cleared run feedback
+   */
+  200: AgentExecutionFeedbackDetail;
+};
+
+export type AgentsRunsFeedbackDeleteResponse =
+  AgentsRunsFeedbackDeleteResponses[keyof AgentsRunsFeedbackDeleteResponses];
+
+export type AgentsRunsFeedbackGetData = {
+  body?: never;
+  path: {
+    /**
+     * Run id
+     */
+    runId: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/runs/{runId}/feedback';
+};
+
+export type AgentsRunsFeedbackGetErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsRunsFeedbackGetError =
+  AgentsRunsFeedbackGetErrors[keyof AgentsRunsFeedbackGetErrors];
+
+export type AgentsRunsFeedbackGetResponses = {
+  /**
+   * Run feedback
+   */
+  200: AgentExecutionFeedbackDetail;
+};
+
+export type AgentsRunsFeedbackGetResponse =
+  AgentsRunsFeedbackGetResponses[keyof AgentsRunsFeedbackGetResponses];
+
+export type AgentsRunsFeedbackUpdateData = {
+  body: UpdateAgentExecutionFeedbackBody;
+  path: {
+    /**
+     * Run id
+     */
+    runId: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/runs/{runId}/feedback';
+};
+
+export type AgentsRunsFeedbackUpdateErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsRunsFeedbackUpdateError =
+  AgentsRunsFeedbackUpdateErrors[keyof AgentsRunsFeedbackUpdateErrors];
+
+export type AgentsRunsFeedbackUpdateResponses = {
+  /**
+   * Updated run feedback
+   */
+  200: AgentExecutionFeedbackDetail;
+};
+
+export type AgentsRunsFeedbackUpdateResponse =
+  AgentsRunsFeedbackUpdateResponses[keyof AgentsRunsFeedbackUpdateResponses];
+
+export type AgentsRunsFilesDownloadData = {
+  body?: never;
+  path: {
+    runId: string;
+    kind: 'input' | 'output' | 'issues' | 'trace' | 'lockfile';
+    filename: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/runs/{runId}/files/{kind}/{filename}';
+};
+
+export type AgentsRunsFilesDownloadErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsRunsFilesDownloadError =
+  AgentsRunsFilesDownloadErrors[keyof AgentsRunsFilesDownloadErrors];
+
+export type AgentsRunsFilesDownloadResponses = {
+  /**
+   * Run file bytes
+   */
+  200: unknown;
+};
+
+export type AgentsRunsRerunData = {
+  body?: never;
+  path: {
+    /**
+     * Source run id
+     */
+    runId: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/runs/{runId}/rerun';
+};
+
+export type AgentsRunsRerunErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsRunsRerunError = AgentsRunsRerunErrors[keyof AgentsRunsRerunErrors];
+
+export type AgentsRunsRerunResponses = {
+  /**
+   * Rerun accepted
+   */
+  202: RerunAgentRunResponse;
+};
+
+export type AgentsRunsRerunResponse = AgentsRunsRerunResponses[keyof AgentsRunsRerunResponses];
+
+export type AgentsRunsGetData = {
+  body?: never;
+  path: {
+    /**
+     * Run id
+     */
+    runId: string;
+  };
+  query?: {
+    /**
+     * Comma-separated optional sections, e.g. feedback,expected,files
+     */
+    include?: string;
+  };
+  url: '/api/v1/agents/runs/{runId}';
+};
+
+export type AgentsRunsGetErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsRunsGetError = AgentsRunsGetErrors[keyof AgentsRunsGetErrors];
+
+export type AgentsRunsGetResponses = {
+  /**
+   * Agent run
+   */
+  200: AgentRunResponse;
+};
+
+export type AgentsRunsGetResponse = AgentsRunsGetResponses[keyof AgentsRunsGetResponses];
+
+export type AutomationsSyncData = {
+  body?: never;
+  path: {
+    automation: string;
+  };
+  query?: never;
+  url: '/api/v1/automations/{automation}/sync';
+};
+
+export type AutomationsSyncErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AutomationsSyncError = AutomationsSyncErrors[keyof AutomationsSyncErrors];
+
+export type AutomationsSyncResponses = {
+  /**
+   * Automation synced
+   */
+  200: AutomationSyncResponse;
+};
+
+export type AutomationsSyncResponse = AutomationsSyncResponses[keyof AutomationsSyncResponses];
+
+export type SourceLockfilePreviewData = {
+  body?: never;
+  path?: never;
+  query: {
+    packageRef: string;
+  };
+  url: '/api/v1/source/lockfile';
+};
+
+export type SourceLockfilePreviewErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type SourceLockfilePreviewError =
+  SourceLockfilePreviewErrors[keyof SourceLockfilePreviewErrors];
+
+export type SourceLockfilePreviewResponses = {
+  /**
+   * Resolved lockfile preview
+   */
+  200: SourceLockfileResponse;
+};
+
+export type SourceLockfilePreviewResponse =
+  SourceLockfilePreviewResponses[keyof SourceLockfilePreviewResponses];
+
+export type SourceRawData = {
+  body?: never;
+  path?: never;
+  query: {
+    ref?: string;
+    path: string;
+  };
+  url: '/api/v1/source/raw';
+};
+
+export type SourceRawErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type SourceRawError = SourceRawErrors[keyof SourceRawErrors];
+
+export type SourceRawResponses = {
+  /**
+   * Raw source file preview
+   */
+  200: RawSourceResponse;
+};
+
+export type SourceRawResponse = SourceRawResponses[keyof SourceRawResponses];
+
+export type SourceReleasesData = {
+  body?: never;
+  path?: never;
+  query: {
+    packagePath: string;
+    version?: string;
+  };
+  url: '/api/v1/source/releases';
+};
+
+export type SourceReleasesErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type SourceReleasesError = SourceReleasesErrors[keyof SourceReleasesErrors];
+
+export type SourceReleasesResponses = {
+  /**
+   * Source package releases
+   */
+  200: SourceReleasesResponse;
+};
+
+export type SourceReleasesResponse2 = SourceReleasesResponses[keyof SourceReleasesResponses];
+
+export type SourceRepositoryData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/source/repository';
+};
+
+export type SourceRepositoryErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type SourceRepositoryError = SourceRepositoryErrors[keyof SourceRepositoryErrors];
+
+export type SourceRepositoryResponses = {
+  /**
+   * Organization Git repository
+   */
+  200: SourceRepositoryResponse;
+};
+
+export type SourceRepositoryResponse2 = SourceRepositoryResponses[keyof SourceRepositoryResponses];
+
+export type SourceSecretsDecryptData = {
+  body: SourceSecretsDecryptBody;
+  path?: never;
+  query?: never;
+  url: '/api/v1/source/secrets/decrypt';
+};
+
+export type SourceSecretsDecryptErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type SourceSecretsDecryptError =
+  SourceSecretsDecryptErrors[keyof SourceSecretsDecryptErrors];
+
+export type SourceSecretsDecryptResponses = {
+  /**
+   * Decrypted secret value
+   */
+  200: SourceSecretsDecryptResponse;
+};
+
+export type SourceSecretsDecryptResponse2 =
+  SourceSecretsDecryptResponses[keyof SourceSecretsDecryptResponses];
+
+export type SourceSecretsEncryptData = {
+  body: SourceSecretsEncryptBody;
+  path?: never;
+  query?: never;
+  url: '/api/v1/source/secrets/encrypt';
+};
+
+export type SourceSecretsEncryptErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type SourceSecretsEncryptError =
+  SourceSecretsEncryptErrors[keyof SourceSecretsEncryptErrors];
+
+export type SourceSecretsEncryptResponses = {
+  /**
+   * Encrypted secret value(s)
+   */
+  200: SourceSecretsEncryptResponse;
+};
+
+export type SourceSecretsEncryptResponse2 =
+  SourceSecretsEncryptResponses[keyof SourceSecretsEncryptResponses];
 
 export type WorkflowsExecutionsListData = {
   body?: never;

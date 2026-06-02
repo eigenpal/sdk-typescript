@@ -2,6 +2,8 @@ import { EigenpalError, EigenpalTimeoutError, errorFromResponse } from './errors
 import { createClient, createConfig, type Client, type Config } from './generated/client';
 import type { ApiErrorEnvelope } from './generated/types.gen';
 import { AgentsResource } from './resources/agents';
+import { AutomationsResource } from './resources/automations';
+import { SourceResource } from './resources/source';
 import { WorkflowsResource } from './resources/workflows';
 import { buildTelemetryHeaders } from './telemetry';
 
@@ -74,6 +76,10 @@ export class EigenpalClient {
   public readonly workflows: WorkflowsResource;
   /** Agent operations: `list`, `get`, `create`, `run`, `executions`. */
   public readonly agents: AgentsResource;
+  /** Source repository operations: repository metadata, raw files, releases, lockfiles, and secret decrypt. */
+  public readonly source: SourceResource;
+  /** Automation operations: sync public automation metadata from source. */
+  public readonly automations: AutomationsResource;
 
   /** Underlying hey-api client. Use `getRawClient()` for advanced cases. */
   private readonly client: Client;
@@ -116,6 +122,8 @@ export class EigenpalClient {
 
     this.workflows = new WorkflowsResource(this.client, this._request.bind(this));
     this.agents = new AgentsResource(this.client, this._request.bind(this));
+    this.source = new SourceResource(this.client, this._request.bind(this));
+    this.automations = new AutomationsResource(this.client, this._request.bind(this));
   }
 
   /** Expose the underlying hey-api client for advanced use (custom interceptors, etc.). */

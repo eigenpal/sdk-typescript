@@ -28,28 +28,36 @@ client
 │   ├── listFiles
 │   ├── putFile
 │   ├── uploadFiles
+│   ├── runs.list
+│   ├── runs.get
+│   ├── runs.cancel
+│   ├── runs.rerun
+│   ├── runs.getFeedback
+│   ├── runs.updateFeedback
+│   ├── runs.clearFeedback
+│   ├── runs.listExpected
+│   ├── runs.copyOutputToExpected / uploadExpected
+│   ├── runs.downloadExpected
+│   ├── runs.renameExpected
+│   ├── runs.deleteExpected
+│   └── runs.downloadFile
+├── workflows
+│   ├── list
+│   ├── get
+│   ├── run
+│   ├── versions
 │   ├── executions.list
 │   ├── executions.get
 │   ├── executions.cancel
-│   ├── executions.rerun
-│   ├── executions.getFeedback
-│   ├── executions.updateFeedback
-│   ├── executions.clearFeedback
-│   ├── executions.listExpected
-│   ├── executions.copyOutputToExpected / uploadExpected
-│   ├── executions.downloadExpected
-│   ├── executions.renameExpected
-│   ├── executions.deleteExpected
-│   └── executions.downloadFile
-└── workflows
-    ├── list
-    ├── get
-    ├── run
-    ├── versions
-    ├── executions.list
-    ├── executions.get
-    ├── executions.cancel
-    └── executions.runAndWait
+│   └── executions.runAndWait
+├── source
+│   ├── decryptSecrets
+│   ├── lockfile
+│   ├── raw
+│   ├── releases
+│   └── repository
+└── automations
+    └── sync
 ```
 
 ## Client construction
@@ -77,69 +85,13 @@ The constructor option always wins; the env var is a fallback so scripts don't h
 
 ## Agents
 
-### `client.agents.executions.list`
-
-**`GET /api/v1/agents/{agentId}/executions`**
-
-List agent executions
-
-Returns executions for an agent, optionally filtered by status or experiment batch.
-
-**Path parameters**
-
-| Name      | Type     | Description      |
-| --------- | -------- | ---------------- |
-| `agentId` | `string` | Agent id or slug |
-
-**Query parameters**
-
-| Name                     | Type         | Description                                                      |
-| ------------------------ | ------------ | ---------------------------------------------------------------- | ---------- | -------------- | ---------- |
-| `status`                 | `string`     | (optional)Execution status filter                                |
-| `batchId`                | `string`     | (optional)Experiment batch id filter                             |
-| `exampleName`            | `string`     | (optional)Exact dataset example name filter                      |
-| `exampleNameContains`    | `string`     | (optional)Substring match on example name                        |
-| `createdAfter`           | `string`     | (optional)Only executions created at/after this ISO timestamp    |
-| `createdBefore`          | `string`     | (optional)Only executions created at/before this ISO timestamp   |
-| `completedAfter`         | `string`     | (optional)Only executions completed at/after this ISO timestamp  |
-| `completedBefore`        | `string`     | (optional)Only executions completed at/before this ISO timestamp |
-| `feedbackStatus`         | `"open"      | "resolved"                                                       | "ignored"` | (optional)     |
-| `feedbackRating`         | `"pass"      | "fail"                                                           | "partial"  | "none"`        | (optional) |
-| `hasFeedback`            | `boolean`    | (optional)                                                       |
-| `noFeedback`             | `boolean`    | (optional)                                                       |
-| `hasExpected`            | `boolean`    | (optional)                                                       |
-| `hasExpectedJson`        | `boolean`    | (optional)                                                       |
-| `hasExpectedFiles`       | `boolean`    | (optional)                                                       |
-| `feedbackBodyContains`   | `string`     | (optional)                                                       |
-| `feedbackCreatedAfter`   | `string`     | (optional)                                                       |
-| `feedbackCreatedBefore`  | `string`     | (optional)                                                       |
-| `feedbackUpdatedAfter`   | `string`     | (optional)                                                       |
-| `feedbackUpdatedBefore`  | `string`     | (optional)                                                       |
-| `feedbackResolvedAfter`  | `string`     | (optional)                                                       |
-| `feedbackResolvedBefore` | `string`     | (optional)                                                       |
-| `promotedToExample`      | `boolean`    | (optional)                                                       |
-| `promotedExampleName`    | `string`     | (optional)                                                       |
-| `sinceLastResolved`      | `boolean`    | (optional)                                                       |
-| `include`                | `string`     | (optional)Comma-separated extra parts: feedback, expected, files |
-| `sort`                   | `"createdAt" | "completedAt"                                                    | "status"   | "exampleName"` | (optional) |
-| `order`                  | `"asc"       | "desc"`                                                          | (optional) |
-| `scanLimit`              | `number`     | (optional)                                                       |
-| `limit`                  | `number`     | (optional)                                                       |
-| `offset`                 | `number`     | (optional)                                                       |
-
-**Response**
-
-```ts
-// ListAgentExecutionsResponse
-```
-
 ### `client.agents.listFiles`
 
 **`GET /api/v1/agents/{agentId}/files`**
 
-List or download agent files
+List or download agent source files
 
-Lists live agent files, or returns one file when `path` is provided.
+Lists or reads files from the agent Git package (`agents/{slug}/` on organization source). Runtime artifacts (runs, dataset) are not served here.
 
 **Path parameters**
 
@@ -149,10 +101,11 @@ Lists live agent files, or returns one file when `path` is provided.
 
 **Query parameters**
 
-| Name     | Type     | Description |
-| -------- | -------- | ----------- |
-| `path`   | `string` | (optional)  |
-| `prefix` | `string` | (optional)  |
+| Name     | Type     | Description                      |
+| -------- | -------- | -------------------------------- |
+| `path`   | `string` | (optional)                       |
+| `prefix` | `string` | (optional)                       |
+| `ref`    | `string` | (optional)Git ref (default main) |
 
 **Response**
 
@@ -164,9 +117,9 @@ Lists live agent files, or returns one file when `path` is provided.
 
 **`PUT /api/v1/agents/{agentId}/files`**
 
-Upload one agent file
+Upload one agent file (deprecated)
 
-Uploads one file into the live agent namespace at the safe relative `path` query parameter.
+Agent source is Git-backed. Use Git push or the builder instead.
 
 **Path parameters**
 
@@ -176,18 +129,13 @@ Uploads one file into the live agent namespace at the safe relative `path` query
 
 **Query parameters**
 
-| Name     | Type     | Description |
-| -------- | -------- | ----------- |
-| `path`   | `string` | (optional)  |
-| `prefix` | `string` | (optional)  |
+| Name     | Type     | Description                      |
+| -------- | -------- | -------------------------------- |
+| `path`   | `string` | (optional)                       |
+| `prefix` | `string` | (optional)                       |
+| `ref`    | `string` | (optional)Git ref (default main) |
 
 **Request body**
-
-```ts
-// AgentFileBody
-```
-
-**Response**
 
 ```ts
 // Record<string, unknown>
@@ -197,9 +145,9 @@ Uploads one file into the live agent namespace at the safe relative `path` query
 
 **`POST /api/v1/agents/{agentId}/files`**
 
-Upload agent files
+Upload agent files (deprecated)
 
-Uploads multiple files into the live agent namespace.
+Agent source is Git-backed. Use Git push or the builder instead.
 
 **Path parameters**
 
@@ -208,12 +156,6 @@ Uploads multiple files into the live agent namespace.
 | `agentId` | `string` | Agent id or slug |
 
 **Request body**
-
-```ts
-// AgentFilesBody
-```
-
-**Response**
 
 ```ts
 // Record<string, unknown>
@@ -275,9 +217,9 @@ Updates mutable agent metadata and configuration.
 
 **`POST /api/v1/agents/{agentId}/run`**
 
-Execute an agent
+Run an agent
 
-Enqueues an agent execution. Returns 202 with `{ executionId }` by default. Pass `wait_for_completion=<seconds>` to hold the connection until the execution reaches a terminal state. File inputs are uploaded as multipart/form-data.
+Enqueues an agent run. Returns 202 with `{ runId }` by default. Pass `wait_for_completion=<seconds>` to hold the connection until the run reaches a terminal state. File inputs are uploaded as multipart/form-data.
 
 **Path parameters**
 
@@ -287,9 +229,10 @@ Enqueues an agent execution. Returns 202 with `{ executionId }` by default. Pass
 
 **Query parameters**
 
-| Name                  | Type     | Description                                                                                |
-| --------------------- | -------- | ------------------------------------------------------------------------------------------ |
-| `wait_for_completion` | `number` | (optional)Seconds to hold the connection waiting for completion (max 600). Omit for async. |
+| Name                  | Type     | Description                                                                                                                                                                                |
+| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `wait_for_completion` | `number` | (optional)Seconds to hold the connection waiting for completion (max 600). Omit for async.                                                                                                 |
+| `sourceRef`           | `string` | (optional)Git source ref to resolve for this run. Defaults to latest. Supports latest, main, exact versions/tags such as 1.2.3, semver ranges such as 1.2.x or 1.x, and exact commit SHAs. |
 
 **Request body**
 
@@ -303,255 +246,61 @@ Enqueues an agent execution. Returns 202 with `{ executionId }` by default. Pass
 // RunAgentResponse
 ```
 
-### `client.agents.executions.cancel`
+### `client.agents.runs.list`
 
-**`POST /api/v1/agents/executions/{executionId}/cancel`**
+**`GET /api/v1/agents/{agentId}/runs`**
 
-Cancel agent execution
+List agent runs
 
-Requests cancellation for one agent execution by id.
-
-**Path parameters**
-
-| Name          | Type     | Description  |
-| ------------- | -------- | ------------ |
-| `executionId` | `string` | Execution id |
-
-**Response**
-
-```ts
-// CancelAgentExecutionResponse
-```
-
-### `client.agents.executions.downloadExpected`
-
-**`GET /api/v1/agents/executions/{executionId}/expected/{filename}`**
-
-Download an expected file
-
-Downloads one expected file attached to an agent execution.
+Returns runs for an agent, optionally filtered by status or experiment batch.
 
 **Path parameters**
 
-| Name          | Type     | Description            |
-| ------------- | -------- | ---------------------- |
-| `executionId` | `string` | Execution id           |
-| `filename`    | `string` | Expected artifact path |
-
-### `client.agents.executions.renameExpected`
-
-**`PATCH /api/v1/agents/executions/{executionId}/expected/{filename}`**
-
-Rename an expected file
-
-Renames one expected file attached to an agent execution.
-
-**Path parameters**
-
-| Name          | Type     | Description            |
-| ------------- | -------- | ---------------------- |
-| `executionId` | `string` | Execution id           |
-| `filename`    | `string` | Expected artifact path |
-
-**Request body**
-
-```ts
-// RenameExpectedFileBody
-```
-
-**Response**
-
-```ts
-// RenameExpectedFileResponse
-```
-
-### `client.agents.executions.deleteExpected`
-
-**`DELETE /api/v1/agents/executions/{executionId}/expected/{filename}`**
-
-Delete an expected file
-
-Deletes one expected file attached to an agent execution.
-
-**Path parameters**
-
-| Name          | Type     | Description            |
-| ------------- | -------- | ---------------------- |
-| `executionId` | `string` | Execution id           |
-| `filename`    | `string` | Expected artifact path |
-
-### `client.agents.executions.listExpected`
-
-**`GET /api/v1/agents/executions/{executionId}/expected`**
-
-List execution expected artifacts
-
-Returns structured expected JSON and expected file names for one execution.
-
-**Path parameters**
-
-| Name          | Type     | Description  |
-| ------------- | -------- | ------------ |
-| `executionId` | `string` | Execution id |
-
-**Response**
-
-```ts
-// AgentExecutionExpectedArtifacts
-```
-
-### `client.agents.executions.copyOutputToExpected / uploadExpected`
-
-**`POST /api/v1/agents/executions/{executionId}/expected`**
-
-Create an expected file
-
-Uploads an expected file with multipart/form-data, or copies a generated output file into expected artifacts with JSON.
-
-**Path parameters**
-
-| Name          | Type     | Description  |
-| ------------- | -------- | ------------ |
-| `executionId` | `string` | Execution id |
-
-**Request body**
-
-```ts
-// CopyAgentExecutionOutputToExpectedBody
-```
-
-**Response**
-
-```ts
-// Record<string, unknown>
-```
-
-### `client.agents.executions.getFeedback`
-
-**`GET /api/v1/agents/executions/{executionId}/feedback`**
-
-Get execution feedback
-
-Returns feedback and expected artifacts attached to one agent execution.
-
-**Path parameters**
-
-| Name          | Type     | Description  |
-| ------------- | -------- | ------------ |
-| `executionId` | `string` | Execution id |
-
-**Response**
-
-```ts
-// AgentExecutionFeedbackDetail
-```
-
-### `client.agents.executions.updateFeedback`
-
-**`PATCH /api/v1/agents/executions/{executionId}/feedback`**
-
-Update execution feedback
-
-Updates the feedback body, rating, status, or structured expected JSON attached to one execution.
-
-**Path parameters**
-
-| Name          | Type     | Description  |
-| ------------- | -------- | ------------ |
-| `executionId` | `string` | Execution id |
-
-**Request body**
-
-```ts
-// UpdateAgentExecutionFeedbackBody
-```
-
-**Response**
-
-```ts
-// AgentExecutionFeedbackDetail
-```
-
-### `client.agents.executions.clearFeedback`
-
-**`DELETE /api/v1/agents/executions/{executionId}/feedback`**
-
-Clear execution feedback
-
-Deletes feedback, structured expected JSON, and expected files from one execution.
-
-**Path parameters**
-
-| Name          | Type     | Description  |
-| ------------- | -------- | ------------ |
-| `executionId` | `string` | Execution id |
-
-**Response**
-
-```ts
-// AgentExecutionFeedbackDetail
-```
-
-### `client.agents.executions.downloadFile`
-
-**`GET /api/v1/agents/executions/{executionId}/files/{kind}/{filename}`**
-
-Download an execution file
-
-Downloads an input file, output file, issues.md, or trace.jsonl attached to an agent execution.
-
-**Path parameters**
-
-| Name          | Type     | Description |
-| ------------- | -------- | ----------- | -------- | -------- | --- |
-| `executionId` | `string` |             |
-| `kind`        | `"input" | "output"    | "issues" | "trace"` |     |
-| `filename`    | `string` |             |
-
-### `client.agents.executions.rerun`
-
-**`POST /api/v1/agents/executions/{executionId}/rerun`**
-
-Rerun agent execution
-
-Creates a new execution for the same agent using a previous execution's stored input snapshot.
-
-**Path parameters**
-
-| Name          | Type     | Description         |
-| ------------- | -------- | ------------------- |
-| `executionId` | `string` | Source execution id |
-
-**Response**
-
-```ts
-// RerunAgentExecutionResponse
-```
-
-### `client.agents.executions.get`
-
-**`GET /api/v1/agents/executions/{executionId}`**
-
-Get agent execution
-
-Returns one agent execution by id.
-
-**Path parameters**
-
-| Name          | Type     | Description  |
-| ------------- | -------- | ------------ |
-| `executionId` | `string` | Execution id |
+| Name      | Type     | Description      |
+| --------- | -------- | ---------------- |
+| `agentId` | `string` | Agent id or slug |
 
 **Query parameters**
 
-| Name      | Type     | Description                                                               |
-| --------- | -------- | ------------------------------------------------------------------------- |
-| `include` | `string` | (optional)Comma-separated optional sections, e.g. feedback,expected,files |
+| Name                     | Type                                                      | Description                                                           |
+| ------------------------ | --------------------------------------------------------- | --------------------------------------------------------------------- |
+| `status`                 | `string`                                                  | (optional)Run status filter                                           |
+| `batchId`                | `string`                                                  | (optional)Experiment batch id filter                                  |
+| `exampleId`              | `string`                                                  | (optional)Exact dataset example id (folder name) filter               |
+| `exampleIdContains`      | `string`                                                  | (optional)Substring match on dataset example id                       |
+| `createdAfter`           | `string`                                                  | (optional)Only runs created at/after this ISO timestamp               |
+| `createdBefore`          | `string`                                                  | (optional)Only runs created at/before this ISO timestamp              |
+| `completedAfter`         | `string`                                                  | (optional)Only runs completed at/after this ISO timestamp             |
+| `completedBefore`        | `string`                                                  | (optional)Only runs completed at/before this ISO timestamp            |
+| `sourceRef`              | `string`                                                  | (optional)Filter by the source ref requested when the run was created |
+| `feedbackStatus`         | `"open" \| "resolved" \| "ignored"`                       | (optional)                                                            |
+| `feedbackRating`         | `"pass" \| "fail" \| "partial" \| "none"`                 | (optional)                                                            |
+| `hasFeedback`            | `boolean`                                                 | (optional)                                                            |
+| `noFeedback`             | `boolean`                                                 | (optional)                                                            |
+| `hasExpected`            | `boolean`                                                 | (optional)                                                            |
+| `hasExpectedJson`        | `boolean`                                                 | (optional)                                                            |
+| `hasExpectedFiles`       | `boolean`                                                 | (optional)                                                            |
+| `feedbackBodyContains`   | `string`                                                  | (optional)                                                            |
+| `feedbackCreatedAfter`   | `string`                                                  | (optional)                                                            |
+| `feedbackCreatedBefore`  | `string`                                                  | (optional)                                                            |
+| `feedbackUpdatedAfter`   | `string`                                                  | (optional)                                                            |
+| `feedbackUpdatedBefore`  | `string`                                                  | (optional)                                                            |
+| `feedbackResolvedAfter`  | `string`                                                  | (optional)                                                            |
+| `feedbackResolvedBefore` | `string`                                                  | (optional)                                                            |
+| `promotedToExample`      | `boolean`                                                 | (optional)                                                            |
+| `promotedExampleName`    | `string`                                                  | (optional)                                                            |
+| `sinceLastResolved`      | `boolean`                                                 | (optional)                                                            |
+| `include`                | `string`                                                  | (optional)Comma-separated extra parts: feedback, expected, files      |
+| `sort`                   | `"createdAt" \| "completedAt" \| "status" \| "exampleId"` | (optional)                                                            |
+| `order`                  | `"asc" \| "desc"`                                         | (optional)                                                            |
+| `scanLimit`              | `number`                                                  | (optional)                                                            |
+| `limit`                  | `number`                                                  | (optional)                                                            |
+| `offset`                 | `number`                                                  | (optional)                                                            |
 
 **Response**
 
 ```ts
-// AgentExecutionResponse
+// ListAgentRunsResponse
 ```
 
 ### `client.agents.list`
@@ -560,13 +309,14 @@ Returns one agent execution by id.
 
 List agents
 
-Returns agents the API key has access to, with pagination and basic execution stats.
+Returns agents the caller has access to, with pagination and basic execution stats. Accepts session cookies or API keys.
 
 **Query parameters**
 
 | Name              | Type      | Description                                    |
 | ----------------- | --------- | ---------------------------------------------- |
 | `search`          | `string`  | (optional)Substring match against agent fields |
+| `slug`            | `string`  | (optional)Return a single agent by slug        |
 | `limit`           | `number`  | (optional)                                     |
 | `offset`          | `number`  | (optional)                                     |
 | `includeArchived` | `boolean` | (optional)                                     |
@@ -583,7 +333,7 @@ Returns agents the API key has access to, with pagination and basic execution st
 
 Create an agent
 
-Creates a new agent and initializes its workspace files.
+Creates a new agent, registers it in the automation table, and scaffolds its Git source package. Accepts session cookies or API keys.
 
 **Request body**
 
@@ -595,6 +345,377 @@ Creates a new agent and initializes its workspace files.
 
 ```ts
 // CreateAgentResponse
+```
+
+### `client.agents.runs.cancel`
+
+**`POST /api/v1/agents/runs/{runId}/cancel`**
+
+Cancel agent run
+
+Requests cancellation for one agent run by id.
+
+**Path parameters**
+
+| Name    | Type     | Description |
+| ------- | -------- | ----------- |
+| `runId` | `string` | Run id      |
+
+**Response**
+
+```ts
+// CancelAgentExecutionResponse
+```
+
+### `client.agents.runs.downloadExpected`
+
+**`GET /api/v1/agents/runs/{runId}/expected/{filename}`**
+
+Download an expected file
+
+Downloads one expected file attached to an agent run.
+
+**Path parameters**
+
+| Name       | Type     | Description            |
+| ---------- | -------- | ---------------------- |
+| `runId`    | `string` | Run id                 |
+| `filename` | `string` | Expected artifact path |
+
+### `client.agents.runs.renameExpected`
+
+**`PATCH /api/v1/agents/runs/{runId}/expected/{filename}`**
+
+Rename an expected file
+
+Renames one expected file attached to an agent run.
+
+**Path parameters**
+
+| Name       | Type     | Description            |
+| ---------- | -------- | ---------------------- |
+| `runId`    | `string` | Run id                 |
+| `filename` | `string` | Expected artifact path |
+
+**Request body**
+
+```ts
+// RenameExpectedFileBody
+```
+
+**Response**
+
+```ts
+// RenameExpectedFileResponse
+```
+
+### `client.agents.runs.deleteExpected`
+
+**`DELETE /api/v1/agents/runs/{runId}/expected/{filename}`**
+
+Delete an expected file
+
+Deletes one expected file attached to an agent run.
+
+**Path parameters**
+
+| Name       | Type     | Description            |
+| ---------- | -------- | ---------------------- |
+| `runId`    | `string` | Run id                 |
+| `filename` | `string` | Expected artifact path |
+
+### `client.agents.runs.listExpected`
+
+**`GET /api/v1/agents/runs/{runId}/expected`**
+
+List run expected artifacts
+
+Returns structured expected JSON and expected file names for one run.
+
+**Path parameters**
+
+| Name    | Type     | Description |
+| ------- | -------- | ----------- |
+| `runId` | `string` | Run id      |
+
+**Response**
+
+```ts
+// AgentExecutionExpectedArtifacts
+```
+
+### `client.agents.runs.copyOutputToExpected / uploadExpected`
+
+**`POST /api/v1/agents/runs/{runId}/expected`**
+
+Create an expected file
+
+Uploads an expected file with multipart/form-data, or copies a generated output file into expected artifacts with JSON.
+
+**Path parameters**
+
+| Name    | Type     | Description |
+| ------- | -------- | ----------- |
+| `runId` | `string` | Run id      |
+
+**Request body**
+
+```ts
+// CopyAgentExecutionOutputToExpectedBody
+```
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.agents.runs.getFeedback`
+
+**`GET /api/v1/agents/runs/{runId}/feedback`**
+
+Get run feedback
+
+Returns feedback and expected artifacts attached to one agent run.
+
+**Path parameters**
+
+| Name    | Type     | Description |
+| ------- | -------- | ----------- |
+| `runId` | `string` | Run id      |
+
+**Response**
+
+```ts
+// AgentExecutionFeedbackDetail
+```
+
+### `client.agents.runs.updateFeedback`
+
+**`PATCH /api/v1/agents/runs/{runId}/feedback`**
+
+Update run feedback
+
+Updates the feedback body, rating, status, or structured expected JSON attached to one run.
+
+**Path parameters**
+
+| Name    | Type     | Description |
+| ------- | -------- | ----------- |
+| `runId` | `string` | Run id      |
+
+**Request body**
+
+```ts
+// UpdateAgentExecutionFeedbackBody
+```
+
+**Response**
+
+```ts
+// AgentExecutionFeedbackDetail
+```
+
+### `client.agents.runs.clearFeedback`
+
+**`DELETE /api/v1/agents/runs/{runId}/feedback`**
+
+Clear run feedback
+
+Deletes feedback, structured expected JSON, and expected files from one run.
+
+**Path parameters**
+
+| Name    | Type     | Description |
+| ------- | -------- | ----------- |
+| `runId` | `string` | Run id      |
+
+**Response**
+
+```ts
+// AgentExecutionFeedbackDetail
+```
+
+### `client.agents.runs.downloadFile`
+
+**`GET /api/v1/agents/runs/{runId}/files/{kind}/{filename}`**
+
+Download a run file
+
+Downloads an input file, output file, issues.md, trace.jsonl, or eigenpal.lock attached to an agent run.
+
+**Path parameters**
+
+| Name       | Type                                                       | Description |
+| ---------- | ---------------------------------------------------------- | ----------- |
+| `runId`    | `string`                                                   |             |
+| `kind`     | `"input" \| "output" \| "issues" \| "trace" \| "lockfile"` |             |
+| `filename` | `string`                                                   |             |
+
+### `client.agents.runs.rerun`
+
+**`POST /api/v1/agents/runs/{runId}/rerun`**
+
+Rerun agent run
+
+Creates a new run for the same agent using a previous run's stored input snapshot.
+
+**Path parameters**
+
+| Name    | Type     | Description   |
+| ------- | -------- | ------------- |
+| `runId` | `string` | Source run id |
+
+**Response**
+
+```ts
+// RerunAgentRunResponse
+```
+
+### `client.agents.runs.get`
+
+**`GET /api/v1/agents/runs/{runId}`**
+
+Get agent run
+
+Returns one agent run by id.
+
+**Path parameters**
+
+| Name    | Type     | Description |
+| ------- | -------- | ----------- |
+| `runId` | `string` | Run id      |
+
+**Query parameters**
+
+| Name      | Type     | Description                                                               |
+| --------- | -------- | ------------------------------------------------------------------------- |
+| `include` | `string` | (optional)Comma-separated optional sections, e.g. feedback,expected,files |
+
+**Response**
+
+```ts
+// AgentRunResponse
+```
+
+## Automations
+
+### `client.automations.sync`
+
+**`POST /api/v1/automations/{automation}/sync`**
+
+Sync an automation from latest source
+
+Reconciles lightweight automation metadata from the latest released Git source package. This does not enqueue executions.
+
+**Path parameters**
+
+| Name         | Type     | Description |
+| ------------ | -------- | ----------- |
+| `automation` | `string` |             |
+
+**Response**
+
+```ts
+// AutomationSyncResponse
+```
+
+## Source
+
+### `client.source.lockfile`
+
+**`GET /api/v1/source/lockfile`**
+
+Preview a source lockfile
+
+Resolves a package ref and returns the would-be eigenpal.lock without enqueueing or writing runtime artifacts.
+
+**Query parameters**
+
+| Name         | Type     | Description |
+| ------------ | -------- | ----------- |
+| `packageRef` | `string` |             |
+
+**Response**
+
+```ts
+// SourceLockfileResponse
+```
+
+### `client.source.raw`
+
+**`GET /api/v1/source/raw`**
+
+Preview a raw Git source file
+
+Reads a raw file from the organization Git repository for metadata previews.
+
+**Query parameters**
+
+| Name   | Type     | Description |
+| ------ | -------- | ----------- |
+| `ref`  | `string` | (optional)  |
+| `path` | `string` |             |
+
+**Response**
+
+```ts
+// RawSourceResponse
+```
+
+### `client.source.releases`
+
+**`GET /api/v1/source/releases`**
+
+List Git source package releases
+
+Lists package-scoped Git release tags, or returns one exact version when requested.
+
+**Query parameters**
+
+| Name          | Type     | Description |
+| ------------- | -------- | ----------- |
+| `packagePath` | `string` |             |
+| `version`     | `string` | (optional)  |
+
+**Response**
+
+```ts
+// SourceReleasesResponse
+```
+
+### `client.source.repository`
+
+**`GET /api/v1/source/repository`**
+
+Get organization Git source repository
+
+Returns the authenticated organization Git remote used by hidden source CLI commands.
+
+**Response**
+
+```ts
+// SourceRepositoryResponse
+```
+
+### `client.source.decryptSecrets`
+
+**`POST /api/v1/source/secrets/decrypt`**
+
+Decrypt a Git-backed source secret
+
+Decrypts one or more encrypted source secret values for the authenticated tenant. Single-secret requests require an execution id and are checked against that execution lockfile graph; batch `secrets[]` requests are tenant-scoped for local CLI use.
+
+**Request body**
+
+```ts
+// SourceSecretsDecryptBody
+```
+
+**Response**
+
+```ts
+// SourceSecretsDecryptResponse
 ```
 
 ## Workflows
@@ -746,9 +867,9 @@ Returns the current status, completion timestamps, and result or error for a wor
 
 **Query parameters**
 
-| Name           | Type    | Description |
-| -------------- | ------- | ----------- | ----------------------------------------------------------------------------------------- |
-| `includeSteps` | `"true" | "false"`    | (optional)When "true", returns the full per-step execution payload instead of the summary |
+| Name           | Type                | Description                                                                               |
+| -------------- | ------------------- | ----------------------------------------------------------------------------------------- |
+| `includeSteps` | `"true" \| "false"` | (optional)When "true", returns the full per-step execution payload instead of the summary |
 
 **Response**
 
@@ -766,13 +887,13 @@ Returns workflows the API key has access to, with pagination. Use `name` for exa
 
 **Query parameters**
 
-| Name     | Type        | Description                                          |
-| -------- | ----------- | ---------------------------------------------------- | --------------------------------- |
-| `search` | `string`    | (optional)Substring match against workflow name      |
-| `name`   | `string`    | (optional)Exact-match lookup by workflow name (slug) |
-| `kind`   | `"workflow" | "block"`                                             | (optional)Filter by workflow kind |
-| `limit`  | `number`    | (optional)Page size (max 100, default 50)            |
-| `offset` | `number`    | (optional)Page offset                                |
+| Name     | Type                    | Description                                          |
+| -------- | ----------------------- | ---------------------------------------------------- |
+| `search` | `string`                | (optional)Substring match against workflow name      |
+| `name`   | `string`                | (optional)Exact-match lookup by workflow name (slug) |
+| `kind`   | `"workflow" \| "block"` | (optional)Filter by workflow kind                    |
+| `limit`  | `number`                | (optional)Page size (max 100, default 50)            |
+| `offset` | `number`                | (optional)Page offset                                |
 
 **Response**
 
