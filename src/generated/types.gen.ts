@@ -216,6 +216,14 @@ export type ListAgentRunsResponse = {
 export type AgentExecutionSummary = {
   id: string;
   status: ExecutionStatus;
+  triggerType?: string | null;
+  triggeredBy?: {
+    id: string;
+    name?: string | null;
+    email: string;
+  } | null;
+  emailSubject?: string | null;
+  emailFrom?: string | null;
   model?: string | null;
   output?: unknown | null;
   schemaValid?: boolean | null;
