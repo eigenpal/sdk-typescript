@@ -82,6 +82,9 @@ import type {
   AgentsUpdateData,
   AgentsUpdateErrors,
   AgentsUpdateResponses,
+  AgentsVersionsListData,
+  AgentsVersionsListErrors,
+  AgentsVersionsListResponses,
   AutomationsSyncData,
   AutomationsSyncErrors,
   AutomationsSyncResponses,
@@ -365,6 +368,24 @@ export const agentsTriggersEmailCreateAlias = <ThrowOnError extends boolean = fa
   });
 
 /**
+ * List agent Git versions
+ *
+ * Lists Git-backed release versions for an agent. Release notes are included when a matching legacy published-version message exists.
+ */
+export const agentsVersionsList = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsVersionsListData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    AgentsVersionsListResponses,
+    AgentsVersionsListErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/{agentId}/versions',
+    ...options,
+  });
+
+/**
  * List agents
  *
  * Returns agents the caller has access to, with pagination and basic execution stats. Accepts session cookies or API keys.
@@ -596,6 +617,10 @@ export const agentsRunsRerun = <ThrowOnError extends boolean = false>(
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/agents/runs/{runId}/rerun',
     ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
   });
 
 /**

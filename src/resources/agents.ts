@@ -28,6 +28,7 @@ import {
   agentsTriggersEmailUpdate,
   agentsTriggersEmailUpdateAlias,
   agentsUpdate,
+  agentsVersionsList,
 } from '../generated/sdk.gen';
 import type {
   AgentExecutionExpectedArtifacts,
@@ -48,6 +49,7 @@ import type {
   CreateAgentResponse,
   GetAgentResponse,
   ListAgentRunsResponse,
+  ListAgentVersionsResponse,
   ListAgentsResponse,
   PatchAgentBody,
   PatchAgentResponse,
@@ -240,12 +242,15 @@ export class AgentRunsResource {
 
   async rerun(
     runId: string,
-    options: { signal?: AbortSignal } = {}
+    options: { sourceRef?: string; signal?: AbortSignal } = {}
   ): Promise<RerunAgentRunResponse> {
     return this.dispatch(() =>
       agentsRunsRerun({
         client: this.client,
         path: { runId },
+        body: {
+          ...(options.sourceRef !== undefined ? { sourceRef: options.sourceRef } : {}),
+        },
         signal: options.signal,
       })
     );
@@ -493,6 +498,15 @@ export class AgentsResource {
         body,
         signal: options.signal,
       })
+    );
+  }
+
+  async versions(
+    agentId: string,
+    options: { signal?: AbortSignal } = {}
+  ): Promise<ListAgentVersionsResponse> {
+    return this.dispatch(() =>
+      agentsVersionsList({ client: this.client, path: { agentId }, signal: options.signal })
     );
   }
 

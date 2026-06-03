@@ -28,6 +28,7 @@ client
 │   ├── listFiles
 │   ├── putFile
 │   ├── uploadFiles
+│   ├── versions
 │   ├── emailTriggers.list
 │   ├── emailTriggers.get
 │   ├── emailTriggers.createAlias
@@ -430,6 +431,26 @@ Creates an email trigger alias for one agent.
 // Record<string, unknown>
 ```
 
+### `client.agents.versions`
+
+**`GET /api/v1/agents/{agentId}/versions`**
+
+List agent Git versions
+
+Lists Git-backed release versions for an agent. Release notes are included when a matching legacy published-version message exists.
+
+**Path parameters**
+
+| Name      | Type     | Description      |
+| --------- | -------- | ---------------- |
+| `agentId` | `string` | Agent id or slug |
+
+**Response**
+
+```ts
+// ListAgentVersionsResponse
+```
+
 ### `client.agents.list`
 
 **`GET /api/v1/agents`**
@@ -691,6 +712,12 @@ Creates a new run for the same agent using a previous run's stored input snapsho
 | Name    | Type     | Description   |
 | ------- | -------- | ------------- |
 | `runId` | `string` | Source run id |
+
+**Request body**
+
+```ts
+// RerunAgentRunBody
+```
 
 **Response**
 

@@ -54,6 +54,13 @@ export type UpdateAgentExecutionFeedbackBody = {
   expected?: unknown | null;
 };
 
+export type RerunAgentRunBody = {
+  /**
+   * Git source ref to use for the rerun. Defaults to latest. Pass the source run version to reproduce the previous version.
+   */
+  sourceRef?: string;
+};
+
 export type SourceSecretsDecryptBody = {
   organizationId?: string;
   executionId?: string;
@@ -262,6 +269,21 @@ export type AgentExecutionSummary = {
   [key: string]: unknown;
 };
 
+export type ListAgentVersionsResponse = {
+  agentId: string;
+  slug: string;
+  packagePath: string;
+  versions: Array<{
+    version: string;
+    sourceRef: string;
+    tag: string;
+    commit: string;
+    notes: string | null;
+    createdAt: string | null;
+    latest: boolean;
+  }>;
+};
+
 export type ListAgentsResponse = {
   data: Array<AgentSummary>;
   total: number;
@@ -317,6 +339,10 @@ export type RerunAgentRunResponse = {
   runId: string;
   sourceRunId: string;
   status: ExecutionStatus;
+  requestedSourceRef?: string | null;
+  resolvedGitRef?: string | null;
+  resolvedGitTag?: string | null;
+  resolvedCommitSha?: string | null;
 };
 
 export type AgentRunResponse = {
@@ -1314,6 +1340,57 @@ export type AgentsTriggersEmailCreateAliasResponses = {
 export type AgentsTriggersEmailCreateAliasResponse =
   AgentsTriggersEmailCreateAliasResponses[keyof AgentsTriggersEmailCreateAliasResponses];
 
+export type AgentsVersionsListData = {
+  body?: never;
+  path: {
+    /**
+     * Agent id or slug
+     */
+    agentId: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/{agentId}/versions';
+};
+
+export type AgentsVersionsListErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsVersionsListError = AgentsVersionsListErrors[keyof AgentsVersionsListErrors];
+
+export type AgentsVersionsListResponses = {
+  /**
+   * Agent versions
+   */
+  200: ListAgentVersionsResponse;
+};
+
+export type AgentsVersionsListResponse =
+  AgentsVersionsListResponses[keyof AgentsVersionsListResponses];
+
 export type AgentsListData = {
   body?: never;
   path?: never;
@@ -1941,7 +2018,7 @@ export type AgentsRunsFilesDownloadResponses = {
 };
 
 export type AgentsRunsRerunData = {
-  body?: never;
+  body: RerunAgentRunBody;
   path: {
     /**
      * Source run id
