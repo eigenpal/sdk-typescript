@@ -28,6 +28,12 @@ client
 │   ├── listFiles
 │   ├── putFile
 │   ├── uploadFiles
+│   ├── emailTriggers.list
+│   ├── emailTriggers.get
+│   ├── emailTriggers.createAlias
+│   ├── emailTriggers.deleteAlias
+│   ├── emailTriggers.update
+│   ├── emailTriggers.updateAlias
 │   ├── runs.list
 │   ├── runs.get
 │   ├── runs.cancel
@@ -52,6 +58,7 @@ client
 │   └── executions.runAndWait
 ├── source
 │   ├── decryptSecrets
+│   ├── encryptSecrets
 │   ├── lockfile
 │   ├── raw
 │   ├── releases
@@ -303,6 +310,126 @@ Returns runs for an agent, optionally filtered by status or experiment batch.
 // ListAgentRunsResponse
 ```
 
+### `client.agents.emailTriggers.updateAlias`
+
+**`PATCH /api/v1/agents/{agentId}/triggers/email/{emailId}`**
+
+Update an agent email alias
+
+Updates an email trigger alias for one agent.
+
+**Path parameters**
+
+| Name      | Type     | Description            |
+| --------- | -------- | ---------------------- |
+| `agentId` | `string` | Agent id or slug       |
+| `emailId` | `string` | Email trigger alias id |
+
+**Request body**
+
+```ts
+// Record<string, unknown>
+```
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.agents.emailTriggers.deleteAlias`
+
+**`DELETE /api/v1/agents/{agentId}/triggers/email/{emailId}`**
+
+Delete an agent email alias
+
+Revokes an email trigger alias for one agent.
+
+**Path parameters**
+
+| Name      | Type     | Description            |
+| --------- | -------- | ---------------------- |
+| `agentId` | `string` | Agent id or slug       |
+| `emailId` | `string` | Email trigger alias id |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.agents.emailTriggers.get`
+
+**`GET /api/v1/agents/{agentId}/triggers/email`**
+
+Get an agent email trigger
+
+Returns email trigger configuration and aliases for one agent.
+
+**Path parameters**
+
+| Name      | Type     | Description      |
+| --------- | -------- | ---------------- |
+| `agentId` | `string` | Agent id or slug |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.agents.emailTriggers.update`
+
+**`PATCH /api/v1/agents/{agentId}/triggers/email`**
+
+Update an agent email trigger
+
+Enables or disables the email trigger for one agent.
+
+**Path parameters**
+
+| Name      | Type     | Description      |
+| --------- | -------- | ---------------- |
+| `agentId` | `string` | Agent id or slug |
+
+**Request body**
+
+```ts
+// Record<string, unknown>
+```
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.agents.emailTriggers.createAlias`
+
+**`POST /api/v1/agents/{agentId}/triggers/email`**
+
+Create an agent email alias
+
+Creates an email trigger alias for one agent.
+
+**Path parameters**
+
+| Name      | Type     | Description      |
+| --------- | -------- | ---------------- |
+| `agentId` | `string` | Agent id or slug |
+
+**Request body**
+
+```ts
+// Record<string, unknown>
+```
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
 ### `client.agents.list`
 
 **`GET /api/v1/agents`**
@@ -538,19 +665,18 @@ Deletes feedback, structured expected JSON, and expected files from one run.
 
 ### `client.agents.runs.downloadFile`
 
-**`GET /api/v1/agents/runs/{runId}/files/{kind}/{filename}`**
+**`GET /api/v1/agents/runs/{runId}/files/{path}`**
 
 Download a run file
 
-Downloads an input file, output file, issues.md, trace.jsonl, or eigenpal.lock attached to an agent run.
+Downloads an artifact path attached to an agent run, such as input.json, output/result.json, output.json, issues.md, trace.jsonl, or eigenpal.lock.
 
 **Path parameters**
 
-| Name       | Type                                                       | Description |
-| ---------- | ---------------------------------------------------------- | ----------- |
-| `runId`    | `string`                                                   |             |
-| `kind`     | `"input" \| "output" \| "issues" \| "trace" \| "lockfile"` |             |
-| `filename` | `string`                                                   |             |
+| Name    | Type       | Description |
+| ------- | ---------- | ----------- |
+| `runId` | `string`   |             |
+| `path`  | `string[]` |             |
 
 ### `client.agents.runs.rerun`
 
@@ -596,6 +722,20 @@ Returns one agent run by id.
 
 ```ts
 // AgentRunResponse
+```
+
+### `client.agents.emailTriggers.list`
+
+**`GET /api/v1/agents/triggers/email`**
+
+List agent email triggers
+
+Lists email trigger aliases for the authenticated organization.
+
+**Response**
+
+```ts
+// Record<string, unknown>
 ```
 
 ## Automations
@@ -716,6 +856,26 @@ Decrypts one or more encrypted source secret values for the authenticated tenant
 
 ```ts
 // SourceSecretsDecryptResponse
+```
+
+### `client.source.encryptSecrets`
+
+**`POST /api/v1/source/secrets/encrypt`**
+
+Encrypt a Git-backed source secret
+
+Encrypts one or more plaintext secret values for the authenticated tenant using the organization active decrypt key. Organization decrypt keys never leave the server; callers send plaintext over TLS with normal app authentication.
+
+**Request body**
+
+```ts
+// SourceSecretsEncryptBody
+```
+
+**Response**
+
+```ts
+// SourceSecretsEncryptResponse
 ```
 
 ## Workflows

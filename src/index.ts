@@ -34,7 +34,12 @@ export {
 
 export { toFile } from './lib/files';
 export type { FileDescriptor, FileInput, NodeReadableStream } from './lib/files';
-export type { ListAgentRunsOptions, ListAgentsOptions, RunAgentOptions } from './resources/agents';
+export type {
+  AgentExecutionFileKind,
+  ListAgentRunsOptions,
+  ListAgentsOptions,
+  RunAgentOptions,
+} from './resources/agents';
 export type { SourceRawOptions, SourceReleasesOptions } from './resources/source';
 export type {
   ListVersionsOptions,
@@ -57,6 +62,15 @@ export type {
   AgentExecutionSummary,
   AgentRunResponse,
   AgentSummary,
+  AgentsTriggersEmailCreateAliasData,
+  AgentsTriggersEmailCreateAliasResponse,
+  AgentsTriggersEmailDeleteAliasResponse,
+  AgentsTriggersEmailGetResponse,
+  AgentsTriggersEmailListResponse,
+  AgentsTriggersEmailUpdateAliasData,
+  AgentsTriggersEmailUpdateAliasResponse,
+  AgentsTriggersEmailUpdateData,
+  AgentsTriggersEmailUpdateResponse,
   ApiErrorEnvelope,
   ApiErrorIssue,
   AutomationSyncResponse,
@@ -79,6 +93,8 @@ export type {
   SourceRepositoryResponse,
   SourceSecretsDecryptBody,
   SourceSecretsDecryptResponse,
+  SourceSecretsEncryptBody,
+  SourceSecretsEncryptResponse,
   WorkflowDetail,
   WorkflowExecutionStatusResponse,
   WorkflowSummary,

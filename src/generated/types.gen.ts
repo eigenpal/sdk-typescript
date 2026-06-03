@@ -188,6 +188,10 @@ export type RunAgentResponse = {
   output?: unknown;
   schemaValid?: boolean | null;
   error?: string | null;
+  requestedSourceRef?: string | null;
+  resolvedGitRef?: string | null;
+  resolvedGitTag?: string | null;
+  resolvedCommitSha?: string | null;
   cost?: {
     [key: string]: unknown;
   };
@@ -1009,6 +1013,307 @@ export type AgentsRunsListResponses = {
 
 export type AgentsRunsListResponse = AgentsRunsListResponses[keyof AgentsRunsListResponses];
 
+export type AgentsTriggersEmailDeleteAliasData = {
+  body?: never;
+  path: {
+    /**
+     * Agent id or slug
+     */
+    agentId: string;
+    /**
+     * Email trigger alias id
+     */
+    emailId: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/{agentId}/triggers/email/{emailId}';
+};
+
+export type AgentsTriggersEmailDeleteAliasErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsTriggersEmailDeleteAliasError =
+  AgentsTriggersEmailDeleteAliasErrors[keyof AgentsTriggersEmailDeleteAliasErrors];
+
+export type AgentsTriggersEmailDeleteAliasResponses = {
+  /**
+   * Removed email alias
+   */
+  200: {
+    removed: true;
+  };
+};
+
+export type AgentsTriggersEmailDeleteAliasResponse =
+  AgentsTriggersEmailDeleteAliasResponses[keyof AgentsTriggersEmailDeleteAliasResponses];
+
+export type AgentsTriggersEmailUpdateAliasData = {
+  body: {
+    label?: string | null;
+    allowlist?: Array<string>;
+    allow?: Array<string>;
+    status?: 'active' | 'disabled';
+    replyConfig?: {
+      [key: string]: unknown;
+    };
+    requireSenderAuth?: boolean;
+    [key: string]: unknown;
+  };
+  path: {
+    /**
+     * Agent id or slug
+     */
+    agentId: string;
+    /**
+     * Email trigger alias id
+     */
+    emailId: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/{agentId}/triggers/email/{emailId}';
+};
+
+export type AgentsTriggersEmailUpdateAliasErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsTriggersEmailUpdateAliasError =
+  AgentsTriggersEmailUpdateAliasErrors[keyof AgentsTriggersEmailUpdateAliasErrors];
+
+export type AgentsTriggersEmailUpdateAliasResponses = {
+  /**
+   * Updated email alias
+   */
+  200: {
+    email: unknown;
+  };
+};
+
+export type AgentsTriggersEmailUpdateAliasResponse =
+  AgentsTriggersEmailUpdateAliasResponses[keyof AgentsTriggersEmailUpdateAliasResponses];
+
+export type AgentsTriggersEmailGetData = {
+  body?: never;
+  path: {
+    /**
+     * Agent id or slug
+     */
+    agentId: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/{agentId}/triggers/email';
+};
+
+export type AgentsTriggersEmailGetErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsTriggersEmailGetError =
+  AgentsTriggersEmailGetErrors[keyof AgentsTriggersEmailGetErrors];
+
+export type AgentsTriggersEmailGetResponses = {
+  /**
+   * Email trigger state
+   */
+  200: {
+    trigger: unknown;
+    emails: Array<unknown>;
+  };
+};
+
+export type AgentsTriggersEmailGetResponse =
+  AgentsTriggersEmailGetResponses[keyof AgentsTriggersEmailGetResponses];
+
+export type AgentsTriggersEmailUpdateData = {
+  body: {
+    enabled: boolean;
+  };
+  path: {
+    /**
+     * Agent id or slug
+     */
+    agentId: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/{agentId}/triggers/email';
+};
+
+export type AgentsTriggersEmailUpdateErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsTriggersEmailUpdateError =
+  AgentsTriggersEmailUpdateErrors[keyof AgentsTriggersEmailUpdateErrors];
+
+export type AgentsTriggersEmailUpdateResponses = {
+  /**
+   * Updated email trigger state
+   */
+  200: {
+    trigger: unknown;
+  };
+};
+
+export type AgentsTriggersEmailUpdateResponse =
+  AgentsTriggersEmailUpdateResponses[keyof AgentsTriggersEmailUpdateResponses];
+
+export type AgentsTriggersEmailCreateAliasData = {
+  body: {
+    email?: string;
+    alias?: string;
+    label?: string;
+    allowlist?: Array<string>;
+    allow?: Array<string>;
+    replyConfig?: {
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  };
+  path: {
+    /**
+     * Agent id or slug
+     */
+    agentId: string;
+  };
+  query?: never;
+  url: '/api/v1/agents/{agentId}/triggers/email';
+};
+
+export type AgentsTriggersEmailCreateAliasErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsTriggersEmailCreateAliasError =
+  AgentsTriggersEmailCreateAliasErrors[keyof AgentsTriggersEmailCreateAliasErrors];
+
+export type AgentsTriggersEmailCreateAliasResponses = {
+  /**
+   * Created email alias
+   */
+  201: {
+    email: unknown;
+  };
+};
+
+export type AgentsTriggersEmailCreateAliasResponse =
+  AgentsTriggersEmailCreateAliasResponses[keyof AgentsTriggersEmailCreateAliasResponses];
+
 export type AgentsListData = {
   body?: never;
   path?: never;
@@ -1592,11 +1897,10 @@ export type AgentsRunsFilesDownloadData = {
   body?: never;
   path: {
     runId: string;
-    kind: 'input' | 'output' | 'issues' | 'trace' | 'lockfile';
-    filename: string;
+    path: Array<string>;
   };
   query?: never;
-  url: '/api/v1/agents/runs/{runId}/files/{kind}/{filename}';
+  url: '/api/v1/agents/runs/{runId}/files/{path}';
 };
 
 export type AgentsRunsFilesDownloadErrors = {
@@ -1740,6 +2044,55 @@ export type AgentsRunsGetResponses = {
 };
 
 export type AgentsRunsGetResponse = AgentsRunsGetResponses[keyof AgentsRunsGetResponses];
+
+export type AgentsTriggersEmailListData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/agents/triggers/email';
+};
+
+export type AgentsTriggersEmailListErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type AgentsTriggersEmailListError =
+  AgentsTriggersEmailListErrors[keyof AgentsTriggersEmailListErrors];
+
+export type AgentsTriggersEmailListResponses = {
+  /**
+   * Email trigger aliases
+   */
+  200: {
+    emails: Array<unknown>;
+  };
+};
+
+export type AgentsTriggersEmailListResponse =
+  AgentsTriggersEmailListResponses[keyof AgentsTriggersEmailListResponses];
 
 export type AutomationsSyncData = {
   body?: never;

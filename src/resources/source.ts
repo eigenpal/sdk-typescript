@@ -6,6 +6,7 @@ import {
   sourceReleases,
   sourceRepository,
   sourceSecretsDecrypt,
+  sourceSecretsEncrypt,
 } from '../generated/sdk.gen';
 import type {
   RawSourceResponse,
@@ -14,6 +15,8 @@ import type {
   SourceRepositoryResponse,
   SourceSecretsDecryptBody,
   SourceSecretsDecryptResponse,
+  SourceSecretsEncryptBody,
+  SourceSecretsEncryptResponse,
 } from '../generated/types.gen';
 
 type Dispatch = <T>(call: () => Promise<OperationResult<T>>) => Promise<T>;
@@ -76,6 +79,19 @@ export class SourceResource {
   ): Promise<SourceSecretsDecryptResponse> {
     return this.dispatch(() =>
       sourceSecretsDecrypt({
+        client: this.client,
+        body,
+        signal: options.signal,
+      })
+    );
+  }
+
+  async encryptSecrets(
+    body: SourceSecretsEncryptBody,
+    options: { signal?: AbortSignal } = {}
+  ): Promise<SourceSecretsEncryptResponse> {
+    return this.dispatch(() =>
+      sourceSecretsEncrypt({
         client: this.client,
         body,
         signal: options.signal,

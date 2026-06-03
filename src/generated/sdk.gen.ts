@@ -61,6 +61,24 @@ import type {
   AgentsRunsRerunData,
   AgentsRunsRerunErrors,
   AgentsRunsRerunResponses,
+  AgentsTriggersEmailCreateAliasData,
+  AgentsTriggersEmailCreateAliasErrors,
+  AgentsTriggersEmailCreateAliasResponses,
+  AgentsTriggersEmailDeleteAliasData,
+  AgentsTriggersEmailDeleteAliasErrors,
+  AgentsTriggersEmailDeleteAliasResponses,
+  AgentsTriggersEmailGetData,
+  AgentsTriggersEmailGetErrors,
+  AgentsTriggersEmailGetResponses,
+  AgentsTriggersEmailListData,
+  AgentsTriggersEmailListErrors,
+  AgentsTriggersEmailListResponses,
+  AgentsTriggersEmailUpdateAliasData,
+  AgentsTriggersEmailUpdateAliasErrors,
+  AgentsTriggersEmailUpdateAliasResponses,
+  AgentsTriggersEmailUpdateData,
+  AgentsTriggersEmailUpdateErrors,
+  AgentsTriggersEmailUpdateResponses,
   AgentsUpdateData,
   AgentsUpdateErrors,
   AgentsUpdateResponses,
@@ -242,6 +260,108 @@ export const agentsRunsList = <ThrowOnError extends boolean = false>(
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/agents/{agentId}/runs',
     ...options,
+  });
+
+/**
+ * Delete an agent email alias
+ *
+ * Revokes an email trigger alias for one agent.
+ */
+export const agentsTriggersEmailDeleteAlias = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsTriggersEmailDeleteAliasData, ThrowOnError>
+) =>
+  (options.client ?? client).delete<
+    AgentsTriggersEmailDeleteAliasResponses,
+    AgentsTriggersEmailDeleteAliasErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/{agentId}/triggers/email/{emailId}',
+    ...options,
+  });
+
+/**
+ * Update an agent email alias
+ *
+ * Updates an email trigger alias for one agent.
+ */
+export const agentsTriggersEmailUpdateAlias = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsTriggersEmailUpdateAliasData, ThrowOnError>
+) =>
+  (options.client ?? client).patch<
+    AgentsTriggersEmailUpdateAliasResponses,
+    AgentsTriggersEmailUpdateAliasErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/{agentId}/triggers/email/{emailId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * Get an agent email trigger
+ *
+ * Returns email trigger configuration and aliases for one agent.
+ */
+export const agentsTriggersEmailGet = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsTriggersEmailGetData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    AgentsTriggersEmailGetResponses,
+    AgentsTriggersEmailGetErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/{agentId}/triggers/email',
+    ...options,
+  });
+
+/**
+ * Update an agent email trigger
+ *
+ * Enables or disables the email trigger for one agent.
+ */
+export const agentsTriggersEmailUpdate = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsTriggersEmailUpdateData, ThrowOnError>
+) =>
+  (options.client ?? client).patch<
+    AgentsTriggersEmailUpdateResponses,
+    AgentsTriggersEmailUpdateErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/{agentId}/triggers/email',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * Create an agent email alias
+ *
+ * Creates an email trigger alias for one agent.
+ */
+export const agentsTriggersEmailCreateAlias = <ThrowOnError extends boolean = false>(
+  options: Options<AgentsTriggersEmailCreateAliasData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    AgentsTriggersEmailCreateAliasResponses,
+    AgentsTriggersEmailCreateAliasErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/{agentId}/triggers/email',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
   });
 
 /**
@@ -449,7 +569,7 @@ export const agentsRunsFeedbackUpdate = <ThrowOnError extends boolean = false>(
 /**
  * Download a run file
  *
- * Downloads an input file, output file, issues.md, trace.jsonl, or eigenpal.lock attached to an agent run.
+ * Downloads an artifact path attached to an agent run, such as input.json, output/result.json, output.json, issues.md, trace.jsonl, or eigenpal.lock.
  */
 export const agentsRunsFilesDownload = <ThrowOnError extends boolean = false>(
   options: Options<AgentsRunsFilesDownloadData, ThrowOnError>
@@ -460,7 +580,7 @@ export const agentsRunsFilesDownload = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/runs/{runId}/files/{kind}/{filename}',
+    url: '/api/v1/agents/runs/{runId}/files/{path}',
     ...options,
   });
 
@@ -489,6 +609,24 @@ export const agentsRunsGet = <ThrowOnError extends boolean = false>(
   (options.client ?? client).get<AgentsRunsGetResponses, AgentsRunsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/agents/runs/{runId}',
+    ...options,
+  });
+
+/**
+ * List agent email triggers
+ *
+ * Lists email trigger aliases for the authenticated organization.
+ */
+export const agentsTriggersEmailList = <ThrowOnError extends boolean = false>(
+  options?: Options<AgentsTriggersEmailListData, ThrowOnError>
+) =>
+  (options?.client ?? client).get<
+    AgentsTriggersEmailListResponses,
+    AgentsTriggersEmailListErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/agents/triggers/email',
     ...options,
   });
 

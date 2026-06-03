@@ -18,16 +18,30 @@ import {
   agentsRunsFeedbackDelete,
   agentsRunsFeedbackGet,
   agentsRunsFeedbackUpdate,
-  agentsRunsFilesDownload,
   agentsRunsGet,
   agentsRunsList,
   agentsRunsRerun,
+  agentsTriggersEmailCreateAlias,
+  agentsTriggersEmailDeleteAlias,
+  agentsTriggersEmailGet,
+  agentsTriggersEmailList,
+  agentsTriggersEmailUpdate,
+  agentsTriggersEmailUpdateAlias,
   agentsUpdate,
 } from '../generated/sdk.gen';
 import type {
   AgentExecutionExpectedArtifacts,
   AgentExecutionFeedbackDetail,
   AgentRunResponse,
+  AgentsTriggersEmailCreateAliasData,
+  AgentsTriggersEmailCreateAliasResponse,
+  AgentsTriggersEmailDeleteAliasResponse,
+  AgentsTriggersEmailGetResponse,
+  AgentsTriggersEmailListResponse,
+  AgentsTriggersEmailUpdateAliasData,
+  AgentsTriggersEmailUpdateAliasResponse,
+  AgentsTriggersEmailUpdateData,
+  AgentsTriggersEmailUpdateResponse,
   CancelAgentExecutionResponse,
   CopyAgentExecutionOutputToExpectedBody,
   CreateAgentBody,
@@ -95,7 +109,93 @@ export interface ListAgentRunsOptions {
   signal?: AbortSignal;
 }
 
-export type AgentExecutionFileKind = 'input' | 'output' | 'issues' | 'trace';
+export type AgentExecutionFileKind = 'input' | 'output' | 'issues' | 'trace' | 'lockfile';
+
+export class AgentEmailTriggersResource {
+  constructor(
+    private readonly client: Client,
+    private readonly dispatch: Dispatch
+  ) {}
+
+  async list(options: { signal?: AbortSignal } = {}): Promise<AgentsTriggersEmailListResponse> {
+    return this.dispatch(() =>
+      agentsTriggersEmailList({ client: this.client, signal: options.signal })
+    );
+  }
+
+  async get(
+    agentId: string,
+    options: { signal?: AbortSignal } = {}
+  ): Promise<AgentsTriggersEmailGetResponse> {
+    return this.dispatch(() =>
+      agentsTriggersEmailGet({
+        client: this.client,
+        path: { agentId },
+        signal: options.signal,
+      })
+    );
+  }
+
+  async update(
+    agentId: string,
+    body: AgentsTriggersEmailUpdateData['body'],
+    options: { signal?: AbortSignal } = {}
+  ): Promise<AgentsTriggersEmailUpdateResponse> {
+    return this.dispatch(() =>
+      agentsTriggersEmailUpdate({
+        client: this.client,
+        path: { agentId },
+        body,
+        signal: options.signal,
+      })
+    );
+  }
+
+  async createAlias(
+    agentId: string,
+    body: AgentsTriggersEmailCreateAliasData['body'],
+    options: { signal?: AbortSignal } = {}
+  ): Promise<AgentsTriggersEmailCreateAliasResponse> {
+    return this.dispatch(() =>
+      agentsTriggersEmailCreateAlias({
+        client: this.client,
+        path: { agentId },
+        body,
+        signal: options.signal,
+      })
+    );
+  }
+
+  async updateAlias(
+    agentId: string,
+    emailId: string,
+    body: AgentsTriggersEmailUpdateAliasData['body'],
+    options: { signal?: AbortSignal } = {}
+  ): Promise<AgentsTriggersEmailUpdateAliasResponse> {
+    return this.dispatch(() =>
+      agentsTriggersEmailUpdateAlias({
+        client: this.client,
+        path: { agentId, emailId },
+        body,
+        signal: options.signal,
+      })
+    );
+  }
+
+  async deleteAlias(
+    agentId: string,
+    emailId: string,
+    options: { signal?: AbortSignal } = {}
+  ): Promise<AgentsTriggersEmailDeleteAliasResponse> {
+    return this.dispatch(() =>
+      agentsTriggersEmailDeleteAlias({
+        client: this.client,
+        path: { agentId, emailId },
+        signal: options.signal,
+      })
+    );
+  }
+}
 
 export class AgentRunsResource {
   constructor(
@@ -289,17 +389,24 @@ export class AgentRunsResource {
 
   async downloadFile(
     runId: string,
-    kind: AgentExecutionFileKind,
-    filename: string,
+    artifactPathOrKind: string,
+    filenameOrOptions?: string | { signal?: AbortSignal },
     options: { signal?: AbortSignal } = {}
   ): Promise<Blob> {
+    const artifactPath =
+      typeof filenameOrOptions === 'string'
+        ? artifactPathForKind(artifactPathOrKind as AgentExecutionFileKind, filenameOrOptions)
+        : artifactPathOrKind;
+    const requestOptions =
+      typeof filenameOrOptions === 'string' ? options : (filenameOrOptions ?? {});
     return this.downloadBlob(
       () =>
-        agentsRunsFilesDownload({
-          client: this.client,
-          path: { runId, kind, filename },
+        this.client.get({
+          url: `/api/v1/agents/runs/${encodeURIComponent(runId)}/files/${encodeArtifactPath(
+            artifactPath
+          )}`,
           parseAs: 'blob',
-          signal: options.signal,
+          signal: requestOptions.signal,
         }) as Promise<OperationResult<Blob>>
     );
   }
@@ -315,14 +422,25 @@ export class AgentRunsResource {
   }
 }
 
+function artifactPathForKind(kind: AgentExecutionFileKind, filename: string): string {
+  if (kind === 'issues' || kind === 'trace' || kind === 'lockfile') return filename;
+  return `${kind}/${filename}`;
+}
+
+function encodeArtifactPath(artifactPath: string): string {
+  return artifactPath.split('/').map(encodeURIComponent).join('/');
+}
+
 export class AgentsResource {
   public readonly runs: AgentRunsResource;
+  public readonly emailTriggers: AgentEmailTriggersResource;
 
   constructor(
     private readonly client: Client,
     private readonly dispatch: Dispatch
   ) {
     this.runs = new AgentRunsResource(client, dispatch);
+    this.emailTriggers = new AgentEmailTriggersResource(client, dispatch);
   }
 
   async list(options: ListAgentsOptions = {}): Promise<ListAgentsResponse> {
