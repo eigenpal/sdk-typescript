@@ -199,6 +199,7 @@ export type {
   CopyAgentExecutionOutputToExpectedBody,
   CreateAgentBody,
   CreateAgentResponse,
+  ExecutionObservability,
   ExecutionStatus,
   ExecutionSummary,
   GetAgentResponse,

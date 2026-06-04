@@ -266,7 +266,57 @@ export type AgentExecutionSummary = {
   expectedFiles?: Array<{
     name: string;
   }>;
+  observability?: ExecutionObservability;
   [key: string]: unknown;
+};
+
+export type ExecutionObservability = {
+  phases: Array<{
+    executionId: string;
+    phase:
+      | 'queued'
+      | 'starting'
+      | 'preparing_inputs'
+      | 'preparing_environment'
+      | 'installing_dependencies'
+      | 'running'
+      | 'collecting_outputs'
+      | 'finalizing';
+    phaseOrder: number;
+    status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped' | 'cancelled';
+    startedAt?: string | null;
+    completedAt?: string | null;
+    message?: string | null;
+    failureCode?: string | null;
+    durationMs?: number | null;
+  }>;
+  currentPhase?:
+    | 'queued'
+    | 'starting'
+    | 'preparing_inputs'
+    | 'preparing_environment'
+    | 'installing_dependencies'
+    | 'running'
+    | 'collecting_outputs'
+    | 'finalizing';
+  failure?: {
+    phase:
+      | 'queued'
+      | 'starting'
+      | 'preparing_inputs'
+      | 'preparing_environment'
+      | 'installing_dependencies'
+      | 'running'
+      | 'collecting_outputs'
+      | 'finalizing';
+    code: string;
+    category: 'input' | 'source' | 'environment' | 'runtime' | 'output' | 'finalization' | 'system';
+    provider?: string;
+    retryable: boolean;
+    userMessage: string;
+    occurredAt: string;
+  };
+  derived: boolean;
 };
 
 export type ListAgentVersionsResponse = {
@@ -280,6 +330,12 @@ export type ListAgentVersionsResponse = {
     commit: string;
     notes: string | null;
     createdAt: string | null;
+    createdByUser: {
+      id: string;
+      email: string;
+      name: string | null;
+      image: string | null;
+    } | null;
     latest: boolean;
   }>;
 };
@@ -460,6 +516,7 @@ export type ExecutionSummary = {
     id: string;
     name: string;
   } | null;
+  observability?: ExecutionObservability;
 };
 
 export type WorkflowDetail = {
@@ -561,6 +618,7 @@ export type WorkflowExecutionStatusResponse = {
    * Error message (status=failed)
    */
   error?: string | null;
+  observability?: ExecutionObservability;
 };
 
 export type ListWorkflowsResponse = {

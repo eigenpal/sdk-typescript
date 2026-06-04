@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.6.9
+
+### Minor Changes
+
+- 5e7c051: Add `observability` (phase timeline + structured failure) to workflow execution and agent run status API responses.
+
 ## 0.6.4
 
 ### Patch Changes
