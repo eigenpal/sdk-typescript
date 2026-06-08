@@ -34,12 +34,8 @@ export {
 
 export { toFile } from './lib/files';
 export type { FileDescriptor, FileInput, NodeReadableStream } from './lib/files';
-export type {
-  AgentExecutionFileKind,
-  ListAgentRunsOptions,
-  ListAgentsOptions,
-  RunAgentOptions,
-} from './resources/agents';
+export type { ListAgentsOptions, RunAgentOptions } from './resources/agents';
+export type { ListRunsOptions } from './resources/runs';
 export type { SourceRawOptions, SourceReleasesOptions } from './resources/source';
 export type {
   ListVersionsOptions,
@@ -51,16 +47,11 @@ export type {
 // SDK perspective you always upload a file; fileId is an internal wire id
 // the server creates after upload — not something users construct.
 
-export type { ListExecutionsOptions, RunAndWaitOptions } from './resources/executions';
+export type { RunAndWaitOptions } from './resources/executions';
 
 // Re-export the canonical generated types so users can type their own
 // callbacks and helpers without reaching into `./generated`.
 export type {
-  AgentExecutionExpectedArtifacts,
-  AgentExecutionFeedback,
-  AgentExecutionFeedbackDetail,
-  AgentExecutionSummary,
-  AgentRunResponse,
   AgentSummary,
   AgentsTriggersEmailCreateAliasData,
   AgentsTriggersEmailCreateAliasResponse,
@@ -74,20 +65,27 @@ export type {
   ApiErrorEnvelope,
   ApiErrorIssue,
   AutomationSyncResponse,
-  CancelAgentExecutionResponse,
-  CancelWorkflowExecutionResponse,
   ExecutionStatus,
-  ExecutionSummary,
   GetAgentResponse,
-  ListAgentRunsResponse,
   ListAgentsResponse,
   ListVersionsResponse,
-  ListWorkflowExecutionsResponse,
   ListWorkflowsResponse,
   RawSourceResponse,
   RunAgentResponse,
+  RunSummary,
   RunWorkflowBody,
   RunWorkflowResponse,
+  RunsCancelResponse,
+  RunsExpectedCreateResponse,
+  RunsExpectedFileDeleteResponse,
+  RunsExpectedFileUpdateResponse,
+  RunsExpectedGetResponse,
+  RunsFeedbackClearResponse,
+  RunsFeedbackUpdateResponse,
+  RunsGetResponse,
+  RunsListResponse,
+  RunsRerunResponse,
+  RunsResumeResponse,
   SourceLockfileResponse,
   SourceReleasesResponse,
   SourceRepositoryResponse,
@@ -96,7 +94,6 @@ export type {
   SourceSecretsEncryptBody,
   SourceSecretsEncryptResponse,
   WorkflowDetail,
-  WorkflowExecutionStatusResponse,
   WorkflowSummary,
   WorkflowVersion,
 } from './generated/types.gen';

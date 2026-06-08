@@ -152,6 +152,62 @@ describe('EigenpalClient SDK', () => {
     });
   });
 
+  test('runs resource uses the public v1 runs API', async () => {
+    const captured: { url: string; method: string }[] = [];
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch: mockFetch(
+        [
+          { status: 200, body: { runs: [], nextCursor: null } },
+          {
+            status: 200,
+            body: {
+              run: {
+                id: 'run_123',
+                type: 'workflow',
+                status: 'completed',
+                source: { id: 'wf_123', name: 'Extract' },
+                createdAt: '2026-01-01T00:00:00.000Z',
+              },
+            },
+          },
+          { status: 200, body: { ok: true } },
+          { status: 200, body: { executionId: 'run_rerun', status: 'pending' } },
+          { status: 200, body: { id: 'run_123', status: 'running' } },
+          { status: 200, body: { ok: true } },
+          { status: 200, body: { expected: null, files: [] } },
+        ],
+        captured
+      ),
+      maxRetries: 0,
+    });
+
+    await client.runs.list({ type: 'workflow', source: 'wf_123', status: 'completed' });
+    const run = await client.runs.get('run_123', { include: 'detail' });
+    await client.runs.cancel('run_123');
+    await client.runs.rerun('run_123');
+    await client.runs.resume('run_123');
+    await client.runs.feedback.update('run_123', { status: 'open' });
+    await client.runs.expected.list('run_123');
+
+    expect(run.id).toBe('run_123');
+    expect(captured[0]?.url).toContain('/api/v1/runs');
+    expect(captured[0]?.url).toContain('type=workflow');
+    expect(captured[1]?.url).toContain('/api/v1/runs/run_123');
+    expect(captured[1]?.url).toContain('include=detail');
+    expect(captured[2]?.method).toBe('POST');
+    expect(captured[2]?.url).toContain('/api/v1/runs/run_123/cancel');
+    expect(captured[3]?.method).toBe('POST');
+    expect(captured[3]?.url).toContain('/api/v1/runs/run_123/rerun');
+    expect(captured[4]?.method).toBe('POST');
+    expect(captured[4]?.url).toContain('/api/v1/runs/run_123/resume');
+    expect(captured[5]?.method).toBe('PATCH');
+    expect(captured[5]?.url).toContain('/api/v1/runs/run_123/feedback');
+    expect(captured[6]?.method).toBe('GET');
+    expect(captured[6]?.url).toContain('/api/v1/runs/run_123/expected');
+  });
+
   test('401 surfaces as EigenpalAuthError', async () => {
     const client = new EigenpalClient({
       apiKey: 'bad',
@@ -240,29 +296,37 @@ describe('EigenpalClient SDK', () => {
   });
 
   test('runAndWait polls until terminal status', async () => {
+    const captured: { url: string }[] = [];
     const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
-      fetch: mockFetch([
-        // 1: trigger run
-        { status: 201, body: { executionId: 'exec_pq' } },
-        // 2: poll — running
-        {
-          status: 200,
-          body: { executionId: 'exec_pq', status: 'running', createdAt: '2025-01-01T00:00:00Z' },
-        },
-        // 3: poll — completed
-        {
-          status: 200,
-          body: {
-            executionId: 'exec_pq',
-            status: 'completed',
-            result: { total: 42 },
-            createdAt: '2025-01-01T00:00:00Z',
-            completedAt: '2025-01-01T00:00:05Z',
+      fetch: mockFetch(
+        [
+          // 1: trigger run
+          { status: 201, body: { executionId: 'exec_pq' } },
+          // 2: poll — running
+          {
+            status: 200,
+            body: {
+              run: { executionId: 'exec_pq', status: 'running', createdAt: '2025-01-01T00:00:00Z' },
+            },
           },
-        },
-      ]),
+          // 3: poll — completed
+          {
+            status: 200,
+            body: {
+              run: {
+                executionId: 'exec_pq',
+                status: 'completed',
+                result: { total: 42 },
+                createdAt: '2025-01-01T00:00:00Z',
+                completedAt: '2025-01-01T00:00:05Z',
+              },
+            },
+          },
+        ],
+        captured
+      ),
       maxRetries: 0,
     });
 
@@ -275,9 +339,11 @@ describe('EigenpalClient SDK', () => {
     expect(result.executionId).toBe('exec_pq');
     expect(result.status).toBe('completed');
     expect(result.result).toEqual({ total: 42 });
+    expect(captured[1]?.url).toContain('include=detail');
+    expect(captured[2]?.url).toContain('include=detail');
   });
 
-  test('workflows.executions.cancel hits the cancel endpoint', async () => {
+  test('runs.cancel cancels workflow runs through the public v1 runs API', async () => {
     const captured: { url: string; method: string }[] = [];
     const client = new EigenpalClient({
       apiKey: 'eg_test',
@@ -294,10 +360,10 @@ describe('EigenpalClient SDK', () => {
       maxRetries: 0,
     });
 
-    const r = await client.workflows.executions.cancel('exec_pq');
+    const r = await client.runs.cancel('exec_pq');
     expect(r.status).toBe('cancelled');
     expect(captured[0]?.method).toBe('POST');
-    expect(captured[0]?.url).toContain('/api/v1/workflows/executions/exec_pq/cancel');
+    expect(captured[0]?.url).toContain('/api/v1/runs/exec_pq');
   });
 
   test('retries on 503 then succeeds', async () => {

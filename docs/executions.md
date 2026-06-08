@@ -1,14 +1,14 @@
 # Executions
 
-`client.workflows.executions` inspects and manages individual workflow executions.
+`client.workflows.executions` only exposes `runAndWait`. Inspect and manage existing workflow runs through `client.runs`.
 
 ## Which polling option do I pick?
 
-| Run length   | Use                                                                                   |
-| ------------ | ------------------------------------------------------------------------------------- |
-| 0–60s        | `client.workflows.run(id, input, { waitForCompletion: 60 })` — server hold.           |
-| 60s–5min     | `client.workflows.executions.runAndWait(id, input)` — client polls every 2s.          |
-| Driving a UI | `client.workflows.run(...)` then poll `client.workflows.executions.get(id)` yourself. |
+| Run length   | Use                                                                          |
+| ------------ | ---------------------------------------------------------------------------- |
+| 0–60s        | `client.workflows.run(id, input, { waitForCompletion: 60 })` — server hold.  |
+| 60s–5min     | `client.workflows.executions.runAndWait(id, input)` — client polls every 2s. |
+| Driving a UI | `client.workflows.run(...)` then poll `client.runs.get(id)` yourself.        |
 
 ## Statuses
 
@@ -24,7 +24,7 @@ The first five are non-terminal; the last four are terminal. Always check `statu
 ## Get
 
 ```ts
-const exec = await client.workflows.executions.get(executionId);
+const exec = await client.runs.get(executionId);
 //   { executionId, status, createdAt, completedAt?, result?, error? }
 ```
 
@@ -33,7 +33,7 @@ const exec = await client.workflows.executions.get(executionId);
 ### Per-step detail
 
 ```ts
-const detail = await client.workflows.executions.get(executionId, { includeSteps: true });
+const detail = await client.runs.get(executionId, { include: 'detail' });
 ```
 
 Returns the full per-step execution payload (heavier; intended for debugging, not happy-path UI).
@@ -53,15 +53,17 @@ const final = await client.workflows.executions.runAndWait(
 );
 ```
 
-Triggers async, then polls `workflows.executions.get` until terminal or timeout. Throws `EigenpalTimeoutError` on timeout.
+Triggers async, then polls `client.runs.get` until terminal or timeout. Throws `EigenpalTimeoutError` on timeout.
 
 ## List
 
 ```ts
-const { data } = await client.workflows.executions.list('wf_abc123', {
+const { runs } = await client.runs.list({
+  type: 'workflow',
+  source: 'wf_abc123',
   status: ['failed', 'cancelled'], // string or string[]
-  fromDate: 'now()-7d', // ISO-8601 or relative expression
-  toDate: 'now()',
+  from: 'now()-7d', // ISO-8601 or relative expression
+  to: 'now()',
   limit: 50,
 });
 ```
@@ -73,7 +75,7 @@ Item shape: `{ id, workflowId, status, triggerType, triggerInput, result, error,
 ## Cancel
 
 ```ts
-await client.workflows.executions.cancel(executionId);
+await client.runs.cancel(executionId);
 ```
 
 Idempotent. For runs not yet picked up by a worker (`created`/`pending`), transitions immediately to `cancelled`. For `running` executions, stamps `cancelRequestedAt` so the worker honors the cancel at the next checkpoint.
@@ -89,7 +91,7 @@ const { executionId } = await client.workflows.run('extract-invoice', input);
 let status;
 do {
   await new Promise((r) => setTimeout(r, 2000));
-  status = await client.workflows.executions.get(executionId);
+  status = await client.runs.get(executionId);
 } while (!TERMINAL.has(status.status));
 
 console.log(status.status, status.result, status.error);

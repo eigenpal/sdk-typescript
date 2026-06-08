@@ -34,29 +34,38 @@ client
 │   ├── emailTriggers.createAlias
 │   ├── emailTriggers.deleteAlias
 │   ├── emailTriggers.update
-│   ├── emailTriggers.updateAlias
-│   ├── runs.list
-│   ├── runs.get
-│   ├── runs.cancel
-│   ├── runs.rerun
-│   ├── runs.getFeedback
-│   ├── runs.updateFeedback
-│   ├── runs.clearFeedback
-│   ├── runs.listExpected
-│   ├── runs.copyOutputToExpected / uploadExpected
-│   ├── runs.downloadExpected
-│   ├── runs.renameExpected
-│   ├── runs.deleteExpected
-│   └── runs.downloadFile
+│   └── emailTriggers.updateAlias
 ├── workflows
 │   ├── list
 │   ├── get
 │   ├── run
 │   ├── versions
-│   ├── executions.list
-│   ├── executions.get
-│   ├── executions.cancel
 │   └── executions.runAndWait
+├── runs
+│   ├── list
+│   ├── get
+│   ├── artifacts.download
+│   ├── artifacts.downloadZip
+│   ├── cancel
+│   ├── compare
+│   ├── comparison.get
+│   ├── connect
+│   ├── expected.list
+│   ├── expected.copyOutput
+│   ├── expected.delete
+│   ├── expected.download
+│   ├── expected.rename
+│   ├── expected.upload
+│   ├── feedback.get
+│   ├── feedback.clear
+│   ├── feedback.resolve
+│   ├── feedback.update
+│   ├── files.list
+│   ├── files.delete
+│   ├── files.upload
+│   ├── rerun
+│   ├── resume
+│   └── trace.get
 ├── source
 │   ├── decryptSecrets
 │   ├── encryptSecrets
@@ -67,6 +76,12 @@ client
 └── automations
     └── sync
 ```
+
+Run inspection and mutation is canonical under `client.runs.*`, which maps to `/api/v1/runs`.
+
+`client.runs.files.*` is currently for DB-backed workflow run files. `client.runs.artifacts.*` is currently for agent run artifacts such as traces, metadata, and output files; workflow artifacts will be unified in a future refactor.
+
+`client.workflows.executions.runAndWait` remains a workflow-specific helper because it triggers a workflow and then polls the canonical runs API until completion.
 
 ## Client construction
 
@@ -254,63 +269,6 @@ Enqueues an agent run. Returns 202 with `{ runId }` by default. Pass `wait_for_c
 // RunAgentResponse
 ```
 
-### `client.agents.runs.list`
-
-**`GET /api/v1/agents/{agentId}/runs`**
-
-List agent runs
-
-Returns runs for an agent, optionally filtered by status or experiment batch.
-
-**Path parameters**
-
-| Name      | Type     | Description      |
-| --------- | -------- | ---------------- |
-| `agentId` | `string` | Agent id or slug |
-
-**Query parameters**
-
-| Name                     | Type                                                      | Description                                                           |
-| ------------------------ | --------------------------------------------------------- | --------------------------------------------------------------------- |
-| `status`                 | `string`                                                  | (optional)Run status filter                                           |
-| `batchId`                | `string`                                                  | (optional)Experiment batch id filter                                  |
-| `exampleId`              | `string`                                                  | (optional)Exact dataset example id (folder name) filter               |
-| `exampleIdContains`      | `string`                                                  | (optional)Substring match on dataset example id                       |
-| `createdAfter`           | `string`                                                  | (optional)Only runs created at/after this ISO timestamp               |
-| `createdBefore`          | `string`                                                  | (optional)Only runs created at/before this ISO timestamp              |
-| `completedAfter`         | `string`                                                  | (optional)Only runs completed at/after this ISO timestamp             |
-| `completedBefore`        | `string`                                                  | (optional)Only runs completed at/before this ISO timestamp            |
-| `sourceRef`              | `string`                                                  | (optional)Filter by the source ref requested when the run was created |
-| `feedbackStatus`         | `"open" \| "resolved" \| "ignored"`                       | (optional)                                                            |
-| `feedbackRating`         | `"pass" \| "fail" \| "partial" \| "none"`                 | (optional)                                                            |
-| `hasFeedback`            | `boolean`                                                 | (optional)                                                            |
-| `noFeedback`             | `boolean`                                                 | (optional)                                                            |
-| `hasExpected`            | `boolean`                                                 | (optional)                                                            |
-| `hasExpectedJson`        | `boolean`                                                 | (optional)                                                            |
-| `hasExpectedFiles`       | `boolean`                                                 | (optional)                                                            |
-| `feedbackBodyContains`   | `string`                                                  | (optional)                                                            |
-| `feedbackCreatedAfter`   | `string`                                                  | (optional)                                                            |
-| `feedbackCreatedBefore`  | `string`                                                  | (optional)                                                            |
-| `feedbackUpdatedAfter`   | `string`                                                  | (optional)                                                            |
-| `feedbackUpdatedBefore`  | `string`                                                  | (optional)                                                            |
-| `feedbackResolvedAfter`  | `string`                                                  | (optional)                                                            |
-| `feedbackResolvedBefore` | `string`                                                  | (optional)                                                            |
-| `promotedToExample`      | `boolean`                                                 | (optional)                                                            |
-| `promotedExampleName`    | `string`                                                  | (optional)                                                            |
-| `sinceLastResolved`      | `boolean`                                                 | (optional)                                                            |
-| `include`                | `string`                                                  | (optional)Comma-separated extra parts: feedback, expected, files      |
-| `sort`                   | `"createdAt" \| "completedAt" \| "status" \| "exampleId"` | (optional)                                                            |
-| `order`                  | `"asc" \| "desc"`                                         | (optional)                                                            |
-| `scanLimit`              | `number`                                                  | (optional)                                                            |
-| `limit`                  | `number`                                                  | (optional)                                                            |
-| `offset`                 | `number`                                                  | (optional)                                                            |
-
-**Response**
-
-```ts
-// ListAgentRunsResponse
-```
-
 ### `client.agents.emailTriggers.updateAlias`
 
 **`PATCH /api/v1/agents/{agentId}/triggers/email/{emailId}`**
@@ -495,262 +453,6 @@ Creates a new agent, registers it in the automation table, and scaffolds its Git
 // CreateAgentResponse
 ```
 
-### `client.agents.runs.cancel`
-
-**`POST /api/v1/agents/runs/{runId}/cancel`**
-
-Cancel agent run
-
-Requests cancellation for one agent run by id.
-
-**Path parameters**
-
-| Name    | Type     | Description |
-| ------- | -------- | ----------- |
-| `runId` | `string` | Run id      |
-
-**Response**
-
-```ts
-// CancelAgentExecutionResponse
-```
-
-### `client.agents.runs.downloadExpected`
-
-**`GET /api/v1/agents/runs/{runId}/expected/{filename}`**
-
-Download an expected file
-
-Downloads one expected file attached to an agent run.
-
-**Path parameters**
-
-| Name       | Type     | Description            |
-| ---------- | -------- | ---------------------- |
-| `runId`    | `string` | Run id                 |
-| `filename` | `string` | Expected artifact path |
-
-### `client.agents.runs.renameExpected`
-
-**`PATCH /api/v1/agents/runs/{runId}/expected/{filename}`**
-
-Rename an expected file
-
-Renames one expected file attached to an agent run.
-
-**Path parameters**
-
-| Name       | Type     | Description            |
-| ---------- | -------- | ---------------------- |
-| `runId`    | `string` | Run id                 |
-| `filename` | `string` | Expected artifact path |
-
-**Request body**
-
-```ts
-// RenameExpectedFileBody
-```
-
-**Response**
-
-```ts
-// RenameExpectedFileResponse
-```
-
-### `client.agents.runs.deleteExpected`
-
-**`DELETE /api/v1/agents/runs/{runId}/expected/{filename}`**
-
-Delete an expected file
-
-Deletes one expected file attached to an agent run.
-
-**Path parameters**
-
-| Name       | Type     | Description            |
-| ---------- | -------- | ---------------------- |
-| `runId`    | `string` | Run id                 |
-| `filename` | `string` | Expected artifact path |
-
-### `client.agents.runs.listExpected`
-
-**`GET /api/v1/agents/runs/{runId}/expected`**
-
-List run expected artifacts
-
-Returns structured expected JSON and expected file names for one run.
-
-**Path parameters**
-
-| Name    | Type     | Description |
-| ------- | -------- | ----------- |
-| `runId` | `string` | Run id      |
-
-**Response**
-
-```ts
-// AgentExecutionExpectedArtifacts
-```
-
-### `client.agents.runs.copyOutputToExpected / uploadExpected`
-
-**`POST /api/v1/agents/runs/{runId}/expected`**
-
-Create an expected file
-
-Uploads an expected file with multipart/form-data, or copies a generated output file into expected artifacts with JSON.
-
-**Path parameters**
-
-| Name    | Type     | Description |
-| ------- | -------- | ----------- |
-| `runId` | `string` | Run id      |
-
-**Request body**
-
-```ts
-// CopyAgentExecutionOutputToExpectedBody
-```
-
-**Response**
-
-```ts
-// Record<string, unknown>
-```
-
-### `client.agents.runs.getFeedback`
-
-**`GET /api/v1/agents/runs/{runId}/feedback`**
-
-Get run feedback
-
-Returns feedback and expected artifacts attached to one agent run.
-
-**Path parameters**
-
-| Name    | Type     | Description |
-| ------- | -------- | ----------- |
-| `runId` | `string` | Run id      |
-
-**Response**
-
-```ts
-// AgentExecutionFeedbackDetail
-```
-
-### `client.agents.runs.updateFeedback`
-
-**`PATCH /api/v1/agents/runs/{runId}/feedback`**
-
-Update run feedback
-
-Updates the feedback body, rating, status, or structured expected JSON attached to one run.
-
-**Path parameters**
-
-| Name    | Type     | Description |
-| ------- | -------- | ----------- |
-| `runId` | `string` | Run id      |
-
-**Request body**
-
-```ts
-// UpdateAgentExecutionFeedbackBody
-```
-
-**Response**
-
-```ts
-// AgentExecutionFeedbackDetail
-```
-
-### `client.agents.runs.clearFeedback`
-
-**`DELETE /api/v1/agents/runs/{runId}/feedback`**
-
-Clear run feedback
-
-Deletes feedback, structured expected JSON, and expected files from one run.
-
-**Path parameters**
-
-| Name    | Type     | Description |
-| ------- | -------- | ----------- |
-| `runId` | `string` | Run id      |
-
-**Response**
-
-```ts
-// AgentExecutionFeedbackDetail
-```
-
-### `client.agents.runs.downloadFile`
-
-**`GET /api/v1/agents/runs/{runId}/files/{path}`**
-
-Download a run file
-
-Downloads an artifact path attached to an agent run, such as input.json, output/result.json, output.json, issues.md, trace.jsonl, or eigenpal.lock.
-
-**Path parameters**
-
-| Name    | Type       | Description |
-| ------- | ---------- | ----------- |
-| `runId` | `string`   |             |
-| `path`  | `string[]` |             |
-
-### `client.agents.runs.rerun`
-
-**`POST /api/v1/agents/runs/{runId}/rerun`**
-
-Rerun agent run
-
-Creates a new run for the same agent using a previous run's stored input snapshot.
-
-**Path parameters**
-
-| Name    | Type     | Description   |
-| ------- | -------- | ------------- |
-| `runId` | `string` | Source run id |
-
-**Request body**
-
-```ts
-// RerunAgentRunBody
-```
-
-**Response**
-
-```ts
-// RerunAgentRunResponse
-```
-
-### `client.agents.runs.get`
-
-**`GET /api/v1/agents/runs/{runId}`**
-
-Get agent run
-
-Returns one agent run by id.
-
-**Path parameters**
-
-| Name    | Type     | Description |
-| ------- | -------- | ----------- |
-| `runId` | `string` | Run id      |
-
-**Query parameters**
-
-| Name      | Type     | Description                                                               |
-| --------- | -------- | ------------------------------------------------------------------------- |
-| `include` | `string` | (optional)Comma-separated optional sections, e.g. feedback,expected,files |
-
-**Response**
-
-```ts
-// AgentRunResponse
-```
-
 ### `client.agents.emailTriggers.list`
 
 **`GET /api/v1/agents/triggers/email`**
@@ -785,6 +487,430 @@ Reconciles lightweight automation metadata from the latest released Git source p
 
 ```ts
 // AutomationSyncResponse
+```
+
+## Runs
+
+### `client.runs.artifacts.download`
+
+**`GET /api/v1/runs/{id}/artifact/{path}`**
+
+Download run artifact
+
+Download an agent run artifact such as input/output JSON, trace.jsonl, issues.md, metadata, or files under input/ and output/. Workflow run file rows are exposed through /files.
+
+**Path parameters**
+
+| Name   | Type     | Description |
+| ------ | -------- | ----------- |
+| `id`   | `string` |             |
+| `path` | `string` |             |
+
+### `client.runs.cancel`
+
+**`POST /api/v1/runs/{id}/cancel`**
+
+Cancel run
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.comparison.get`
+
+**`GET /api/v1/runs/{id}/comparison`**
+
+Get run comparison
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.connect`
+
+**`POST /api/v1/runs/{id}/connect`**
+
+Connect to live run
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.expected.download`
+
+**`GET /api/v1/runs/{id}/expected/{filename}`**
+
+Download expected artifact file
+
+**Path parameters**
+
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| `id`       | `string` |             |
+| `filename` | `string` |             |
+
+### `client.runs.expected.rename`
+
+**`PATCH /api/v1/runs/{id}/expected/{filename}`**
+
+Rename expected artifact file
+
+**Path parameters**
+
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| `id`       | `string` |             |
+| `filename` | `string` |             |
+
+**Request body**
+
+```ts
+// Record<string, unknown>
+```
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.expected.delete`
+
+**`DELETE /api/v1/runs/{id}/expected/{filename}`**
+
+Delete expected artifact file
+
+**Path parameters**
+
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| `id`       | `string` |             |
+| `filename` | `string` |             |
+
+### `client.runs.expected.list`
+
+**`GET /api/v1/runs/{id}/expected`**
+
+Get run expected artifacts
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.expected.copyOutput`
+
+**`POST /api/v1/runs/{id}/expected`**
+
+Create or update expected artifacts
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Request body**
+
+```ts
+// Record<string, unknown>
+```
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.feedback.get`
+
+**`GET /api/v1/runs/{id}/feedback`**
+
+Get run feedback
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.feedback.update`
+
+**`PATCH /api/v1/runs/{id}/feedback`**
+
+Update run feedback
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Request body**
+
+```ts
+// RunFeedbackRequest
+```
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.feedback.clear`
+
+**`DELETE /api/v1/runs/{id}/feedback`**
+
+Clear run feedback
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.artifacts.downloadZip`
+
+**`GET /api/v1/runs/{id}/files-zip`**
+
+Download run output files zip
+
+Download agent run output artifacts as a zip. Workflow run files use /files and will be folded into artifacts in a future refactor.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Query parameters**
+
+| Name    | Type     | Description |
+| ------- | -------- | ----------- |
+| `files` | `string` | (optional)  |
+| `token` | `string` | (optional)  |
+
+### `client.runs.files.delete`
+
+**`DELETE /api/v1/runs/{id}/files/{fileId}`**
+
+Delete run input file
+
+**Path parameters**
+
+| Name     | Type     | Description |
+| -------- | -------- | ----------- |
+| `id`     | `string` |             |
+| `fileId` | `string` |             |
+
+### `client.runs.files.list`
+
+**`GET /api/v1/runs/{id}/files`**
+
+List run files
+
+List DB-backed workflow run files: mutable workflow inputs before execution starts, plus workflow/eval input and output file rows. Agent debug outputs are exposed as run artifacts instead.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// RunFilesResponse
+```
+
+### `client.runs.files.upload`
+
+**`POST /api/v1/runs/{id}/files`**
+
+Upload run input file
+
+Upload a DB-backed workflow run input file. This endpoint is for workflow runs before execution starts; agent run downloads use artifacts.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.rerun`
+
+**`POST /api/v1/runs/{id}/rerun`**
+
+Rerun run
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Request body**
+
+```ts
+// RunRerunRequest
+```
+
+**Response**
+
+```ts
+// RunRerunResponse
+```
+
+### `client.runs.resume`
+
+**`POST /api/v1/runs/{id}/resume`**
+
+Resume workflow run
+
+Resume a workflow run that is waiting for approval.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` | Run id      |
+
+**Response**
+
+```ts
+// RunResumeResponse
+```
+
+### `client.runs.get`
+
+**`GET /api/v1/runs/{id}`**
+
+Get run
+
+Returns a run summary by default. Pass include=detail for the rich type-specific workflow or agent run payload.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` | Run id      |
+
+**Query parameters**
+
+| Name      | Type     | Description                                                            |
+| --------- | -------- | ---------------------------------------------------------------------- |
+| `include` | `string` | (optional)Comma-separated sections. Include `detail` for rich payload. |
+
+**Response**
+
+```ts
+// RunEnvelope
+```
+
+### `client.runs.trace.get`
+
+**`GET /api/v1/runs/{id}/trace`**
+
+Get run trace
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.list`
+
+**`GET /api/v1/runs`**
+
+List runs
+
+Tenant-scoped, cursor-paginated feed of workflow and agent runs. Use type and source filters to scope to one runtime or resource.
+
+**Query parameters**
+
+| Name                | Type     | Description |
+| ------------------- | -------- | ----------- |
+| `type`              | `string` | (optional)  |
+| `source`            | `string` | (optional)  |
+| `status`            | `string` | (optional)  |
+| `trigger`           | `string` | (optional)  |
+| `triggeredBy`       | `string` | (optional)  |
+| `sourceRef`         | `string` | (optional)  |
+| `batchId`           | `string` | (optional)  |
+| `exampleId`         | `string` | (optional)  |
+| `exampleIdContains` | `string` | (optional)  |
+| `from`              | `string` | (optional)  |
+| `to`                | `string` | (optional)  |
+| `createdAfter`      | `string` | (optional)  |
+| `createdBefore`     | `string` | (optional)  |
+| `completedAfter`    | `string` | (optional)  |
+| `completedBefore`   | `string` | (optional)  |
+| `cursor`            | `string` | (optional)  |
+| `offset`            | `number` | (optional)  |
+| `limit`             | `number` | (optional)  |
+| `ids`               | `string` | (optional)  |
+
+**Response**
+
+```ts
+// RunsListResponse
 ```
 
 ## Source
@@ -907,37 +1033,6 @@ Encrypts one or more plaintext secret values for the authenticated tenant using 
 
 ## Workflows
 
-### `client.workflows.executions.list`
-
-**`GET /api/v1/workflows/{id}/executions`**
-
-List workflow executions
-
-Returns executions for a workflow, optionally filtered by status, date range, or eval example. Paginated.
-
-**Path parameters**
-
-| Name | Type     | Description                  |
-| ---- | -------- | ---------------------------- |
-| `id` | `string` | Workflow id (e.g. wf_abc123) |
-
-**Query parameters**
-
-| Name        | Type     | Description                                                                                              |
-| ----------- | -------- | -------------------------------------------------------------------------------------------------------- |
-| `status`    | `string` | (optional)Comma-separated list of execution statuses to filter by                                        |
-| `fromDate`  | `string` | (optional)ISO-8601 timestamp or relative expression (e.g. "now()-7d") for the lower bound on `createdAt` |
-| `toDate`    | `string` | (optional)Upper bound on `createdAt`                                                                     |
-| `exampleId` | `string` | (optional)Filter to executions launched from a specific eval example                                     |
-| `limit`     | `number` | (optional)                                                                                               |
-| `offset`    | `number` | (optional)                                                                                               |
-
-**Response**
-
-```ts
-// ListWorkflowExecutionsResponse
-```
-
 ### `client.workflows.get`
 
 **`GET /api/v1/workflows/{id}`**
@@ -1016,52 +1111,6 @@ Returns released versions in reverse-chronological order, paginated.
 
 ```ts
 // ListVersionsResponse
-```
-
-### `client.workflows.executions.cancel`
-
-**`POST /api/v1/workflows/executions/{executionId}/cancel`**
-
-Cancel a workflow execution
-
-Idempotent. Created/pending executions transition immediately to `cancelled`; running/waiting executions receive a cancellation request for the worker to observe.
-
-**Path parameters**
-
-| Name          | Type     | Description            |
-| ------------- | -------- | ---------------------- |
-| `executionId` | `string` | Execution id to cancel |
-
-**Response**
-
-```ts
-// CancelWorkflowExecutionResponse
-```
-
-### `client.workflows.executions.get`
-
-**`GET /api/v1/workflows/executions/{executionId}`**
-
-Get workflow execution status
-
-Returns the current status, completion timestamps, and result or error for a workflow execution. Pass `includeSteps=true` for the per-step artifact payload.
-
-**Path parameters**
-
-| Name          | Type     | Description                  |
-| ------------- | -------- | ---------------------------- |
-| `executionId` | `string` | Execution id (e.g. exec_xyz) |
-
-**Query parameters**
-
-| Name           | Type                | Description                                                                               |
-| -------------- | ------------------- | ----------------------------------------------------------------------------------------- |
-| `includeSteps` | `"true" \| "false"` | (optional)When "true", returns the full per-step execution payload instead of the summary |
-
-**Response**
-
-```ts
-// WorkflowExecutionStatusResponse | ExecutionSummary
 ```
 
 ### `client.workflows.list`

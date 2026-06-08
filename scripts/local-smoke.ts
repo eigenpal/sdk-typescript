@@ -123,66 +123,57 @@ if (wfId) {
   }
 }
 
-// 4. workflows.executions.list — public shape, filters
+// 4. runs.list — public shape, filters
 const execs = wfId
-  ? await client.workflows.executions.list(wfId, { limit: 3 })
-  : { data: [], total: 0 };
+  ? await client.runs.list({ type: 'workflow', source: wfId, limit: 3 })
+  : { runs: [], nextCursor: null };
 pass(
-  'workflows.executions.list returns paginated envelope',
-  typeof execs.total === 'number',
-  `total=${execs.total}`
+  'runs.list returns paginated envelope',
+  Array.isArray(execs.runs),
+  `runs=${execs.runs.length}`
 );
-if (execs.data?.length)
-  assertPublicShape('workflows.executions[0] public shape', execs.data[0], PUBLIC_EXECUTION_FIELDS);
+if (execs.runs?.length)
+  assertPublicShape('runs[0] public shape', execs.runs[0], PUBLIC_EXECUTION_FIELDS);
 
-// 5. workflows.executions.list is workflow-scoped
-if (wfId && execs.data?.length) {
-  const filtered = await client.workflows.executions.list(wfId, { limit: 5 });
-  const allMatch = filtered.data.every((e) => e.workflowId === wfId);
+// 5. runs.list is workflow-scoped
+if (wfId && execs.runs?.length) {
+  const filtered = await client.runs.list({ type: 'workflow', source: wfId, limit: 5 });
+  const allMatch = filtered.runs.every((e) => e.workflowId === wfId);
   pass(
-    'workflows.executions.list returns only the requested workflow',
+    'runs.list returns only the requested workflow',
     allMatch,
-    `${filtered.data.length} items, all match=${allMatch}`
+    `${filtered.runs.length} items, all match=${allMatch}`
   );
 }
 
-// 6. workflows.executions.list with status filter
+// 6. runs.list with status filter
 const failedRuns = wfId
-  ? await client.workflows.executions.list(wfId, { status: 'failed', limit: 3 })
-  : { data: [] };
-const allFailed = failedRuns.data.every((e) => e.status === 'failed');
+  ? await client.runs.list({ type: 'workflow', source: wfId, status: 'failed', limit: 3 })
+  : { runs: [] };
+const allFailed = failedRuns.runs.every((e) => e.status === 'failed');
 pass(
-  'workflows.executions.list filters by status=failed',
+  'runs.list filters by status=failed',
   allFailed,
-  `${failedRuns.data.length} items, all failed=${allFailed}`
+  `${failedRuns.runs.length} items, all failed=${allFailed}`
 );
 
-// 7. workflows.executions.get — terminal execution from list
-const completedExec = execs.data?.find((e) => e.status === 'completed') ?? execs.data?.[0];
+// 7. runs.get — terminal execution from list
+const completedExec = execs.runs?.find((e) => e.status === 'completed') ?? execs.runs?.[0];
 if (completedExec) {
-  const detail = await client.workflows.executions.get(completedExec.id);
-  pass(
-    'workflows.executions.get returns matching id',
-    detail.executionId === completedExec.id,
-    `id=${detail.executionId}`
-  );
-  pass(
-    'workflows.executions.get has status',
-    typeof detail.status === 'string',
-    `status=${detail.status}`
-  );
+  const detail = await client.runs.get(completedExec.id);
+  const detailId = (detail as { id?: string; executionId?: string }).id ?? detail.executionId;
+  pass('runs.get returns matching id', detailId === completedExec.id, `id=${detailId}`);
+  pass('runs.get has status', typeof detail.status === 'string', `status=${detail.status}`);
 }
 
-// 8. workflows.executions.get with includeSteps — heavier per-step payload
+// 8. runs.get with include=detail — heavier per-step payload
 if (completedExec) {
-  const stepDetail = await client.workflows.executions.get(completedExec.id, {
-    includeSteps: true,
-  });
+  const stepDetail = await client.runs.get(completedExec.id, { include: 'detail' });
   // The full artifact is a discriminated union with the summary; both shapes
   // carry executionId, the artifact additionally has steps/overrides/etc.
   const k = new Set(Object.keys((stepDetail as object) ?? {}));
   pass(
-    'workflows.executions.get includeSteps=true returns artifact',
+    'runs.get include=detail returns artifact',
     k.has('executionId') && k.has('status'),
     `keys: ${[...k].slice(0, 8).join(', ')}…`
   );
@@ -199,7 +190,7 @@ await expectThrows('unknown workflow id throws EigenpalNotFoundError', EigenpalN
   client.workflows.get('wf_definitely_does_not_exist_xxx')
 );
 await expectThrows('unknown execution id throws EigenpalNotFoundError', EigenpalNotFoundError, () =>
-  client.workflows.executions.get('exec_definitely_does_not_exist_xxx')
+  client.runs.get('exec_definitely_does_not_exist_xxx')
 );
 await expectThrows('bad baseUrl throws EigenpalError', EigenpalError, () =>
   new EigenpalClient({ baseUrl: 'https://example.com', apiKey }).workflows.list({ limit: 1 })
@@ -230,22 +221,18 @@ if (apiWorkflow) {
   }
 }
 
-// 14. workflows.executions.cancel is idempotent
+// 14. runs.cancel is idempotent
 if (triggeredId) {
   try {
-    const r1 = await client.workflows.executions.cancel(triggeredId);
-    const r2 = await client.workflows.executions.cancel(triggeredId);
+    const r1 = await client.runs.cancel(triggeredId);
+    const r2 = await client.runs.cancel(triggeredId);
     pass(
-      'workflows.executions.cancel is idempotent',
+      'runs.cancel is idempotent',
       typeof r1 === 'object' && typeof r2 === 'object',
       `r1.status=${(r1 as { status?: string }).status} r2.status=${(r2 as { status?: string }).status}`
     );
   } catch (e) {
-    pass(
-      'workflows.executions.cancel is idempotent',
-      false,
-      `${(e as Error).message.slice(0, 100)}`
-    );
+    pass('runs.cancel is idempotent', false, `${(e as Error).message.slice(0, 100)}`);
   }
 }
 

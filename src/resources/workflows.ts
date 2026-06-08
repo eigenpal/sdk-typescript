@@ -55,8 +55,8 @@ export interface ListVersionsOptions {
 type Dispatch = <T>(call: () => Promise<OperationResult<T>>) => Promise<T>;
 
 /**
- * Workflow resource — list, get, run, and inspect versions of saved
- * workflows. Reached via `client.workflows`.
+ * Workflow resource — list, get, run, and inspect versions of saved workflows.
+ * Existing run retrieval and mutation lives on `client.runs`.
  */
 export class WorkflowsResource {
   public readonly executions: WorkflowExecutionsResource;
@@ -76,8 +76,7 @@ export class WorkflowsResource {
    * @param options — `version`, `waitForCompletion`, `overrides`.
    *
    * - With no `waitForCompletion`, returns immediately with `{ executionId }`.
-   *   Poll via `client.workflows.executions.get(id)` or use
-   *   `client.workflows.executions.runAndWait`.
+   *   Poll via `client.runs.get(id)` or use `client.workflows.executions.runAndWait`.
    * - With `waitForCompletion: 60`, the server holds the connection up to 60
    *   seconds. The response also includes `status`, `result`, and `error`
    *   when the run finishes within the window.

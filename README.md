@@ -106,17 +106,31 @@ await client.workflows.run('extract-invoice', {
 ## Execution polling
 
 ```ts
-const status = await client.workflows.executions.get(executionId);
+const runs = await client.runs.list({
+  type: 'workflow',
+  source: 'extract-invoice',
+  status: 'failed,cancelled',
+});
+
+const run = await client.runs.get(executionId, { include: 'detail' });
+await client.runs.cancel(executionId);
+
+const status = await client.runs.get(executionId);
 //   { executionId, status, result?, error?, createdAt, completedAt? }
 
-const list = await client.workflows.executions.list('extract-invoice', {
+const list = await client.runs.list({
+  type: 'workflow',
+  source: 'extract-invoice',
   status: ['failed', 'cancelled'],
-  fromDate: 'now()-7d',
+  from: 'now()-7d',
   limit: 50,
 });
 
-await client.workflows.executions.cancel(executionId);
+await client.runs.cancel(executionId);
 ```
+
+`/api/v1/runs` is the shared run API for workflow, agent, and eval runs. Use `type=workflow|agent`
+and `source=<workflowId-or-agentId>` to scope list calls.
 
 ## Workflows
 
@@ -136,9 +150,12 @@ const { executionId } = await client.agents.run('invoice-agent', {
   invoice: file,
 });
 
-await client.agents.runs.get(runId);
-await client.agents.runs.cancel(runId);
+await client.runs.get(executionId);
+await client.runs.cancel(executionId);
 ```
+
+Agent run listing uses the same shared runs API with `type: 'agent'` and the agent id or slug as
+`source`.
 
 ## Errors
 

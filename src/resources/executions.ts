@@ -1,33 +1,10 @@
 import type { OperationResult } from '../client';
 import { EigenpalTimeoutError } from '../errors';
 import type { Client } from '../generated/client';
-import {
-  workflowsExecutionsCancel,
-  workflowsExecutionsGet,
-  workflowsExecutionsList,
-  workflowsRun,
-} from '../generated/sdk.gen';
-import type {
-  CancelWorkflowExecutionResponse,
-  ExecutionStatus,
-  ListWorkflowExecutionsResponse,
-  RunWorkflowResponse,
-  WorkflowExecutionStatusResponse,
-} from '../generated/types.gen';
+import { runsGet, workflowsRun } from '../generated/sdk.gen';
+import type { ExecutionStatus, RunsGetResponse, RunWorkflowResponse } from '../generated/types.gen';
 import { buildMultipart, hasFileInput } from '../lib/files';
 import type { WorkflowInput } from './workflows';
-
-export interface ListExecutionsOptions {
-  /** Execution status, or an array of statuses. */
-  status?: string | string[];
-  /** ISO timestamp or relative expression like `"now()-7d"`. */
-  fromDate?: string;
-  toDate?: string;
-  exampleId?: string;
-  limit?: number;
-  offset?: number;
-  signal?: AbortSignal;
-}
 
 export interface RunAndWaitOptions {
   /** Workflow version. Default: `"latest"`. */
@@ -58,64 +35,15 @@ const DEFAULT_RUN_AND_WAIT_TIMEOUT_MS = 5 * 60 * 1000;
 type Dispatch = <T>(call: () => Promise<OperationResult<T>>) => Promise<T>;
 
 /**
- * Workflow execution resource — read execution status, list executions, cancel
- * in-flight executions, and the convenience `runAndWait` helper that wraps a
- * workflow trigger + client-side poll loop. Reached via `client.workflows.executions`.
+ * Workflow execution helper namespace. Retrieval and mutation of existing runs
+ * lives on `client.runs`; this namespace only keeps `runAndWait` because it
+ * triggers a workflow before polling.
  */
 export class WorkflowExecutionsResource {
   constructor(
     private readonly client: Client,
     private readonly dispatch: Dispatch
   ) {}
-
-  /** Get execution status. Pass `includeSteps` for the full per-step payload. */
-  async get(
-    executionId: string,
-    options: { includeSteps?: boolean; signal?: AbortSignal } = {}
-  ): Promise<WorkflowExecutionStatusResponse> {
-    return this.dispatch<WorkflowExecutionStatusResponse>(
-      () =>
-        workflowsExecutionsGet({
-          client: this.client,
-          path: { executionId },
-          query: options.includeSteps ? { includeSteps: 'true' } : {},
-          signal: options.signal,
-        }) as Promise<OperationResult<WorkflowExecutionStatusResponse>>
-    );
-  }
-
-  /** List executions, paginated. */
-  async list(
-    workflowId: string,
-    options: ListExecutionsOptions = {}
-  ): Promise<ListWorkflowExecutionsResponse> {
-    const { signal, status, ...rest } = options;
-    // Wire format takes comma-separated lists; idiomatic JS callers can
-    // pass a string[] and we serialize.
-    const query = {
-      ...rest,
-      ...(status !== undefined
-        ? { status: Array.isArray(status) ? status.join(',') : status }
-        : {}),
-    };
-    return this.dispatch(() =>
-      workflowsExecutionsList({ client: this.client, path: { id: workflowId }, query, signal })
-    );
-  }
-
-  /** Cancel an execution. Idempotent. */
-  async cancel(
-    executionId: string,
-    options: { signal?: AbortSignal } = {}
-  ): Promise<CancelWorkflowExecutionResponse> {
-    return this.dispatch(() =>
-      workflowsExecutionsCancel({
-        client: this.client,
-        path: { executionId },
-        signal: options.signal,
-      })
-    );
-  }
 
   /**
    * Trigger a workflow and poll for completion client-side.
@@ -180,7 +108,20 @@ export class WorkflowExecutionsResource {
         );
       }
 
-      const status = await this.get(executionId, { signal: options.signal });
+      const response = await this.dispatch<RunsGetResponse>(
+        () =>
+          runsGet({
+            client: this.client,
+            path: { id: executionId },
+            query: { include: 'detail' },
+            signal: options.signal,
+          }) as Promise<OperationResult<RunsGetResponse>>
+      );
+      const status = response.run as {
+        status?: ExecutionStatus | null;
+        result?: unknown;
+        error?: string | null;
+      };
 
       if (status.status && TERMINAL_STATUSES.has(status.status)) {
         return {
