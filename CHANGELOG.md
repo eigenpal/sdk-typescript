@@ -1,5 +1,13 @@
 # @eigenpal/sdk
 
+## 0.6.15
+
+### Minor Changes
+
+- ca87265: Unify workflow and agent run starts behind the canonical `/api/v1/run/{target}` endpoint, root `eigenpal run` / `eigenpal rerun` commands, and root SDK `client.run()` / `client.rerun()` methods.
+
+  The old nested CLI commands and SDK resource methods for starting workflow or agent runs have been removed.
+
 ## 0.6.10
 
 ### Patch Changes

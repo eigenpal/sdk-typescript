@@ -4,11 +4,11 @@
 
 ## Which polling option do I pick?
 
-| Run length   | Use                                                                          |
-| ------------ | ---------------------------------------------------------------------------- |
-| 0–60s        | `client.workflows.run(id, input, { waitForCompletion: 60 })` — server hold.  |
-| 60s–5min     | `client.workflows.executions.runAndWait(id, input)` — client polls every 2s. |
-| Driving a UI | `client.workflows.run(...)` then poll `client.runs.get(id)` yourself.        |
+| Run length   | Use                                                                               |
+| ------------ | --------------------------------------------------------------------------------- |
+| 0–60s        | `client.run("workflows.<slug>", input, { waitForCompletion: 60 })` — server hold. |
+| 60s–5min     | `client.workflows.executions.runAndWait(id, input)` — client polls every 2s.      |
+| Driving a UI | `client.run(...)` then poll `client.runs.get(id)` yourself.                       |
 
 ## Statuses
 
@@ -24,8 +24,8 @@ The first five are non-terminal; the last four are terminal. Always check `statu
 ## Get
 
 ```ts
-const exec = await client.runs.get(executionId);
-//   { executionId, status, createdAt, completedAt?, result?, error? }
+const run = await client.runs.get(runId);
+//   { run: { id, status, createdAt, completedAt?, output?, error? } }
 ```
 
 `result` is set on `status === 'completed'`. `error` is set on `status === 'failed'`.
@@ -33,7 +33,7 @@ const exec = await client.runs.get(executionId);
 ### Per-step detail
 
 ```ts
-const detail = await client.runs.get(executionId, { include: 'detail' });
+const detail = await client.runs.get(runId, { include: 'detail' });
 ```
 
 Returns the full per-step execution payload (heavier; intended for debugging, not happy-path UI).
@@ -75,7 +75,7 @@ Item shape: `{ id, workflowId, status, triggerType, triggerInput, result, error,
 ## Cancel
 
 ```ts
-await client.runs.cancel(executionId);
+await client.runs.cancel(runId);
 ```
 
 Idempotent. For runs not yet picked up by a worker (`created`/`pending`), transitions immediately to `cancelled`. For `running` executions, stamps `cancelRequestedAt` so the worker honors the cancel at the next checkpoint.
@@ -87,12 +87,12 @@ If `runAndWait` doesn't fit (e.g. you're driving a UI progress bar), poll manual
 ```ts
 const TERMINAL = new Set(['completed', 'failed', 'cancelled', 'rejected']);
 
-const { executionId } = await client.workflows.run('extract-invoice', input);
+const { runId } = await client.run('workflows.extract-invoice', input);
 let status;
 do {
   await new Promise((r) => setTimeout(r, 2000));
-  status = await client.runs.get(executionId);
+  status = await client.runs.get(runId);
 } while (!TERMINAL.has(status.status));
 
-console.log(status.status, status.result, status.error);
+console.log(status.status, status.output, status.error);
 ```

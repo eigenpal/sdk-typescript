@@ -12,60 +12,67 @@ const result = await client.workflows.executions.runAndWait('extract-invoice', {
   contract: file, // File / Blob / { content, filename, mimeType }
 });
 
-console.log(result.status, result.result);
+console.log(result.status, result.output);
 ```
 
 ## Surface
 
 ```
 client
+├── run
+├── rerun
 ├── agents
 │   ├── list
 │   ├── get
 │   ├── create
 │   ├── update
-│   ├── run
 │   ├── listFiles
 │   ├── putFile
 │   ├── uploadFiles
 │   ├── versions
-│   ├── emailTriggers.list
-│   ├── emailTriggers.get
-│   ├── emailTriggers.createAlias
-│   ├── emailTriggers.deleteAlias
-│   ├── emailTriggers.update
-│   └── emailTriggers.updateAlias
+│   └── emailTriggers
+│       ├── list
+│       ├── get
+│       ├── createAlias
+│       ├── deleteAlias
+│       ├── update
+│       └── updateAlias
 ├── workflows
 │   ├── list
 │   ├── get
-│   ├── run
 │   ├── versions
-│   └── executions.runAndWait
+│   └── executions
+│       └── runAndWait
 ├── runs
 │   ├── list
 │   ├── get
-│   ├── artifacts.download
-│   ├── artifacts.downloadZip
+│   ├── artifacts
+│   │   ├── download
+│   │   └── downloadZip
 │   ├── cancel
 │   ├── compare
-│   ├── comparison.get
+│   ├── comparison
+│   │   └── get
 │   ├── connect
-│   ├── expected.list
-│   ├── expected.copyOutput
-│   ├── expected.delete
-│   ├── expected.download
-│   ├── expected.rename
-│   ├── expected.upload
-│   ├── feedback.get
-│   ├── feedback.clear
-│   ├── feedback.resolve
-│   ├── feedback.update
-│   ├── files.list
-│   ├── files.delete
-│   ├── files.upload
-│   ├── rerun
+│   ├── expected
+│   │   ├── list
+│   │   ├── copyOutput
+│   │   ├── delete
+│   │   ├── download
+│   │   ├── rename
+│   │   └── upload
+│   ├── feedback
+│   │   ├── get
+│   │   ├── clear
+│   │   ├── resolve
+│   │   └── update
+│   ├── files
+│   │   ├── list
+│   │   ├── delete
+│   │   └── upload
 │   ├── resume
-│   └── trace.get
+│   └── trace
+│       └── get
 ├── source
 │   ├── decryptSecrets
 │   ├── encryptSecrets
@@ -77,7 +84,9 @@ client
     └── sync
 ```
 
-Run inspection and mutation is canonical under `client.runs.*`, which maps to `/api/v1/runs`.
+Start runs with `client.run(...)` and create a new run from a previous snapshot with `client.rerun(...)`.
+
+Run inspection and artifact/feedback/file mutation lives under `client.runs.*`, which maps to `/api/v1/runs`.
 
 `client.runs.files.*` is currently for DB-backed workflow run files. `client.runs.artifacts.*` is currently for agent run artifacts such as traces, metadata, and output files; workflow artifacts will be unified in a future refactor.
 
@@ -234,39 +243,6 @@ Updates mutable agent metadata and configuration.
 
 ```ts
 // PatchAgentResponse
-```
-
-### `client.agents.run`
-
-**`POST /api/v1/agents/{agentId}/run`**
-
-Run an agent
-
-Enqueues an agent run. Returns 202 with `{ runId }` by default. Pass `wait_for_completion=<seconds>` to hold the connection until the run reaches a terminal state. File inputs are uploaded as multipart/form-data.
-
-**Path parameters**
-
-| Name      | Type     | Description      |
-| --------- | -------- | ---------------- |
-| `agentId` | `string` | Agent id or slug |
-
-**Query parameters**
-
-| Name                  | Type     | Description                                                                                                                                                                                |
-| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `wait_for_completion` | `number` | (optional)Seconds to hold the connection waiting for completion (max 600). Omit for async.                                                                                                 |
-| `sourceRef`           | `string` | (optional)Git source ref to resolve for this run. Defaults to latest. Supports latest, main, exact versions/tags such as 1.2.3, semver ranges such as 1.2.x or 1.x, and exact commit SHAs. |
-
-**Request body**
-
-```ts
-// RunAgentBody
-```
-
-**Response**
-
-```ts
-// RunAgentResponse
 ```
 
 ### `client.agents.emailTriggers.updateAlias`
@@ -490,6 +466,39 @@ Reconciles lightweight automation metadata from the latest released Git source p
 ```
 
 ## Runs
+
+### `client.run`
+
+**`POST /api/v1/run/{target}`**
+
+Start a workflow or agent run
+
+Starts a run for a workflow or agent target. The target lives in the URL path; the optional `version` query parameter selects a release/ref and defaults to `latest`. The request body is the input object; a reserved `_overrides` key (workflow targets only) carries per-step output overrides for replay. Run provenance may be declared with the `X-Eigenpal-Trigger` header (`api` or `cli`).
+
+**Path parameters**
+
+| Name     | Type     | Description                                 |
+| -------- | -------- | ------------------------------------------- |
+| `target` | `string` | Automation target without a version suffix. |
+
+**Query parameters**
+
+| Name                  | Type     | Description                                                   |
+| --------------------- | -------- | ------------------------------------------------------------- |
+| `version`             | `string` | (optional)Optional version or source ref. Defaults to latest. |
+| `wait_for_completion` | `number` | (optional)                                                    |
+
+**Request body**
+
+```ts
+// RunTargetInputBody
+```
+
+**Response**
+
+```ts
+// RunStartResponse
+```
 
 ### `client.runs.artifacts.download`
 
@@ -787,7 +796,7 @@ Upload a DB-backed workflow run input file. This endpoint is for workflow runs b
 // Record<string, unknown>
 ```
 
-### `client.runs.rerun`
+### `client.rerun`
 
 **`POST /api/v1/runs/{id}/rerun`**
 
@@ -798,6 +807,12 @@ Rerun run
 | Name | Type     | Description |
 | ---- | -------- | ----------- |
 | `id` | `string` |             |
+
+**Query parameters**
+
+| Name                  | Type     | Description |
+| --------------------- | -------- | ----------- |
+| `wait_for_completion` | `number` | (optional)  |
 
 **Request body**
 
@@ -1051,39 +1066,6 @@ Returns the workflow summary plus the current version YAML. Use `versions list` 
 
 ```ts
 // WorkflowDetail
-```
-
-### `client.workflows.run`
-
-**`POST /api/v1/workflows/{id}/run`**
-
-Execute a workflow (async or sync)
-
-Enqueues a workflow execution. Returns 201 with `{ executionId }` by default. Pass `wait_for_completion=<seconds>` (max 60) to hold the connection until the run reaches a terminal state; the body then also includes `status`, `result`, and `error`. File inputs are uploaded as `multipart/form-data` (each file as a top-level form field; `_json` field carries scalar inputs).
-
-**Path parameters**
-
-| Name | Type     | Description                                                                           |
-| ---- | -------- | ------------------------------------------------------------------------------------- |
-| `id` | `string` | Workflow id (e.g. `wf_abc123`) or slug (e.g. `extract-invoice`, the workflow `name`). |
-
-**Query parameters**
-
-| Name                  | Type     | Description                                                                               |
-| --------------------- | -------- | ----------------------------------------------------------------------------------------- |
-| `version`             | `string` | (optional)Version id, or "latest" (default)                                               |
-| `wait_for_completion` | `number` | (optional)Seconds to hold the connection waiting for completion (max 60). Omit for async. |
-
-**Request body**
-
-```ts
-// RunWorkflowBody
-```
-
-**Response**
-
-```ts
-// RunWorkflowResponse
 ```
 
 ### `client.workflows.versions`

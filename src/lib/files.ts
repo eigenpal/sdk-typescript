@@ -1,5 +1,5 @@
 /**
- * File-input helpers for `client.workflows.run()` (and agent runs).
+ * File-input helpers for `client.run()`.
  *
  * A workflow input value is treated as a file when it is one of:
  *   - a Node readable stream — `fs.createReadStream('contract.pdf')`
@@ -69,7 +69,7 @@ export type FileInput = Blob | FileDescriptor | NodeReadableStream;
  * a file path or stream.
  *
  * ```ts
- * await client.workflows.run('extract-invoice', {
+ * await client.run('workflows.extract-invoice', {
  *   contract_document: toFile(buffer, 'contract.pdf'),
  * });
  * ```
@@ -188,49 +188,39 @@ async function appendFiles(
 }
 
 /**
- * Build a `multipart/form-data` body matching what `processMultipartRunBody`
- * on the server expects:
+ * JSON-body counterpart of {@link buildRunMultipart}: per-step overrides ride
+ * in the reserved `_overrides` body key.
+ */
+export function buildRunJsonBody(
+  input: Record<string, unknown> | undefined,
+  overrides?: { steps?: Record<string, Record<string, unknown>> }
+): Record<string, unknown> {
+  return overrides ? { ...(input ?? {}), _overrides: overrides } : (input ?? {});
+}
+
+/**
+ * Build multipart for the canonical `client.run(...)` endpoint
+ * (`POST /api/v1/run/{target}`):
  *
- *   - Each file in `input` becomes a top-level form field (key = input name).
- *   - Non-file inputs + overrides + trigger go in a `_json` text field.
+ *   - Each top-level file in `input` becomes a form field (key = input name).
+ *   - Non-file inputs go in the `_json` text field (the input object itself).
+ *   - Per-step overrides go in the reserved `_overrides` text field.
  *
  * Async because stream inputs are drained to bytes here. Only top-level file
  * values are extracted — files nested inside arrays / objects keep their
  * position in the JSON sidecar (the server has no nested-upload path).
  */
-export async function buildMultipart(args: {
+export async function buildRunMultipart(args: {
   input?: Record<string, unknown>;
   overrides?: { steps?: Record<string, Record<string, unknown>> };
-  trigger?: 'api' | 'cli';
 }): Promise<MultipartParts> {
   const fd = new FormData();
   const { scalars, fileCount } = await appendFiles(fd, args.input);
-
-  const sidecar: Record<string, unknown> = {};
-  if (Object.keys(scalars).length > 0) sidecar.input = scalars;
-  if (args.overrides) sidecar.overrides = args.overrides;
-  if (args.trigger) sidecar.trigger = args.trigger;
-  if (Object.keys(sidecar).length > 0) {
-    fd.append('_json', JSON.stringify(sidecar));
-  }
-
-  return { formData: fd, fileCount };
-}
-
-/**
- * Build multipart for agent runs. Agent run endpoints consume `_json` as the
- * input object itself, unlike workflow runs where `_json` is a sidecar with
- * `{ input, overrides, trigger }`.
- */
-export async function buildAgentMultipart(
-  input?: Record<string, unknown>
-): Promise<MultipartParts> {
-  const fd = new FormData();
-  const { scalars, fileCount } = await appendFiles(fd, input);
-
   if (Object.keys(scalars).length > 0) {
     fd.append('_json', JSON.stringify(scalars));
   }
-
+  if (args.overrides) {
+    fd.append('_overrides', JSON.stringify(args.overrides));
+  }
   return { formData: fd, fileCount };
 }

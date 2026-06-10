@@ -16,7 +16,7 @@ Every non-2xx response throws a typed subclass of `EigenpalError`.
 import { EigenpalClient, EigenpalValidationError } from '@eigenpal/sdk';
 
 try {
-  await client.workflows.run('extract-invoice');
+  await client.run('workflows.extract-invoice');
 } catch (err) {
   if (err instanceof EigenpalValidationError) {
     for (const issue of err.issues) {

@@ -24,9 +24,6 @@ import type {
   AgentsListData,
   AgentsListErrors,
   AgentsListResponses,
-  AgentsRunData,
-  AgentsRunErrors,
-  AgentsRunResponses,
   AgentsTriggersEmailCreateAliasData,
   AgentsTriggersEmailCreateAliasErrors,
   AgentsTriggersEmailCreateAliasResponses,
@@ -114,6 +111,9 @@ import type {
   RunsResumeData,
   RunsResumeErrors,
   RunsResumeResponses,
+  RunStartWithTargetData,
+  RunStartWithTargetErrors,
+  RunStartWithTargetResponses,
   RunsTraceGetData,
   RunsTraceGetErrors,
   RunsTraceGetResponses,
@@ -141,9 +141,6 @@ import type {
   WorkflowsListData,
   WorkflowsListErrors,
   WorkflowsListResponses,
-  WorkflowsRunData,
-  WorkflowsRunErrors,
-  WorkflowsRunResponses,
   WorkflowsVersionsListData,
   WorkflowsVersionsListErrors,
   WorkflowsVersionsListResponses,
@@ -246,24 +243,6 @@ export const agentsUpdate = <ThrowOnError extends boolean = false>(
   (options.client ?? client).patch<AgentsUpdateResponses, AgentsUpdateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/agents/{agentId}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-
-/**
- * Run an agent
- *
- * Enqueues an agent run. Returns 202 with `{ runId }` by default. Pass `wait_for_completion=<seconds>` to hold the connection until the run reaches a terminal state. File inputs are uploaded as multipart/form-data.
- */
-export const agentsRun = <ThrowOnError extends boolean = false>(
-  options: Options<AgentsRunData, ThrowOnError>
-) =>
-  (options.client ?? client).post<AgentsRunResponses, AgentsRunErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/{agentId}/run',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -453,6 +432,28 @@ export const automationsSync = <ThrowOnError extends boolean = false>(
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/automations/{automation}/sync',
     ...options,
+  });
+
+/**
+ * Start a workflow or agent run
+ *
+ * Starts a run for a workflow or agent target. The target lives in the URL path; the optional `version` query parameter selects a release/ref and defaults to `latest`. The request body is the input object; a reserved `_overrides` key (workflow targets only) carries per-step output overrides for replay. Run provenance may be declared with the `X-Eigenpal-Trigger` header (`api` or `cli`).
+ */
+export const runStartWithTarget = <ThrowOnError extends boolean = false>(
+  options: Options<RunStartWithTargetData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    RunStartWithTargetResponses,
+    RunStartWithTargetErrors,
+    ThrowOnError
+  >({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/run/{target}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
   });
 
 /**
@@ -884,24 +885,6 @@ export const workflowsGet = <ThrowOnError extends boolean = false>(
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/workflows/{id}',
     ...options,
-  });
-
-/**
- * Execute a workflow (async or sync)
- *
- * Enqueues a workflow execution. Returns 201 with `{ executionId }` by default. Pass `wait_for_completion=<seconds>` (max 60) to hold the connection until the run reaches a terminal state; the body then also includes `status`, `result`, and `error`. File inputs are uploaded as `multipart/form-data` (each file as a top-level form field; `_json` field carries scalar inputs).
- */
-export const workflowsRun = <ThrowOnError extends boolean = false>(
-  options: Options<WorkflowsRunData, ThrowOnError>
-) =>
-  (options.client ?? client).post<WorkflowsRunResponses, WorkflowsRunErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/workflows/{id}/run',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
   });
 
 /**

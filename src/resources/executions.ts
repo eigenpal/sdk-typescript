@@ -1,9 +1,9 @@
 import type { OperationResult } from '../client';
 import { EigenpalTimeoutError } from '../errors';
 import type { Client } from '../generated/client';
-import { runsGet, workflowsRun } from '../generated/sdk.gen';
-import type { ExecutionStatus, RunsGetResponse, RunWorkflowResponse } from '../generated/types.gen';
-import { buildMultipart, hasFileInput } from '../lib/files';
+import { runsGet } from '../generated/sdk.gen';
+import type { ExecutionStatus, RunsGetResponse } from '../generated/types.gen';
+import { buildRunJsonBody, buildRunMultipart, hasFileInput } from '../lib/files';
 import type { WorkflowInput } from './workflows';
 
 export interface RunAndWaitOptions {
@@ -21,6 +21,13 @@ export interface RunAndWaitOptions {
   /** AbortSignal to cancel the entire poll loop. */
   signal?: AbortSignal;
 }
+
+export type WorkflowRunAndWaitResponse = {
+  runId: string;
+  status?: ExecutionStatus;
+  output?: unknown;
+  error?: string;
+};
 
 const TERMINAL_STATUSES = new Set<ExecutionStatus>([
   'completed',
@@ -48,55 +55,54 @@ export class WorkflowExecutionsResource {
   /**
    * Trigger a workflow and poll for completion client-side.
    *
-   * Unlike `workflows.run({ waitForCompletion: 60 })`, this helper polls
+   * Unlike `client.run({ waitForCompletion: 60 })`, this helper polls
    * indefinitely (up to `timeoutMs`, default 5 min) so it works for runs
    * that exceed the server-side 60s sync window. Returns the final
-   * response with `status`/`result`/`error` populated.
+   * response with `status`/`output`/`error` populated.
    */
   async runAndWait(
     workflowId: string,
     input?: WorkflowInput,
     options: RunAndWaitOptions = {}
-  ): Promise<RunWorkflowResponse> {
+  ): Promise<WorkflowRunAndWaitResponse> {
     const pollInterval = options.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
     const timeoutMs = options.timeoutMs ?? DEFAULT_RUN_AND_WAIT_TIMEOUT_MS;
     const deadline = Date.now() + timeoutMs;
 
-    // Trigger async — we don't ask the server to wait, since we're polling.
-    const triggerQuery = options.version ? { version: options.version } : {};
-    let runResult: RunWorkflowResponse;
+    const target = `workflows.${workflowId}`;
+    const runUrl = `/api/v1/run/${encodeURIComponent(target)}`;
+    const runQuery =
+      options.version && options.version !== 'latest' ? { version: options.version } : undefined;
+    let runResult: { runId: string };
     if (hasFileInput(input)) {
       // Build the multipart body once, up front — `dispatch` may retry the
       // POST, and a drained stream cannot be replayed.
-      const { formData } = await buildMultipart({ input, overrides: options.overrides });
-      runResult = await this.dispatch<RunWorkflowResponse>(
+      const { formData } = await buildRunMultipart({ input, overrides: options.overrides });
+      runResult = await this.dispatch<{ runId: string }>(
         () =>
           this.client.post({
-            url: '/api/v1/workflows/{id}/run',
-            path: { id: workflowId },
-            query: triggerQuery,
+            url: runUrl,
+            query: runQuery,
             body: formData,
             bodySerializer: null,
             headers: { 'Content-Type': null },
             signal: options.signal,
-          }) as Promise<OperationResult<RunWorkflowResponse>>
+          }) as Promise<OperationResult<{ runId: string }>>
       );
     } else {
-      runResult = await this.dispatch<RunWorkflowResponse>(() =>
-        workflowsRun({
-          client: this.client,
-          path: { id: workflowId },
-          query: triggerQuery,
-          body: {
-            ...(input !== undefined ? { input } : {}),
-            ...(options.overrides ? { overrides: options.overrides } : {}),
-          },
-          signal: options.signal,
-        })
+      const body = buildRunJsonBody(input, options.overrides);
+      runResult = await this.dispatch<{ runId: string }>(
+        () =>
+          this.client.post({
+            url: runUrl,
+            query: runQuery,
+            body,
+            signal: options.signal,
+          }) as Promise<OperationResult<{ runId: string }>>
       );
     }
 
-    const { executionId } = runResult;
+    const runId = runResult.runId;
 
     while (true) {
       if (options.signal?.aborted) {
@@ -104,7 +110,7 @@ export class WorkflowExecutionsResource {
       }
       if (Date.now() >= deadline) {
         throw new EigenpalTimeoutError(
-          `runAndWait timed out after ${timeoutMs}ms (executionId=${executionId})`
+          `runAndWait timed out after ${timeoutMs}ms (runId=${runId})`
         );
       }
 
@@ -112,22 +118,22 @@ export class WorkflowExecutionsResource {
         () =>
           runsGet({
             client: this.client,
-            path: { id: executionId },
+            path: { id: runId },
             query: { include: 'detail' },
             signal: options.signal,
           }) as Promise<OperationResult<RunsGetResponse>>
       );
       const status = response.run as {
         status?: ExecutionStatus | null;
-        result?: unknown;
+        output?: unknown;
         error?: string | null;
       };
 
       if (status.status && TERMINAL_STATUSES.has(status.status)) {
         return {
-          executionId,
+          runId,
           status: status.status,
-          ...(status.result != null ? { result: status.result } : {}),
+          ...(status.output != null ? { output: status.output } : {}),
           ...(status.error != null ? { error: status.error } : {}),
         };
       }

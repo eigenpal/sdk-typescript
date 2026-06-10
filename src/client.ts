@@ -1,6 +1,8 @@
 import { EigenpalError, EigenpalTimeoutError, errorFromResponse } from './errors';
 import { createClient, createConfig, type Client, type Config } from './generated/client';
+import { runStartWithTarget } from './generated/sdk.gen';
 import type { ApiErrorEnvelope } from './generated/types.gen';
+import { buildRunJsonBody, buildRunMultipart, hasFileInput } from './lib/files';
 import { AgentsResource } from './resources/agents';
 import { AutomationsResource } from './resources/automations';
 import { RunsResource } from './resources/runs';
@@ -51,6 +53,40 @@ export interface OperationResult<T> {
   request?: Request;
 }
 
+export type RunTarget =
+  | string
+  | {
+      type: 'workflow' | 'agent';
+      id?: string;
+      slug?: string;
+      version?: string;
+    };
+
+export type RunInput = Record<string, unknown>;
+
+export interface RunOptions {
+  input?: RunInput;
+  waitForCompletion?: number;
+  overrides?: { steps?: Record<string, Record<string, unknown>> };
+  signal?: AbortSignal;
+}
+
+export type RunCallOptions = Omit<RunOptions, 'input'>;
+
+export interface RerunOptions {
+  version?: 'latest' | 'original' | string;
+  waitForCompletion?: number;
+  signal?: AbortSignal;
+}
+
+export type RunStartResponse = Record<string, unknown> & {
+  runId: string;
+  type: 'workflow' | 'agent';
+  status?: string;
+  output?: unknown;
+  error?: string | null;
+};
+
 /**
  * The EigenPal SDK client.
  *
@@ -61,10 +97,13 @@ export interface OperationResult<T> {
  * const client = new EigenpalClient();
  *
  * // Async — enqueue and poll later.
- * const { executionId } = await client.workflows.run('wf_abc', { language: 'en' });
+ * const { runId } = await client.run('workflows.extract-invoice', {
+ *   input: { language: 'en' },
+ * });
  *
  * // Sync (server holds the connection up to 60s).
- * const result = await client.workflows.run('wf_abc', { language: 'en' }, {
+ * const result = await client.run('workflows.extract-invoice', {
+ *   input: { language: 'en' },
  *   waitForCompletion: 60,
  * });
  *
@@ -73,9 +112,9 @@ export interface OperationResult<T> {
  * ```
  */
 export class EigenpalClient {
-  /** Workflow operations: `list`, `get`, `versions`, `run`. */
+  /** Workflow definition operations: `list`, `get`, `versions`. Start runs with `client.run(...)`. */
   public readonly workflows: WorkflowsResource;
-  /** Agent operations: `list`, `get`, `create`, `run`, `executions`. */
+  /** Agent operations: `list`, `get`, `create`, `executions`. Start runs with `client.run(...)`. */
   public readonly agents: AgentsResource;
   /** Source repository operations: repository metadata, raw files, releases, lockfiles, and secret decrypt. */
   public readonly source: SourceResource;
@@ -133,6 +172,83 @@ export class EigenpalClient {
   /** Expose the underlying hey-api client for advanced use (custom interceptors, etc.). */
   getRawClient(): Client {
     return this.client;
+  }
+
+  async run(
+    target: RunTarget,
+    input?: RunInput,
+    options?: RunCallOptions
+  ): Promise<RunStartResponse>;
+  async run(target: RunTarget, options?: RunOptions): Promise<RunStartResponse>;
+  async run(request: { target: RunTarget } & RunOptions): Promise<RunStartResponse>;
+  async run(
+    targetOrRequest: RunTarget | ({ target: RunTarget } & RunOptions),
+    inputOrOptions: RunInput | RunOptions = {},
+    options: RunCallOptions = {}
+  ): Promise<RunStartResponse> {
+    const targetPassedDirectly =
+      typeof targetOrRequest === 'string' ||
+      (targetOrRequest &&
+        typeof targetOrRequest === 'object' &&
+        'type' in targetOrRequest &&
+        !('target' in targetOrRequest));
+    const request = targetPassedDirectly
+      ? { target: targetOrRequest, ...normalizeRunArgs(inputOrOptions, options) }
+      : (targetOrRequest as { target: RunTarget } & RunOptions);
+    const { pathTarget, version } = pathTargetFromRunTarget(request.target);
+    const query = runQuery({
+      waitForCompletion: request.waitForCompletion,
+      version,
+    });
+
+    if (hasFileInput(request.input)) {
+      const { formData } = await buildRunMultipart({
+        input: request.input,
+        overrides: request.overrides,
+      });
+      return this._request<RunStartResponse>(
+        () =>
+          this.client.post({
+            url: `/api/v1/run/${encodeURIComponent(pathTarget)}`,
+            query,
+            body: formData,
+            bodySerializer: null,
+            headers: { 'Content-Type': null },
+            signal: request.signal,
+          }) as Promise<OperationResult<RunStartResponse>>
+      );
+    }
+
+    const body = buildRunJsonBody(request.input, request.overrides);
+    return this._request<RunStartResponse>(
+      () =>
+        runStartWithTarget({
+          client: this.client,
+          path: { target: pathTarget },
+          query,
+          body,
+          signal: request.signal,
+        }) as Promise<OperationResult<RunStartResponse>>
+    );
+  }
+
+  async rerun(runId: string, options: RerunOptions = {}): Promise<Record<string, unknown>> {
+    return this._request<Record<string, unknown>>(
+      () =>
+        this.client.post({
+          url: '/api/v1/runs/{id}/rerun',
+          path: { id: runId },
+          query:
+            options.waitForCompletion !== undefined
+              ? { wait_for_completion: options.waitForCompletion }
+              : undefined,
+          body:
+            options.version && options.version !== 'latest'
+              ? { sourceRef: options.version }
+              : undefined,
+          signal: options.signal,
+        }) as Promise<OperationResult<Record<string, unknown>>>
+    );
   }
 
   /**
@@ -208,6 +324,39 @@ export class EigenpalClient {
   }
 }
 
+function pathTargetFromRunTarget(target: RunTarget): { pathTarget: string; version?: string } {
+  if (typeof target === 'string') {
+    const [pathTarget, version, extra] = target.split('@');
+    if (!pathTarget || version === '' || extra !== undefined) {
+      throw new EigenpalError('Run target strings must be <target> or <target>@<version>.', {
+        status: 0,
+      });
+    }
+    return { pathTarget, version: version && version !== 'latest' ? version : undefined };
+  }
+  const idOrSlug = target.slug ?? target.id;
+  if (!idOrSlug) {
+    throw new EigenpalError('Run target objects require `slug` or `id`.', { status: 0 });
+  }
+  const root = target.type === 'agent' ? 'agents' : 'workflows';
+  const name = idOrSlug.includes('.') ? idOrSlug : `${root}.${idOrSlug.split('/').join('.')}`;
+  return {
+    pathTarget: name,
+    version: target.version && target.version !== 'latest' ? target.version : undefined,
+  };
+}
+
+function runQuery(options: {
+  waitForCompletion?: number;
+  version?: string;
+}): { wait_for_completion?: number; version?: string } | undefined {
+  const query: { wait_for_completion?: number; version?: string } = {};
+  if (options.waitForCompletion !== undefined)
+    query.wait_for_completion = options.waitForCompletion;
+  if (options.version) query.version = options.version;
+  return Object.keys(query).length > 0 ? query : undefined;
+}
+
 function assertJsonResponse(response: Response): void {
   // 204 No Content has no body — accept silently.
   if (response.status === 204) return;
@@ -221,6 +370,26 @@ function assertJsonResponse(response: Response): void {
       `a misconfigured proxy). Set \`baseUrl\` to your EigenPal instance root, ` +
       `e.g. "https://app.eigenpal.com".`,
     { status: response.status }
+  );
+}
+
+function normalizeRunArgs(
+  inputOrOptions: RunInput | RunOptions,
+  options: RunCallOptions
+): RunOptions {
+  if (Object.keys(options).length > 0) {
+    return { ...options, input: inputOrOptions as RunInput };
+  }
+  if (looksLikeRunOptions(inputOrOptions)) {
+    return inputOrOptions;
+  }
+  return { input: inputOrOptions as RunInput };
+}
+
+function looksLikeRunOptions(value: unknown): value is RunOptions {
+  if (!value || typeof value !== 'object') return false;
+  return (
+    'input' in value || 'waitForCompletion' in value || 'overrides' in value || 'signal' in value
   );
 }
 

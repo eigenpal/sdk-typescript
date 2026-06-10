@@ -4,7 +4,7 @@ import { EigenpalClient, toFile } from '../src';
 
 /**
  * Tests for multipart file upload — exercises the `-F`-style path the SDK
- * takes whenever `workflows.run`'s input contains a Node readable stream, a
+ * takes whenever `client.run`'s input contains a Node readable stream, a
  * `File` / `Blob`, or a `{ content, filename, mimeType }` descriptor.
  */
 
@@ -28,7 +28,7 @@ async function captureRequest(): Promise<{
       contentType: req.headers.get('content-type'),
       body: req.body ? await req.text() : '',
     });
-    return new Response(JSON.stringify({ executionId: 'exec_abc' }), {
+    return new Response(JSON.stringify({ runId: 'exec_abc', type: 'workflow' }), {
       status: 201,
       headers: { 'content-type': 'application/json' },
     });
@@ -47,7 +47,7 @@ describe('multipart file upload', () => {
     });
 
     const blob = new Blob([new Uint8Array([1, 2, 3, 4])], { type: 'application/pdf' });
-    await client.workflows.run('wf_xyz', { contract_document: blob, language: 'en' });
+    await client.run('workflows.wf_xyz', { contract_document: blob, language: 'en' });
 
     expect(captured[0]?.method).toBe('POST');
     expect(captured[0]?.contentType).toMatch(/^multipart\/form-data; boundary=/);
@@ -55,6 +55,8 @@ describe('multipart file upload', () => {
     // Non-file scalar travels in the _json sidecar (not as a top-level field).
     expect(captured[0]?.body).toContain('_json');
     expect(captured[0]?.body).toContain('"language":"en"');
+    expect(captured[0]?.url).toContain('/api/v1/run/workflows.wf_xyz');
+    expect(captured[0]?.url).not.toContain('%40');
   });
 
   test('File input preserves filename', async () => {
@@ -69,7 +71,7 @@ describe('multipart file upload', () => {
     const file = new File([new Uint8Array([1, 2, 3])], 'invoice.pdf', {
       type: 'application/pdf',
     });
-    await client.workflows.run('wf_xyz', { invoice: file });
+    await client.run('workflows.wf_xyz', { input: { invoice: file } });
 
     expect(captured[0]?.contentType).toMatch(/^multipart\/form-data/);
     expect(captured[0]?.body).toContain('filename="invoice.pdf"');
@@ -85,11 +87,13 @@ describe('multipart file upload', () => {
     });
 
     const buffer = new Uint8Array([0x25, 0x50, 0x44, 0x46]); // %PDF
-    await client.workflows.run('wf_xyz', {
-      contract: {
-        content: buffer,
-        filename: 'contract.pdf',
-        mimeType: 'application/pdf',
+    await client.run('workflows.wf_xyz', {
+      input: {
+        contract: {
+          content: buffer,
+          filename: 'contract.pdf',
+          mimeType: 'application/pdf',
+        },
       },
     });
 
@@ -107,10 +111,10 @@ describe('multipart file upload', () => {
       maxRetries: 0,
     });
 
-    await client.workflows.run('wf_xyz', { language: 'en' });
+    await client.run('workflows.wf_xyz', { input: { language: 'en' } });
 
     expect(captured[0]?.contentType).toBe('application/json');
-    expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({ input: { language: 'en' } });
+    expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({ language: 'en' });
   });
 
   test('Node readable stream uploads as multipart with the filename from its path', async () => {
@@ -125,7 +129,7 @@ describe('multipart file upload', () => {
     // A `fs.createReadStream`-shaped value: async-iterable readable + `path`.
     const stream = Readable.from([new Uint8Array([0x25, 0x50, 0x44, 0x46])]);
     (stream as unknown as { path: string }).path = '/tmp/uploads/contract.pdf';
-    await client.workflows.run('wf_xyz', { contract_document: stream });
+    await client.run('workflows.wf_xyz', { input: { contract_document: stream } });
 
     expect(captured[0]?.contentType).toMatch(/^multipart\/form-data/);
     // Filename is the basename of the stream's path.
@@ -142,8 +146,10 @@ describe('multipart file upload', () => {
       maxRetries: 0,
     });
 
-    await client.workflows.run('wf_xyz', {
-      contract: toFile(new Uint8Array([0x25, 0x50, 0x44, 0x46]), 'contract.pdf'),
+    await client.run('workflows.wf_xyz', {
+      input: {
+        contract: toFile(new Uint8Array([0x25, 0x50, 0x44, 0x46]), 'contract.pdf'),
+      },
     });
 
     expect(captured[0]?.contentType).toMatch(/^multipart\/form-data/);
@@ -163,7 +169,7 @@ describe('multipart file upload', () => {
 
     const a = new File([new Uint8Array([1])], 'a.pdf', { type: 'application/pdf' });
     const b = new File([new Uint8Array([2])], 'b.pdf', { type: 'application/pdf' });
-    await client.workflows.run('wf_xyz', { primary: a, secondary: b });
+    await client.run('workflows.wf_xyz', { input: { primary: a, secondary: b } });
 
     expect(captured[0]?.body).toContain('filename="a.pdf"');
     expect(captured[0]?.body).toContain('filename="b.pdf"');

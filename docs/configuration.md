@@ -33,7 +33,7 @@ new EigenpalClient({
 
 `timeoutMs` applies per-request. The per-call `signal` (an `AbortSignal`) wins if you pass one.
 
-For workflow runs longer than `timeoutMs`, prefer `workflows.executions.runAndWait` (client-side polling) over `workflows.run({ waitForCompletion })` (server-side hold).
+For workflow runs longer than `timeoutMs`, prefer `workflows.executions.runAndWait` (client-side polling) over `client.run(..., { waitForCompletion })` (server-side hold).
 
 ## Custom headers
 

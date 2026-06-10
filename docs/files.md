@@ -10,7 +10,7 @@ import { EigenpalClient } from '@eigenpal/sdk';
 const fileInput = document.querySelector<HTMLInputElement>('input[type=file]')!;
 const client = new EigenpalClient({ apiKey });
 
-await client.workflows.run('extract-invoice', {
+await client.run('workflows.extract-invoice', {
   contract_document: fileInput.files![0], // File from <input type="file">
 });
 ```
@@ -21,7 +21,7 @@ await client.workflows.run('extract-invoice', {
 import { readFile } from 'node:fs/promises';
 
 const buffer = await readFile('contract.pdf');
-await client.workflows.run('extract-invoice', {
+await client.run('workflows.extract-invoice', {
   contract_document: {
     content: buffer,
     filename: 'contract.pdf',
@@ -34,13 +34,13 @@ await client.workflows.run('extract-invoice', {
 
 ```ts
 const blob = new Blob([buffer], { type: 'application/pdf' });
-await client.workflows.run('extract-invoice', { contract_document: blob });
+await client.run('workflows.extract-invoice', { contract_document: blob });
 ```
 
 ## Multiple files
 
 ```ts
-await client.workflows.run('compare-versions', {
+await client.run('workflows.compare-versions', {
   original: file1,
   revised: file2,
   reference: file3,
@@ -55,17 +55,17 @@ Only top-level file values become multipart fields. Files inside arrays or neste
 
 ```ts
 // DON'T — `documents` becomes a JSON array of `{}` objects, no upload.
-await client.workflows.run('compare', { documents: [file1, file2] });
+await client.run('workflows.compare', { documents: [file1, file2] });
 
 // DO — flatten to top-level keys, your workflow accepts them by name.
-await client.workflows.run('compare', { document_0: file1, document_1: file2 });
+await client.run('workflows.compare', { document_0: file1, document_1: file2 });
 ```
 
 ## Don't base64 yourself
 
 ```ts
 // Don't do this. Doubles the payload size and skips the optimised path.
-await client.workflows.run('extract-invoice', {
+await client.run('workflows.extract-invoice', {
   contract_document: btoa(buffer.toString('binary')),
 });
 ```

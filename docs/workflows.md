@@ -1,6 +1,6 @@
 # Workflows
 
-`client.workflows` is the entry point for listing, fetching, and running workflows.
+`client.workflows` is the entry point for listing and fetching workflows. Start workflow runs with root `client.run()`.
 
 ## List
 
@@ -27,7 +27,7 @@ Three ways to run, depending on how long you want to wait.
 ### Async (returns immediately)
 
 ```ts
-const { executionId } = await client.workflows.run('extract-invoice', {
+const { runId } = await client.run('workflows.extract-invoice', {
   contract_document: file,
 });
 ```
@@ -37,15 +37,15 @@ For webhooks and fire-and-forget jobs. Poll status via [`client.runs.get`](./exe
 ### Sync (server holds up to 60s)
 
 ```ts
-const result = await client.workflows.run(
-  'extract-invoice',
+const result = await client.run(
+  'workflows.extract-invoice',
   { contract_document: file },
   { waitForCompletion: 60 }
 );
-console.log(result.status, result.result);
+console.log(result.status, result.output);
 ```
 
-If the run completes within `waitForCompletion` seconds, `status`/`result` are populated. Otherwise just `executionId`.
+If the run completes within `waitForCompletion` seconds, `status`/`output` are populated. Otherwise the response includes `runId`.
 
 ### Long-running (client polls)
 
@@ -60,7 +60,7 @@ Default 5 min cap; tune with `pollIntervalMs` and `timeoutMs`. See [Executions](
 ## Pin a version
 
 ```ts
-await client.workflows.run('extract-invoice', input, { version: '1.2.3' });
+await client.run('workflows.extract-invoice@1.2.3', input);
 ```
 
 If omitted, the run picks up the workflow's current published version at trigger time.
@@ -68,8 +68,8 @@ If omitted, the run picks up the workflow's current published version at trigger
 ## Override step output
 
 ```ts
-await client.workflows.run('extract-invoice', input, {
-  overrides: { 'parse-contract': { text: 'pre-extracted...' } },
+await client.run('workflows.extract-invoice', input, {
+  overrides: { steps: { 'parse-contract': { text: 'pre-extracted...' } } },
 });
 ```
 

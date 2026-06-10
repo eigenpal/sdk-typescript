@@ -29,7 +29,7 @@ const client = new EigenpalClient({ apiKey: process.env.EIGENPAL_API_KEY });
 const result = await client.workflows.executions.runAndWait('extract-invoice', {
   contract_document: file,
 });
-console.log(result.status, result.result);
+console.log(result.status, result.output);
 ```
 
 ## Authentication
@@ -55,23 +55,23 @@ const client = new EigenpalClient({
 
 `baseUrl` likewise wins over the `EIGENPAL_BASE_URL` env fallback. Defaults to `https://app.eigenpal.com` (the hosted cloud).
 
-## Triggering workflows
+## Starting runs
 
-`workflows.run(workflowId, input?, options?)` enqueues a workflow execution.
+`client.run(target, input?, options?)` starts a workflow or agent run. Targets can be strings such as `workflows.extract-invoice` / `agents.invoice-agent` or structured objects like `{ type: 'workflow', slug: 'extract-invoice' }`.
 
 ```ts
-// Async: returns immediately with { executionId }.
-const { executionId } = await client.workflows.run('extract-invoice', {
+// Async: returns immediately with { runId }.
+const { runId } = await client.run('workflows.extract-invoice', {
   contract_document: file,
 });
 
 // Sync: server holds the connection up to 60 seconds.
-const result = await client.workflows.run(
-  'extract-invoice',
+const result = await client.run(
+  { type: 'workflow', slug: 'extract-invoice', version: 'latest' },
   { contract_document: file },
   { waitForCompletion: 60 }
 );
-console.log(result.status, result.result);
+console.log(result.status, result.output);
 
 // Long-running: client-side polling, default 5min cap.
 const final = await client.workflows.executions.runAndWait('extract-invoice', {
@@ -79,7 +79,7 @@ const final = await client.workflows.executions.runAndWait('extract-invoice', {
 });
 ```
 
-The second argument is the workflow input map keyed by input name (as declared in the workflow). Pass `undefined` for inputs-less workflows. `options` carries `version`, `waitForCompletion`, and `overrides`.
+The second argument is the input map keyed by input name. Pass `undefined` for inputs-less runs. `options` carries `waitForCompletion` and workflow `overrides`; put the workflow version or agent source ref in the target.
 
 ## File inputs
 
@@ -87,12 +87,12 @@ When a workflow input is a file, pass a `File`, `Blob`, or explicit `{ content, 
 
 ```ts
 // Browser: File from <input type="file">
-await client.workflows.run('extract-invoice', { contract_document: file });
+await client.run('workflows.extract-invoice', { contract_document: file });
 
 // Node: Buffer from fs
 import { readFile } from 'node:fs/promises';
 const buffer = await readFile('contract.pdf');
-await client.workflows.run('extract-invoice', {
+await client.run('workflows.extract-invoice', {
   contract_document: {
     content: buffer,
     filename: 'contract.pdf',
@@ -112,11 +112,11 @@ const runs = await client.runs.list({
   status: 'failed,cancelled',
 });
 
-const run = await client.runs.get(executionId, { include: 'detail' });
-await client.runs.cancel(executionId);
+const run = await client.runs.get(runId, { include: 'detail' });
+await client.runs.cancel(runId);
 
-const status = await client.runs.get(executionId);
-//   { executionId, status, result?, error?, createdAt, completedAt? }
+const status = await client.runs.get(runId);
+//   { run: { id, status, output?, error?, createdAt, completedAt? } }
 
 const list = await client.runs.list({
   type: 'workflow',
@@ -126,7 +126,7 @@ const list = await client.runs.list({
   limit: 50,
 });
 
-await client.runs.cancel(executionId);
+await client.runs.cancel(runId);
 ```
 
 `/api/v1/runs` is the shared run API for workflow, agent, and eval runs. Use `type=workflow|agent`
@@ -146,12 +146,12 @@ await client.workflows.versions('extract-invoice');
 await client.agents.list({ search: 'invoice' });
 await client.agents.get('invoice-agent');
 
-const { executionId } = await client.agents.run('invoice-agent', {
+const { runId: agentRunId } = await client.run('agents.invoice-agent', {
   invoice: file,
 });
 
-await client.runs.get(executionId);
-await client.runs.cancel(executionId);
+await client.runs.get(agentRunId);
+await client.runs.cancel(agentRunId);
 ```
 
 Agent run listing uses the same shared runs API with `type: 'agent'` and the agent id or slug as
@@ -181,7 +181,7 @@ try {
   const result = await client.workflows.executions.runAndWait('extract-invoice', {
     language: 'en',
   });
-  console.log(result.status, result.result);
+  console.log(result.status, result.output);
 } catch (err) {
   if (err instanceof EigenpalValidationError) {
     for (const issue of err.issues) console.error(`${issue.field}: ${issue.message}`);

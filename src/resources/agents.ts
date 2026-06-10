@@ -7,7 +7,6 @@ import {
   agentsFilesUploadBatch,
   agentsGet,
   agentsList,
-  agentsRun,
   agentsTriggersEmailCreateAlias,
   agentsTriggersEmailDeleteAlias,
   agentsTriggersEmailGet,
@@ -34,10 +33,7 @@ import type {
   ListAgentsResponse,
   PatchAgentBody,
   PatchAgentResponse,
-  RunAgentResponse,
 } from '../generated/types.gen';
-import { buildAgentMultipart, hasFileInput } from '../lib/files';
-import type { WorkflowInput } from './workflows';
 
 type Dispatch = <T>(call: () => Promise<OperationResult<T>>) => Promise<T>;
 
@@ -45,12 +41,6 @@ export interface ListAgentsOptions {
   search?: string;
   limit?: number;
   offset?: number;
-  signal?: AbortSignal;
-}
-
-export interface RunAgentOptions {
-  waitForCompletion?: number;
-  sourceRef?: string;
   signal?: AbortSignal;
 }
 
@@ -226,48 +216,6 @@ export class AgentsResource {
   ): Promise<PatchAgentResponse> {
     return this.dispatch(() =>
       agentsUpdate({ client: this.client, path: { agentId }, body, signal: options.signal })
-    );
-  }
-
-  async run(
-    agentId: string,
-    input?: WorkflowInput,
-    options: RunAgentOptions = {}
-  ): Promise<RunAgentResponse> {
-    const query = {
-      ...(options.waitForCompletion !== undefined
-        ? { wait_for_completion: options.waitForCompletion }
-        : {}),
-      ...(options.sourceRef !== undefined ? { sourceRef: options.sourceRef } : {}),
-    };
-
-    if (hasFileInput(input)) {
-      const { formData } = await buildAgentMultipart(input);
-      return this.dispatch<RunAgentResponse>(
-        () =>
-          this.client.post({
-            url: '/api/v1/agents/{agentId}/run',
-            path: { agentId },
-            query,
-            body: formData,
-            bodySerializer: null,
-            headers: { 'Content-Type': null },
-            signal: options.signal,
-          }) as Promise<OperationResult<RunAgentResponse>>
-      );
-    }
-
-    return this.dispatch(() =>
-      agentsRun({
-        client: this.client,
-        path: { agentId },
-        query,
-        body: {
-          ...(input !== undefined ? { input } : {}),
-          ...(options.sourceRef !== undefined ? { sourceRef: options.sourceRef } : {}),
-        },
-        signal: options.signal,
-      })
     );
   }
 }

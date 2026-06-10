@@ -71,24 +71,66 @@ describe('EigenpalClient SDK', () => {
     expect(captured[0]?.auth).toBe('Bearer eg_test_key_123');
   });
 
-  test('workflows.run returns executionId', async () => {
+  test('client.run returns runId', async () => {
     const captured: { url: string; method: string; body?: string }[] = [];
     const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
-      fetch: mockFetch([{ status: 201, body: { executionId: 'exec_abc' } }], captured),
+      fetch: mockFetch([{ status: 201, body: { runId: 'exec_abc', type: 'workflow' } }], captured),
       maxRetries: 0,
     });
 
-    const result = await client.workflows.run('wf_xyz', { foo: 'bar' });
+    const result = await client.run('workflows.wf_xyz', { input: { foo: 'bar' } });
 
-    expect(result.executionId).toBe('exec_abc');
+    expect(result.runId).toBe('exec_abc');
     expect(captured[0]?.method).toBe('POST');
-    expect(captured[0]?.url).toContain('/api/v1/workflows/wf_xyz/run');
-    expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({ input: { foo: 'bar' } });
+    expect(captured[0]?.url).toContain('/api/v1/run/workflows.wf_xyz');
+    expect(captured[0]?.url).not.toContain('%40');
+    expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({ foo: 'bar' });
   });
 
-  test('workflows.run with waitForCompletion adds query param', async () => {
+  test('client.run accepts documented input and options arguments', async () => {
+    const captured: { url: string; method: string; body?: string }[] = [];
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch: mockFetch(
+        [{ status: 200, body: { runId: 'exec_abc', type: 'workflow', status: 'completed' } }],
+        captured
+      ),
+      maxRetries: 0,
+    });
+
+    const result = await client.run('workflows.wf_xyz', { foo: 'bar' }, { waitForCompletion: 30 });
+
+    expect(result.runId).toBe('exec_abc');
+    expect(captured[0]?.url).toContain('wait_for_completion=30');
+    expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({ foo: 'bar' });
+  });
+
+  test('client.run sends overrides under the reserved _overrides body key', async () => {
+    const captured: { url: string; method: string; body?: string }[] = [];
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch: mockFetch([{ status: 201, body: { runId: 'exec_ov', type: 'workflow' } }], captured),
+      maxRetries: 0,
+    });
+
+    const overrides = { steps: { extract: { total: 42 } } };
+    const result = await client.run('workflows.wf_xyz', {
+      input: { language: 'en' },
+      overrides,
+    });
+
+    expect(result.runId).toBe('exec_ov');
+    expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({
+      language: 'en',
+      _overrides: overrides,
+    });
+  });
+
+  test('client.run with waitForCompletion adds query param', async () => {
     const captured: { url: string }[] = [];
     const client = new EigenpalClient({
       apiKey: 'eg_test',
@@ -97,7 +139,12 @@ describe('EigenpalClient SDK', () => {
         [
           {
             status: 201,
-            body: { executionId: 'exec_abc', status: 'completed', result: { ok: true } },
+            body: {
+              runId: 'exec_abc',
+              type: 'workflow',
+              status: 'completed',
+              output: { ok: true },
+            },
           },
         ],
         captured
@@ -105,7 +152,10 @@ describe('EigenpalClient SDK', () => {
       maxRetries: 0,
     });
 
-    const result = await client.workflows.run('wf_xyz', { x: 1 }, { waitForCompletion: 30 });
+    const result = await client.run('workflows.wf_xyz', {
+      input: { x: 1 },
+      waitForCompletion: 30,
+    });
 
     expect(result.status).toBe('completed');
     expect(captured[0]?.url).toContain('wait_for_completion=30');
@@ -186,7 +236,7 @@ describe('EigenpalClient SDK', () => {
     await client.runs.list({ type: 'workflow', source: 'wf_123', status: 'completed' });
     const run = await client.runs.get('run_123', { include: 'detail' });
     await client.runs.cancel('run_123');
-    await client.runs.rerun('run_123');
+    await client.rerun('run_123');
     await client.runs.resume('run_123');
     await client.runs.feedback.update('run_123', { status: 'open' });
     await client.runs.expected.list('run_123');
@@ -287,7 +337,7 @@ describe('EigenpalClient SDK', () => {
     });
 
     try {
-      await client.workflows.run('wf_xyz');
+      await client.run('workflows.wf_xyz');
       throw new Error('expected throw');
     } catch (err) {
       expect(err).toBeInstanceOf(EigenpalValidationError);
@@ -303,12 +353,12 @@ describe('EigenpalClient SDK', () => {
       fetch: mockFetch(
         [
           // 1: trigger run
-          { status: 201, body: { executionId: 'exec_pq' } },
+          { status: 201, body: { runId: 'exec_pq', type: 'workflow' } },
           // 2: poll — running
           {
             status: 200,
             body: {
-              run: { executionId: 'exec_pq', status: 'running', createdAt: '2025-01-01T00:00:00Z' },
+              run: { runId: 'exec_pq', status: 'running', createdAt: '2025-01-01T00:00:00Z' },
             },
           },
           // 3: poll — completed
@@ -316,9 +366,9 @@ describe('EigenpalClient SDK', () => {
             status: 200,
             body: {
               run: {
-                executionId: 'exec_pq',
+                runId: 'exec_pq',
                 status: 'completed',
-                result: { total: 42 },
+                output: { total: 42 },
                 createdAt: '2025-01-01T00:00:00Z',
                 completedAt: '2025-01-01T00:00:05Z',
               },
@@ -336,9 +386,9 @@ describe('EigenpalClient SDK', () => {
       { pollIntervalMs: 5, timeoutMs: 5000 }
     );
 
-    expect(result.executionId).toBe('exec_pq');
+    expect(result.runId).toBe('exec_pq');
     expect(result.status).toBe('completed');
-    expect(result.result).toEqual({ total: 42 });
+    expect(result.output).toEqual({ total: 42 });
     expect(captured[1]?.url).toContain('include=detail');
     expect(captured[2]?.url).toContain('include=detail');
   });

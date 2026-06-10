@@ -12,20 +12,6 @@ export type PatchAgentBody = {
   };
 };
 
-export type RunAgentBody = {
-  input?: {
-    [key: string]: unknown;
-  };
-  _metadata?: {
-    [key: string]: unknown;
-  };
-  /**
-   * Git source ref to resolve for this run. Defaults to latest. Supports latest, main, exact versions/tags such as 1.2.3, semver ranges such as 1.2.x or 1.x, and exact commit SHAs.
-   */
-  sourceRef?: string;
-  [key: string]: unknown;
-};
-
 export type CreateAgentBody = {
   name: string;
   slug: string;
@@ -33,6 +19,10 @@ export type CreateAgentBody = {
   config?: {
     [key: string]: unknown;
   };
+};
+
+export type RunTargetInputBody = {
+  [key: string]: unknown;
 };
 
 export type RunFeedbackRequest = {
@@ -95,29 +85,6 @@ export type SourceSecretsEncryptBody = {
     secretName: string;
     plaintext: string;
   }>;
-};
-
-export type RunWorkflowBody = {
-  /**
-   * Workflow inputs keyed by input name
-   */
-  input?: {
-    [key: string]: unknown;
-  };
-  /**
-   * Per-step output overrides for replay
-   */
-  overrides?: {
-    steps?: {
-      [key: string]: {
-        [key: string]: unknown;
-      };
-    };
-  } | null;
-  /**
-   * Caller surface (defaults to "api")
-   */
-  trigger?: 'api' | 'cli';
 };
 
 export type ApiErrorEnvelope = {
@@ -187,32 +154,6 @@ export type PatchAgentResponse = {
   agent: AgentSummary;
 };
 
-export type RunAgentResponse = {
-  runId: string;
-  status?: ExecutionStatus | 'timeout';
-  output?: unknown;
-  schemaValid?: boolean | null;
-  error?: string | null;
-  requestedSourceRef?: string | null;
-  resolvedGitRef?: string | null;
-  resolvedGitTag?: string | null;
-  resolvedCommitSha?: string | null;
-  cost?: {
-    [key: string]: unknown;
-  };
-};
-
-export type ExecutionStatus =
-  | 'created'
-  | 'pending'
-  | 'running'
-  | 'waiting'
-  | 'finalizing'
-  | 'completed'
-  | 'failed'
-  | 'cancelled'
-  | 'rejected';
-
 export type ListAgentVersionsResponse = {
   agentId: string;
   slug: string;
@@ -262,6 +203,33 @@ export type AutomationSyncResponse = {
   };
   warnings: Array<string>;
 };
+
+export type RunStartResponse = {
+  runId: string;
+  type: 'workflow' | 'agent';
+  status?: ExecutionStatus | 'pending' | 'timeout';
+  output?: unknown;
+  error?: string | null;
+  schemaValid?: boolean | null;
+  requestedSourceRef?: string | null;
+  resolvedGitRef?: string | null;
+  resolvedGitTag?: string | null;
+  resolvedCommitSha?: string | null;
+  cost?: {
+    [key: string]: unknown;
+  };
+};
+
+export type ExecutionStatus =
+  | 'created'
+  | 'pending'
+  | 'running'
+  | 'waiting'
+  | 'finalizing'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'rejected';
 
 export type RunFilesResponse = {
   inputs: Array<{
@@ -412,25 +380,6 @@ export type WorkflowDetail = {
    * YAML for the current version. Null until a version is published. Heavy; only returned on single-workflow GET, not on list.
    */
   yamlContent?: string | null;
-};
-
-export type RunWorkflowResponse = {
-  /**
-   * Newly created execution id (e.g. exec_xyz)
-   */
-  executionId: string;
-  /**
-   * Final execution status. Only set when the run completed within `wait_for_completion`.
-   */
-  status?: ExecutionStatus;
-  /**
-   * Workflow output (status=completed)
-   */
-  result?: unknown;
-  /**
-   * Error message (status=failed)
-   */
-  error?: string;
 };
 
 export type ListVersionsResponse = {
@@ -760,69 +709,6 @@ export type AgentsUpdateResponses = {
 };
 
 export type AgentsUpdateResponse = AgentsUpdateResponses[keyof AgentsUpdateResponses];
-
-export type AgentsRunData = {
-  body: RunAgentBody;
-  path: {
-    /**
-     * Agent id or slug
-     */
-    agentId: string;
-  };
-  query?: {
-    /**
-     * Seconds to hold the connection waiting for completion (max 600). Omit for async.
-     */
-    wait_for_completion?: number;
-    /**
-     * Git source ref to resolve for this run. Defaults to latest. Supports latest, main, exact versions/tags such as 1.2.3, semver ranges such as 1.2.x or 1.x, and exact commit SHAs.
-     */
-    sourceRef?: string;
-  };
-  url: '/api/v1/agents/{agentId}/run';
-};
-
-export type AgentsRunErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type AgentsRunError = AgentsRunErrors[keyof AgentsRunErrors];
-
-export type AgentsRunResponses = {
-  /**
-   * Execution completed while waiting
-   */
-  200: RunAgentResponse;
-  /**
-   * Execution accepted
-   */
-  202: RunAgentResponse;
-};
-
-export type AgentsRunResponse = AgentsRunResponses[keyof AgentsRunResponses];
 
 export type AgentsTriggersEmailDeleteAliasData = {
   body?: never;
@@ -1373,6 +1259,71 @@ export type AutomationsSyncResponses = {
 };
 
 export type AutomationsSyncResponse = AutomationsSyncResponses[keyof AutomationsSyncResponses];
+
+export type RunStartWithTargetData = {
+  body: RunTargetInputBody;
+  path: {
+    /**
+     * Automation target without a version suffix.
+     */
+    target: string;
+  };
+  query?: {
+    /**
+     * Optional version or source ref. Defaults to latest.
+     */
+    version?: string;
+    wait_for_completion?: number;
+  };
+  url: '/api/v1/run/{target}';
+};
+
+export type RunStartWithTargetErrors = {
+  /**
+   * Validation error. Request shape did not match the spec.
+   */
+  400: ApiErrorEnvelope;
+  /**
+   * Missing or invalid API key
+   */
+  401: ApiErrorEnvelope;
+  /**
+   * API key lacks required scope
+   */
+  403: ApiErrorEnvelope;
+  /**
+   * Resource not found
+   */
+  404: ApiErrorEnvelope;
+  /**
+   * Rate limit exceeded
+   */
+  429: ApiErrorEnvelope;
+  /**
+   * Internal server error
+   */
+  500: ApiErrorEnvelope;
+};
+
+export type RunStartWithTargetError = RunStartWithTargetErrors[keyof RunStartWithTargetErrors];
+
+export type RunStartWithTargetResponses = {
+  /**
+   * Run completed while waiting
+   */
+  200: RunStartResponse;
+  /**
+   * Workflow run accepted
+   */
+  201: RunStartResponse;
+  /**
+   * Agent run accepted or wait timed out
+   */
+  202: RunStartResponse;
+};
+
+export type RunStartWithTargetResponse =
+  RunStartWithTargetResponses[keyof RunStartWithTargetResponses];
 
 export type RunsArtifactGetData = {
   body?: never;
@@ -2165,7 +2116,9 @@ export type RunsRerunData = {
   path: {
     id: string;
   };
-  query?: never;
+  query?: {
+    wait_for_completion?: number;
+  };
   url: '/api/v1/runs/{id}/rerun';
 };
 
@@ -2200,13 +2153,17 @@ export type RunsRerunError = RunsRerunErrors[keyof RunsRerunErrors];
 
 export type RunsRerunResponses = {
   /**
-   * Rerun started
+   * Rerun completed while waiting
    */
   200: RunRerunResponse;
   /**
-   * Rerun started
+   * Workflow rerun accepted
    */
   201: RunRerunResponse;
+  /**
+   * Agent rerun accepted or wait timed out
+   */
+  202: RunRerunResponse;
 };
 
 export type RunsRerunResponse = RunsRerunResponses[keyof RunsRerunResponses];
@@ -2763,65 +2720,6 @@ export type WorkflowsGetResponses = {
 };
 
 export type WorkflowsGetResponse = WorkflowsGetResponses[keyof WorkflowsGetResponses];
-
-export type WorkflowsRunData = {
-  body: RunWorkflowBody;
-  path: {
-    /**
-     * Workflow id (e.g. `wf_abc123`) or slug (e.g. `extract-invoice`, the workflow `name`).
-     */
-    id: string;
-  };
-  query?: {
-    /**
-     * Version id, or "latest" (default)
-     */
-    version?: string;
-    /**
-     * Seconds to hold the connection waiting for completion (max 60). Omit for async.
-     */
-    wait_for_completion?: number;
-  };
-  url: '/api/v1/workflows/{id}/run';
-};
-
-export type WorkflowsRunErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type WorkflowsRunError = WorkflowsRunErrors[keyof WorkflowsRunErrors];
-
-export type WorkflowsRunResponses = {
-  /**
-   * Execution accepted. Body always includes `executionId`. When `wait_for_completion` is set and the execution completes within the window, `status`/`result`/`error` are also returned; otherwise poll `/api/v1/runs/{executionId}` for status.
-   */
-  201: RunWorkflowResponse;
-};
-
-export type WorkflowsRunResponse = WorkflowsRunResponses[keyof WorkflowsRunResponses];
 
 export type WorkflowsVersionsListData = {
   body?: never;

@@ -202,19 +202,22 @@ const apiWorkflow = list.data?.find((w) => (w as { id: string }).id);
 let triggeredId: string | null = null;
 if (apiWorkflow) {
   try {
-    const triggered = await client.workflows.run(apiWorkflow.id, {});
-    triggeredId = triggered.executionId;
+    const triggered = await client.run(
+      { type: 'workflow', id: apiWorkflow.id, version: 'latest' },
+      {}
+    );
+    triggeredId = triggered.runId;
     pass(
-      'workflows.run (no input) returns executionId',
-      typeof triggered.executionId === 'string' && triggered.executionId.startsWith('exec_'),
-      `executionId=${triggered.executionId}`
+      'client.run (no input) returns runId',
+      typeof triggered.runId === 'string' && triggered.runId.startsWith('exec_'),
+      `runId=${triggered.runId}`
     );
   } catch (e) {
     // Workflow may require specific input — that's fine, we're testing the
     // SDK round-trip, not workflow semantics. Surface the error so we know
     // it was typed correctly.
     pass(
-      'workflows.run errors are typed (when input invalid)',
+      'client.run errors are typed (when input invalid)',
       e instanceof EigenpalError,
       `${(e as Error).constructor.name}: ${(e as Error).message.slice(0, 80)}`
     );
