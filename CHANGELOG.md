@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.6.17
+
+### Patch Changes
+
+- 716c3cf: Update the hosted default API base URL and API-key guidance from `app.eigenpal.com` to `studio.eigenpal.com`.
+
 ## 0.6.15
 
 ### Minor Changes

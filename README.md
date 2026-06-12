@@ -15,7 +15,7 @@ npm i @eigenpal/sdk
 
 Requires a TypeScript-aware runtime: Bun, Deno, Node 22+ (native TS), `tsx`, Next.js, Vite, or any modern bundler. Plain `node script.js` won't work — see [Configuration](./docs/configuration.md#typescript-runtime).
 
-Get an API key at **app.eigenpal.com → Settings → API Keys**.
+Get an API key at **studio.eigenpal.com → Settings → API Keys**.
 
 ## Quick start
 
@@ -53,7 +53,7 @@ const client = new EigenpalClient({
 });
 ```
 
-`baseUrl` likewise wins over the `EIGENPAL_BASE_URL` env fallback. Defaults to `https://app.eigenpal.com` (the hosted cloud).
+`baseUrl` likewise wins over the `EIGENPAL_BASE_URL` env fallback. Defaults to `https://studio.eigenpal.com` (the hosted cloud).
 
 ## Starting runs
 

@@ -27,7 +27,7 @@ export class EigenpalAuthError extends EigenpalError {
   constructor(envelope?: ApiErrorEnvelope) {
     super(
       envelope?.issues?.[0]?.message ??
-        'Invalid or missing API key. Generate one at app.eigenpal.com → Settings → API Keys; ' +
+        'Invalid or missing API key. Generate one at studio.eigenpal.com → Settings → API Keys; ' +
           'pass it as `new EigenpalClient({ apiKey })` or set EIGENPAL_API_KEY.',
       { status: 401, envelope }
     );

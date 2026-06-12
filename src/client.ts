@@ -21,7 +21,7 @@ export interface EigenpalOptions {
   /**
    * Override the API base URL.
    *
-   * Defaults to `EIGENPAL_BASE_URL` if set, otherwise `https://app.eigenpal.com`.
+   * Defaults to `EIGENPAL_BASE_URL` if set, otherwise `https://studio.eigenpal.com`.
    */
   baseUrl?: string;
   /** Per-request timeout in milliseconds. Defaults to 60_000. */
@@ -34,7 +34,7 @@ export interface EigenpalOptions {
   defaultHeaders?: Record<string, string>;
 }
 
-const DEFAULT_BASE_URL = 'https://app.eigenpal.com';
+const DEFAULT_BASE_URL = 'https://studio.eigenpal.com';
 const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_MAX_RETRIES = 3;
 
@@ -266,7 +266,7 @@ export class EigenpalClient {
         const response = result.response;
         const status = response?.status ?? 0;
         // Guard against misconfigured `baseUrl` pointed at an HTML host
-        // (e.g. `https://eigenpal.com` instead of `https://app.eigenpal.com`).
+        // (e.g. `https://eigenpal.com` instead of `https://studio.eigenpal.com`).
         // Fires for both 2xx and non-2xx so a 4xx with HTML surfaces a typed
         // baseUrl-pointing error instead of a misleading NotFoundError or a
         // downstream JSON-parse crash. 0.4.10 shipped with this footgun.
@@ -368,7 +368,7 @@ function assertJsonResponse(response: Response): void {
     `Expected a JSON response from the API but got Content-Type "${contentType}". ` +
       `This usually means \`baseUrl\` points at a non-API host (e.g. the marketing site or ` +
       `a misconfigured proxy). Set \`baseUrl\` to your EigenPal instance root, ` +
-      `e.g. "https://app.eigenpal.com".`,
+      `e.g. "https://studio.eigenpal.com".`,
     { status: response.status }
   );
 }

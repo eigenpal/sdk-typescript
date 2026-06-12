@@ -105,14 +105,14 @@ const client = new EigenpalClient({
 
 The constructor option always wins; the env var is a fallback so scripts don't have to write `{ apiKey: process.env.EIGENPAL_API_KEY }` explicitly.
 
-| Option           | Type                     | Default                                                         | Description                                       |
-| ---------------- | ------------------------ | --------------------------------------------------------------- | ------------------------------------------------- |
-| `apiKey`         | `string`                 | `process.env.EIGENPAL_API_KEY`                                  | Bearer key from the dashboard.                    |
-| `baseUrl`        | `string`                 | `process.env.EIGENPAL_BASE_URL` ?? `'https://app.eigenpal.com'` | API host. Set to your deployment for self-hosted. |
-| `timeoutMs`      | `number`                 | `60_000`                                                        | Per-request timeout.                              |
-| `maxRetries`     | `number`                 | `3`                                                             | Retries on 5xx / 429 / network errors.            |
-| `fetch`          | `typeof fetch`           | global                                                          | Custom fetch (for tests / proxies).               |
-| `defaultHeaders` | `Record<string, string>` | `{}`                                                            | Extra headers attached to every request.          |
+| Option           | Type                     | Default                                                            | Description                                       |
+| ---------------- | ------------------------ | ------------------------------------------------------------------ | ------------------------------------------------- |
+| `apiKey`         | `string`                 | `process.env.EIGENPAL_API_KEY`                                     | Bearer key from the dashboard.                    |
+| `baseUrl`        | `string`                 | `process.env.EIGENPAL_BASE_URL` ?? `'https://studio.eigenpal.com'` | API host. Set to your deployment for self-hosted. |
+| `timeoutMs`      | `number`                 | `60_000`                                                           | Per-request timeout.                              |
+| `maxRetries`     | `number`                 | `3`                                                                | Retries on 5xx / 429 / network errors.            |
+| `fetch`          | `typeof fetch`           | global                                                             | Custom fetch (for tests / proxies).               |
+| `defaultHeaders` | `Record<string, string>` | `{}`                                                               | Extra headers attached to every request.          |
 
 ## Agents
 
