@@ -21,7 +21,6 @@ import {
   runsGet,
   runsList,
   runsRerun,
-  runsResume,
   runsTraceGet,
 } from '../generated/sdk.gen';
 import type {
@@ -47,7 +46,6 @@ import type {
   RunsListData,
   RunsListResponse,
   RunsRerunResponse,
-  RunsResumeResponse,
   RunsTraceGetResponse,
 } from '../generated/types.gen';
 
@@ -91,12 +89,6 @@ export class RunsResource {
       })
     );
     return response.run;
-  }
-
-  async resume(runId: string, options: SignalOptions = {}): Promise<RunsResumeResponse> {
-    return this.dispatch(() =>
-      runsResume({ client: this.client, path: { id: runId }, signal: options.signal })
-    );
   }
 
   async cancel(runId: string, options: SignalOptions = {}): Promise<RunsCancelResponse> {

@@ -248,10 +248,6 @@ export type RunRerunResponse = {
   status?: string;
 };
 
-export type RunResumeResponse = {
-  [key: string]: unknown;
-};
-
 export type RunEnvelope = {
   run:
     | RunSummary
@@ -2167,56 +2163,6 @@ export type RunsRerunResponses = {
 };
 
 export type RunsRerunResponse = RunsRerunResponses[keyof RunsRerunResponses];
-
-export type RunsResumeData = {
-  body?: never;
-  path: {
-    /**
-     * Run id
-     */
-    id: string;
-  };
-  query?: never;
-  url: '/api/v1/runs/{id}/resume';
-};
-
-export type RunsResumeErrors = {
-  /**
-   * Validation error. Request shape did not match the spec.
-   */
-  400: ApiErrorEnvelope;
-  /**
-   * Missing or invalid API key
-   */
-  401: ApiErrorEnvelope;
-  /**
-   * API key lacks required scope
-   */
-  403: ApiErrorEnvelope;
-  /**
-   * Resource not found
-   */
-  404: ApiErrorEnvelope;
-  /**
-   * Rate limit exceeded
-   */
-  429: ApiErrorEnvelope;
-  /**
-   * Internal server error
-   */
-  500: ApiErrorEnvelope;
-};
-
-export type RunsResumeError = RunsResumeErrors[keyof RunsResumeErrors];
-
-export type RunsResumeResponses = {
-  /**
-   * Run resumed
-   */
-  200: RunResumeResponse;
-};
-
-export type RunsResumeResponse = RunsResumeResponses[keyof RunsResumeResponses];
 
 export type RunsGetData = {
   body?: never;

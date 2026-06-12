@@ -108,9 +108,6 @@ import type {
   RunsRerunData,
   RunsRerunErrors,
   RunsRerunResponses,
-  RunsResumeData,
-  RunsResumeErrors,
-  RunsResumeResponses,
   RunStartWithTargetData,
   RunStartWithTargetErrors,
   RunStartWithTargetResponses,
@@ -713,20 +710,6 @@ export const runsRerun = <ThrowOnError extends boolean = false>(
       'Content-Type': 'application/json',
       ...options.headers,
     },
-  });
-
-/**
- * Resume workflow run
- *
- * Resume a workflow run that is waiting for approval.
- */
-export const runsResume = <ThrowOnError extends boolean = false>(
-  options: Options<RunsResumeData, ThrowOnError>
-) =>
-  (options.client ?? client).post<RunsResumeResponses, RunsResumeErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/resume',
-    ...options,
   });
 
 /**

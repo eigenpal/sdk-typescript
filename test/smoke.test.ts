@@ -224,7 +224,6 @@ describe('EigenpalClient SDK', () => {
           },
           { status: 200, body: { ok: true } },
           { status: 200, body: { executionId: 'run_rerun', status: 'pending' } },
-          { status: 200, body: { id: 'run_123', status: 'running' } },
           { status: 200, body: { ok: true } },
           { status: 200, body: { expected: null, files: [] } },
         ],
@@ -237,7 +236,6 @@ describe('EigenpalClient SDK', () => {
     const run = await client.runs.get('run_123', { include: 'detail' });
     await client.runs.cancel('run_123');
     await client.rerun('run_123');
-    await client.runs.resume('run_123');
     await client.runs.feedback.update('run_123', { status: 'open' });
     await client.runs.expected.list('run_123');
 
@@ -250,12 +248,10 @@ describe('EigenpalClient SDK', () => {
     expect(captured[2]?.url).toContain('/api/v1/runs/run_123/cancel');
     expect(captured[3]?.method).toBe('POST');
     expect(captured[3]?.url).toContain('/api/v1/runs/run_123/rerun');
-    expect(captured[4]?.method).toBe('POST');
-    expect(captured[4]?.url).toContain('/api/v1/runs/run_123/resume');
-    expect(captured[5]?.method).toBe('PATCH');
-    expect(captured[5]?.url).toContain('/api/v1/runs/run_123/feedback');
-    expect(captured[6]?.method).toBe('GET');
-    expect(captured[6]?.url).toContain('/api/v1/runs/run_123/expected');
+    expect(captured[4]?.method).toBe('PATCH');
+    expect(captured[4]?.url).toContain('/api/v1/runs/run_123/feedback');
+    expect(captured[5]?.method).toBe('GET');
+    expect(captured[5]?.url).toContain('/api/v1/runs/run_123/expected');
   });
 
   test('401 surfaces as EigenpalAuthError', async () => {

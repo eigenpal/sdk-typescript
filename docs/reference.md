@@ -70,7 +70,6 @@ client
 │   │   ├── list
 │   │   ├── delete
 │   │   └── upload
-│   ├── resume
 │   └── trace
 │       └── get
 ├── source
@@ -824,26 +823,6 @@ Rerun run
 
 ```ts
 // RunRerunResponse
-```
-
-### `client.runs.resume`
-
-**`POST /api/v1/runs/{id}/resume`**
-
-Resume workflow run
-
-Resume a workflow run that is waiting for approval.
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` | Run id      |
-
-**Response**
-
-```ts
-// RunResumeResponse
 ```
 
 ### `client.runs.get`

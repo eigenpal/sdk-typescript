@@ -93,7 +93,6 @@ export type {
   RunsGetResponse,
   RunsListResponse,
   RunsRerunResponse,
-  RunsResumeResponse,
   SourceLockfileResponse,
   SourceReleasesResponse,
   SourceRepositoryResponse,
