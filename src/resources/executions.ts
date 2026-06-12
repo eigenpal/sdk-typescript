@@ -23,18 +23,11 @@ export interface RunAndWaitOptions {
 }
 
 export type WorkflowRunAndWaitResponse = {
-  runId: string;
+  id: string;
   status?: ExecutionStatus;
   output?: unknown;
   error?: string;
 };
-
-const TERMINAL_STATUSES = new Set<ExecutionStatus>([
-  'completed',
-  'failed',
-  'cancelled',
-  'rejected',
-]);
 
 const DEFAULT_POLL_INTERVAL_MS = 2_000;
 const DEFAULT_RUN_AND_WAIT_TIMEOUT_MS = 5 * 60 * 1000;
@@ -55,7 +48,7 @@ export class WorkflowExecutionsResource {
   /**
    * Trigger a workflow and poll for completion client-side.
    *
-   * Unlike `client.run({ waitForCompletion: 60 })`, this helper polls
+   * Unlike `client.run(target, input, { waitForCompletion: 60 })`, this helper polls
    * indefinitely (up to `timeoutMs`, default 5 min) so it works for runs
    * that exceed the server-side 60s sync window. Returns the final
    * response with `status`/`output`/`error` populated.
@@ -70,15 +63,19 @@ export class WorkflowExecutionsResource {
     const deadline = Date.now() + timeoutMs;
 
     const target = `workflows.${workflowId}`;
-    const runUrl = `/api/v1/run/${encodeURIComponent(target)}`;
+    const runUrl = '/api/v1/runs';
     const runQuery =
       options.version && options.version !== 'latest' ? { version: options.version } : undefined;
-    let runResult: { runId: string };
+    let runResult: { id: string };
     if (hasFileInput(input)) {
       // Build the multipart body once, up front — `dispatch` may retry the
       // POST, and a drained stream cannot be replayed.
-      const { formData } = await buildRunMultipart({ input, overrides: options.overrides });
-      runResult = await this.dispatch<{ runId: string }>(
+      const { formData } = await buildRunMultipart({
+        target,
+        input,
+        overrides: options.overrides,
+      });
+      runResult = await this.dispatch<{ id: string }>(
         () =>
           this.client.post({
             url: runUrl,
@@ -87,22 +84,22 @@ export class WorkflowExecutionsResource {
             bodySerializer: null,
             headers: { 'Content-Type': null },
             signal: options.signal,
-          }) as Promise<OperationResult<{ runId: string }>>
+          }) as Promise<OperationResult<{ id: string }>>
       );
     } else {
-      const body = buildRunJsonBody(input, options.overrides);
-      runResult = await this.dispatch<{ runId: string }>(
+      const body = buildRunJsonBody(target, input, options.overrides);
+      runResult = await this.dispatch<{ id: string }>(
         () =>
           this.client.post({
             url: runUrl,
             query: runQuery,
             body,
             signal: options.signal,
-          }) as Promise<OperationResult<{ runId: string }>>
+          }) as Promise<OperationResult<{ id: string }>>
       );
     }
 
-    const runId = runResult.runId;
+    const runId = runResult.id;
 
     while (true) {
       if (options.signal?.aborted) {
@@ -114,27 +111,28 @@ export class WorkflowExecutionsResource {
         );
       }
 
-      const response = await this.dispatch<RunsGetResponse>(
+      const run = (await this.dispatch<RunsGetResponse>(
         () =>
           runsGet({
             client: this.client,
             path: { id: runId },
-            query: { include: 'detail' },
+            query: { expand: 'execution' },
             signal: options.signal,
           }) as Promise<OperationResult<RunsGetResponse>>
-      );
-      const status = response.run as {
-        status?: ExecutionStatus | null;
+      )) as {
+        finished?: boolean;
         output?: unknown;
         error?: string | null;
+        execution?: { status?: ExecutionStatus | null } | null;
       };
 
-      if (status.status && TERMINAL_STATUSES.has(status.status)) {
+      const status = run.execution?.status;
+      if (run.finished) {
         return {
-          runId,
-          status: status.status,
-          ...(status.output != null ? { output: status.output } : {}),
-          ...(status.error != null ? { error: status.error } : {}),
+          id: runId,
+          status: status ?? 'completed',
+          ...(run.output != null ? { output: run.output } : {}),
+          ...(run.error != null ? { error: run.error } : {}),
         };
       }
 

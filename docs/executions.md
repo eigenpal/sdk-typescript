@@ -19,24 +19,27 @@ created → pending → running → waiting → finalizing → completed
                                                      ↘ rejected
 ```
 
-The first five are non-terminal; the last four are terminal. Always check `status` before reading `result`.
+The first five are non-terminal; the last four are terminal. Check `finished` (or `execution.status` with `expand`) before reading `output`/`files`/`error`.
 
 ## Get
 
 ```ts
 const run = await client.runs.get(runId);
-//   { run: { id, status, createdAt, completedAt?, output?, error? } }
+//   { id, type, finished, execution, output?, files?, error?, timing, ... }
 ```
 
-`result` is set on `status === 'completed'`. `error` is set on `status === 'failed'`.
+Terminal runs expose `output`, `files`, and `error` at the top level. Completed runs include `output` and `files`; failed or cancelled runs include `error`.
+Downloadable output files are listed in `files` on completed runs; pass each entry's `path` to
+`client.runs.artifacts.download`.
 
-### Per-step detail
+### Expanding heavier fields
 
 ```ts
-const detail = await client.runs.get(runId, { include: 'detail' });
+const run = await client.runs.get(runId, { expand: ['usage', 'execution'] });
+console.log(run.output, run.usage, run.execution);
 ```
 
-Returns the full per-step execution payload (heavier; intended for debugging, not happy-path UI).
+`expand` adds optional nested sections in-place onto the run object. Pass an array of valid tokens: `input`, `usage`, `execution`, and `debug`; `execution` adds the heavier workflow step details or agent artifact summary.
 
 ## Run and wait
 
@@ -68,9 +71,11 @@ const { runs } = await client.runs.list({
 });
 ```
 
-Item shape: `{ id, workflowId, status, triggerType, triggerInput, result, error, createdAt, startedAt, completedAt, workflow }`.
+Item shape: `{ id, type, finished, timing, source, trigger, execution, error?, eval? }`.
 
-`workflow` is `{ id, name }` of the owning workflow, or `null` if it has been deleted.
+`source` identifies the owning workflow or agent. List rows always include slim
+`execution` but omit completed-only `output`/`files`; fetch the detail with
+`client.runs.get(id)` when you need output artifacts.
 
 ## Cancel
 
@@ -87,12 +92,12 @@ If `runAndWait` doesn't fit (e.g. you're driving a UI progress bar), poll manual
 ```ts
 const TERMINAL = new Set(['completed', 'failed', 'cancelled', 'rejected']);
 
-const { runId } = await client.run('workflows.extract-invoice', input);
-let status;
+const { id } = await client.run('workflows.extract-invoice', input);
+let run;
 do {
   await new Promise((r) => setTimeout(r, 2000));
-  status = await client.runs.get(runId);
-} while (!TERMINAL.has(status.status));
+  run = await client.runs.get(id);
+} while (!run.finished);
 
-console.log(status.status, status.output, status.error);
+console.log(run.execution?.status, run.output, run.error);
 ```

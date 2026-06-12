@@ -1,7 +1,9 @@
 import { EigenpalError, EigenpalTimeoutError, errorFromResponse } from './errors';
 import { createClient, createConfig, type Client, type Config } from './generated/client';
-import { runStartWithTarget } from './generated/sdk.gen';
-import type { ApiErrorEnvelope } from './generated/types.gen';
+import type {
+  ApiErrorEnvelope,
+  RunStartResponse as GeneratedRunStartResponse,
+} from './generated/types.gen';
 import { buildRunJsonBody, buildRunMultipart, hasFileInput } from './lib/files';
 import { AgentsResource } from './resources/agents';
 import { AutomationsResource } from './resources/automations';
@@ -64,14 +66,12 @@ export type RunTarget =
 
 export type RunInput = Record<string, unknown>;
 
-export interface RunOptions {
-  input?: RunInput;
+/** Third argument to `client.run()` — transport knobs, not workflow/agent input. */
+export interface RunCallOptions {
   waitForCompletion?: number;
   overrides?: { steps?: Record<string, Record<string, unknown>> };
   signal?: AbortSignal;
 }
-
-export type RunCallOptions = Omit<RunOptions, 'input'>;
 
 export interface RerunOptions {
   version?: 'latest' | 'original' | string;
@@ -79,13 +79,14 @@ export interface RerunOptions {
   signal?: AbortSignal;
 }
 
-export type RunStartResponse = Record<string, unknown> & {
-  runId: string;
-  type: 'workflow' | 'agent';
-  status?: string;
-  output?: unknown;
-  error?: string | null;
-};
+/**
+ * Run-start response — async bodies are `{ id, type, finished: false }` (201);
+ * wait-expired bodies use the same shape (202); sync terminal completion matches
+ * `client.runs.get(id)` (200).
+ * Aliases the generated OpenAPI type so the handwritten and generated surfaces
+ * can never diverge.
+ */
+export type RunStartResponse = GeneratedRunStartResponse;
 
 /**
  * The EigenPal SDK client.
@@ -97,15 +98,14 @@ export type RunStartResponse = Record<string, unknown> & {
  * const client = new EigenpalClient();
  *
  * // Async — enqueue and poll later.
- * const { runId } = await client.run('workflows.extract-invoice', {
- *   input: { language: 'en' },
- * });
+ * const { id } = await client.run('workflows.extract-invoice', { language: 'en' });
  *
  * // Sync (server holds the connection up to 60s).
- * const result = await client.run('workflows.extract-invoice', {
- *   input: { language: 'en' },
- *   waitForCompletion: 60,
- * });
+ * const result = await client.run(
+ *   'workflows.extract-invoice',
+ *   { language: 'en' },
+ *   { waitForCompletion: 60 }
+ * );
  *
  * // Client-side polling for long-running executions (default 5min cap).
  * const final = await client.workflows.executions.runAndWait('wf_abc', { language: 'en' });
@@ -177,77 +177,65 @@ export class EigenpalClient {
   async run(
     target: RunTarget,
     input?: RunInput,
-    options?: RunCallOptions
-  ): Promise<RunStartResponse>;
-  async run(target: RunTarget, options?: RunOptions): Promise<RunStartResponse>;
-  async run(request: { target: RunTarget } & RunOptions): Promise<RunStartResponse>;
-  async run(
-    targetOrRequest: RunTarget | ({ target: RunTarget } & RunOptions),
-    inputOrOptions: RunInput | RunOptions = {},
     options: RunCallOptions = {}
   ): Promise<RunStartResponse> {
-    const targetPassedDirectly =
-      typeof targetOrRequest === 'string' ||
-      (targetOrRequest &&
-        typeof targetOrRequest === 'object' &&
-        'type' in targetOrRequest &&
-        !('target' in targetOrRequest));
-    const request = targetPassedDirectly
-      ? { target: targetOrRequest, ...normalizeRunArgs(inputOrOptions, options) }
-      : (targetOrRequest as { target: RunTarget } & RunOptions);
-    const { pathTarget, version } = pathTargetFromRunTarget(request.target);
+    assertRunTarget(target);
+    assertInputNotOptionsBag(input);
+
+    const { pathTarget, version } = pathTargetFromRunTarget(target);
     const query = runQuery({
-      waitForCompletion: request.waitForCompletion,
+      waitForCompletion: options.waitForCompletion,
       version,
     });
 
-    if (hasFileInput(request.input)) {
+    if (hasFileInput(input)) {
       const { formData } = await buildRunMultipart({
-        input: request.input,
-        overrides: request.overrides,
+        target: pathTarget,
+        input,
+        overrides: options.overrides,
       });
       return this._request<RunStartResponse>(
         () =>
           this.client.post({
-            url: `/api/v1/run/${encodeURIComponent(pathTarget)}`,
+            url: '/api/v1/runs',
             query,
             body: formData,
             bodySerializer: null,
             headers: { 'Content-Type': null },
-            signal: request.signal,
+            signal: options.signal,
           }) as Promise<OperationResult<RunStartResponse>>
       );
     }
 
-    const body = buildRunJsonBody(request.input, request.overrides);
+    const body = buildRunJsonBody(pathTarget, input, options.overrides);
     return this._request<RunStartResponse>(
       () =>
-        runStartWithTarget({
-          client: this.client,
-          path: { target: pathTarget },
+        this.client.post({
+          url: '/api/v1/runs',
           query,
           body,
-          signal: request.signal,
+          signal: options.signal,
         }) as Promise<OperationResult<RunStartResponse>>
     );
   }
 
-  async rerun(runId: string, options: RerunOptions = {}): Promise<Record<string, unknown>> {
-    return this._request<Record<string, unknown>>(
+  async rerun(runId: string, options: RerunOptions = {}): Promise<RunStartResponse> {
+    const query: { version?: string; wait_for_completion?: number } = {};
+    if (options.version && options.version !== 'latest') {
+      query.version = options.version;
+    }
+    if (options.waitForCompletion !== undefined) {
+      query.wait_for_completion = options.waitForCompletion;
+    }
+
+    return this._request<RunStartResponse>(
       () =>
         this.client.post({
           url: '/api/v1/runs/{id}/rerun',
           path: { id: runId },
-          query:
-            options.waitForCompletion !== undefined
-              ? { wait_for_completion: options.waitForCompletion }
-              : undefined,
-          body:
-            options.version && options.version !== 'latest'
-              ? { sourceRef: options.version }
-              : undefined,
+          query: Object.keys(query).length > 0 ? query : undefined,
           signal: options.signal,
-        }) as Promise<OperationResult<Record<string, unknown>>>
+        }) as Promise<OperationResult<RunStartResponse>>
     );
   }
 
@@ -338,12 +326,24 @@ function pathTargetFromRunTarget(target: RunTarget): { pathTarget: string; versi
   if (!idOrSlug) {
     throw new EigenpalError('Run target objects require `slug` or `id`.', { status: 0 });
   }
-  const root = target.type === 'agent' ? 'agents' : 'workflows';
-  const name = idOrSlug.includes('.') ? idOrSlug : `${root}.${idOrSlug.split('/').join('.')}`;
+  const name =
+    target.type === 'agent'
+      ? agentPathTarget(idOrSlug)
+      : `workflows.${idOrSlug.split('/').join('.')}`;
   return {
     pathTarget: name,
     version: target.version && target.version !== 'latest' ? target.version : undefined,
   };
+}
+
+function agentPathTarget(idOrSlug: string): string {
+  if (!idOrSlug.includes('.')) return `agents.${idOrSlug.split('/').join('.')}`;
+  if (!idOrSlug.startsWith('agents.')) {
+    throw new EigenpalError(`Agent target must be rooted at "agents.", got "${idOrSlug}".`, {
+      status: 0,
+    });
+  }
+  return idOrSlug;
 }
 
 function runQuery(options: {
@@ -373,24 +373,24 @@ function assertJsonResponse(response: Response): void {
   );
 }
 
-function normalizeRunArgs(
-  inputOrOptions: RunInput | RunOptions,
-  options: RunCallOptions
-): RunOptions {
-  if (Object.keys(options).length > 0) {
-    return { ...options, input: inputOrOptions as RunInput };
+function assertRunTarget(target: RunTarget): void {
+  if (typeof target === 'object' && target !== null && 'target' in target) {
+    throw new EigenpalError(
+      'Pass the run target as the first argument to client.run(target, input?, options?). ' +
+        'Do not wrap it in { target }.',
+      { status: 0 }
+    );
   }
-  if (looksLikeRunOptions(inputOrOptions)) {
-    return inputOrOptions;
-  }
-  return { input: inputOrOptions as RunInput };
 }
 
-function looksLikeRunOptions(value: unknown): value is RunOptions {
-  if (!value || typeof value !== 'object') return false;
-  return (
-    'input' in value || 'waitForCompletion' in value || 'overrides' in value || 'signal' in value
-  );
+function assertInputNotOptionsBag(input: RunInput | undefined): void {
+  if (!input || typeof input !== 'object') return;
+  if ('waitForCompletion' in input || 'overrides' in input || 'signal' in input) {
+    throw new EigenpalError(
+      'Pass workflow/agent input as the second argument and { waitForCompletion, overrides, signal } as the third.',
+      { status: 0 }
+    );
+  }
 }
 
 function isRetriableStatus(status: number): boolean {

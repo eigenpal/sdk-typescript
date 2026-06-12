@@ -8,26 +8,21 @@
  * const client = new EigenpalClient({ apiKey: process.env.EIGENPAL_API_KEY! });
  *
  * // Async — enqueue and poll later.
- * const { runId } = await client.run('workflows.extract-invoice', {
- *   input: { ... },
- * });
+ * const { id } = await client.run('workflows.extract-invoice', { ... });
  *
  * // Sync (server holds the connection up to 60s).
- * const result = await client.run('workflows.extract-invoice', {
- *   input: { ... },
- *   waitForCompletion: 60,
- * });
+ * const result = await client.run('workflows.extract-invoice', { ... }, { waitForCompletion: 60 });
  *
  * // Client-side poll (up to 5min by default).
- * const final = await client.workflows.executions.runAndWait('wf_abc', { input: { ... } });
+ * const final = await client.workflows.executions.runAndWait('wf_abc', { ... });
  * ```
  */
 export {
   EigenpalClient,
   type EigenpalOptions,
   type RerunOptions,
+  type RunCallOptions,
   type RunInput,
-  type RunOptions,
   type RunStartResponse,
   type RunTarget,
 } from './client';
@@ -46,7 +41,7 @@ export {
 export { toFile } from './lib/files';
 export type { FileDescriptor, FileInput, NodeReadableStream } from './lib/files';
 export type { ListAgentsOptions } from './resources/agents';
-export type { ListRunsOptions } from './resources/runs';
+export type { ListRunsOptions, RunExpand, RunExpandSection } from './resources/runs';
 export type { SourceRawOptions, SourceReleasesOptions } from './resources/source';
 export type {
   ListVersionsOptions,
@@ -81,8 +76,8 @@ export type {
   ListVersionsResponse,
   ListWorkflowsResponse,
   RawSourceResponse,
-  RunSummary,
-  RunTargetInputBody,
+  RunListItem,
+  RunStartBody,
   RunsCancelResponse,
   RunsExpectedCreateResponse,
   RunsExpectedFileDeleteResponse,

@@ -2,7 +2,7 @@
 
 ```ts
 new EigenpalClient({
-  apiKey: 'eg_...', // or EIGENPAL_API_KEY env var
+  apiKey: 'eig_live_...', // or EIGENPAL_API_KEY env var
   baseUrl: 'https://studio.eigenpal.com', // or EIGENPAL_BASE_URL env var
   timeoutMs: 60_000, // per-request timeout
   maxRetries: 3, // 5xx / 429 / network
@@ -59,4 +59,4 @@ new EigenpalClient({ fetch: undiciFetch });
 
 ## TypeScript runtime
 
-The package ships TypeScript source (`./src/index.ts` is the entry point). You'll need a TypeScript-aware runtime: Bun, Deno, Node + `ts-node` / `tsx`, Next.js, Vite, Webpack with `ts-loader`, or any modern bundler. Plain `node ./script.js` won't load it. That's intentional: shipping TS-first keeps the source debuggable end-to-end.
+The package ships TypeScript source (`./src/index.ts` is the entry point). You'll need a TypeScript-aware runtime: Bun, Deno, Node + `ts-node` / `tsx`, Next.js, Vite, Webpack with `ts-loader`, or any modern bundler. Plain `node ./script.js` won't load it. The package ships TS-first so the source stays debuggable end-to-end.

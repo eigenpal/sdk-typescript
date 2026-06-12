@@ -27,7 +27,7 @@ Three ways to run, depending on how long you want to wait.
 ### Async (returns immediately)
 
 ```ts
-const { runId } = await client.run('workflows.extract-invoice', {
+const { id } = await client.run('workflows.extract-invoice', {
   contract_document: file,
 });
 ```
@@ -42,10 +42,10 @@ const result = await client.run(
   { contract_document: file },
   { waitForCompletion: 60 }
 );
-console.log(result.status, result.output);
+console.log(result.finished, result.output);
 ```
 
-If the run completes within `waitForCompletion` seconds, `status`/`output` are populated. Otherwise the response includes `runId`.
+If the run completes within `waitForCompletion` seconds, `finished` is true and `output` is populated. Either way the response carries the run `id`.
 
 ### Long-running (client polls)
 
@@ -86,4 +86,4 @@ Returns published versions in reverse-chronological order.
 
 ## File inputs
 
-See [File inputs](./files.md). The TL;DR: pass a `File`, `Blob`, or `{ content, filename, mimeType }` and the SDK uploads via `multipart/form-data` automatically.
+See [File inputs](./files.md). In short: pass a `File`, `Blob`, or `{ content, filename, mimeType }` and the SDK uploads via `multipart/form-data` automatically.

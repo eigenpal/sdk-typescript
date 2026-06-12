@@ -1,5 +1,5 @@
 /**
- * Run with: `EIGENPAL_API_KEY=eg_… bun examples/quickstart.ts`
+ * Run with: `EIGENPAL_API_KEY=eig_live_… bun examples/quickstart.ts`
  *
  * Lists workflows, picks the first one, triggers a run, and polls until the
  * execution reaches a terminal state.
@@ -28,8 +28,8 @@ async function main() {
     { timeoutMs: 5 * 60_000 }
   );
 
-  console.log('status:', result.status);
-  console.log('result:', JSON.stringify(result.result, null, 2));
+  console.log('finished:', result.finished);
+  console.log('output:', JSON.stringify(result.output, null, 2));
 }
 
 main().catch((err) => {

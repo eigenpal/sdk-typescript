@@ -1,5 +1,15 @@
 # @eigenpal/sdk
 
+## 0.7.0
+
+### Minor Changes
+
+- 963fd6c: Unify run detail on `GET /api/v1/runs/{id}`: return the canonical Run object directly (no `{ run: ... }` envelope) and merge expanded fields in-place via documented `expand` tokens. Remove the session-only `expand=internal` dashboard escape hatch; SDKs and CLI now use explicit expand lists.
+
+### Patch Changes
+
+- 12c00d8: Docs: clearer wording in the file-input and TypeScript-runtime sections. No API or behavior changes.
+
 ## 0.6.17
 
 ### Patch Changes

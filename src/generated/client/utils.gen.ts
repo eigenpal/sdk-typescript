@@ -103,7 +103,7 @@ const checkForExistence = (
   options: Pick<RequestOptions, 'auth' | 'query'> & {
     headers: Headers;
   },
-  name?: string
+  name?: string,
 ): boolean => {
   if (!name) {
     return false;
@@ -208,7 +208,7 @@ export const mergeHeaders = (
         // content value in OpenAPI specification is 'application/json'
         mergedHeaders.set(
           key,
-          typeof value === 'object' ? JSON.stringify(value) : (value as string)
+          typeof value === 'object' ? JSON.stringify(value) : (value as string),
         );
       }
     }
@@ -222,7 +222,7 @@ type ErrInterceptor<Err, Res, Req, Options> = (
   response: Res | undefined,
   /** request may be undefined, because error may be from building the request object itself */
   request: Req | undefined,
-  options: Options
+  options: Options,
 ) => Err | Promise<Err>;
 
 type ReqInterceptor<Req, Options> = (request: Req, options: Options) => Req | Promise<Req>;
@@ -230,7 +230,7 @@ type ReqInterceptor<Req, Options> = (request: Req, options: Options) => Req | Pr
 type ResInterceptor<Res, Req, Options> = (
   response: Res,
   request: Req,
-  options: Options
+  options: Options,
 ) => Res | Promise<Res>;
 
 class Interceptors<Interceptor> {
@@ -308,7 +308,7 @@ const defaultHeaders = {
 };
 
 export const createConfig = <T extends ClientOptions = ClientOptions>(
-  override: Config<Omit<ClientOptions, keyof T> & T> = {}
+  override: Config<Omit<ClientOptions, keyof T> & T> = {},
 ): Config<Omit<ClientOptions, keyof T> & T> => ({
   ...jsonBodySerializer,
   headers: defaultHeaders,

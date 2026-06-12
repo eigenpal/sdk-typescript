@@ -29,7 +29,7 @@ const client = new EigenpalClient({ apiKey: process.env.EIGENPAL_API_KEY });
 const result = await client.workflows.executions.runAndWait('extract-invoice', {
   contract_document: file,
 });
-console.log(result.status, result.output);
+console.log(result.finished, result.output);
 ```
 
 ## Authentication
@@ -60,8 +60,8 @@ const client = new EigenpalClient({
 `client.run(target, input?, options?)` starts a workflow or agent run. Targets can be strings such as `workflows.extract-invoice` / `agents.invoice-agent` or structured objects like `{ type: 'workflow', slug: 'extract-invoice' }`.
 
 ```ts
-// Async: returns immediately with { runId }.
-const { runId } = await client.run('workflows.extract-invoice', {
+// Async: returns immediately with { id }.
+const { id: runId } = await client.run('workflows.extract-invoice', {
   contract_document: file,
 });
 
@@ -71,7 +71,7 @@ const result = await client.run(
   { contract_document: file },
   { waitForCompletion: 60 }
 );
-console.log(result.status, result.output);
+console.log(result.finished, result.output);
 
 // Long-running: client-side polling, default 5min cap.
 const final = await client.workflows.executions.runAndWait('extract-invoice', {
@@ -112,11 +112,18 @@ const runs = await client.runs.list({
   status: 'failed,cancelled',
 });
 
-const run = await client.runs.get(runId, { include: 'detail' });
-await client.runs.cancel(runId);
+const run = await client.runs.get(runId);
+//   { id, type, finished, output, files, error, timing, ... }
 
-const status = await client.runs.get(runId);
-//   { run: { id, status, output?, error?, createdAt, completedAt? } }
+// Add heavier optional sections with `expand`.
+const withUsage = await client.runs.get(runId, { expand: ['usage', 'execution'] });
+console.log(
+  withUsage.output,
+  withUsage.files,
+  withUsage.error,
+  withUsage.usage,
+  withUsage.execution
+);
 
 const list = await client.runs.list({
   type: 'workflow',
@@ -146,7 +153,7 @@ await client.workflows.versions('extract-invoice');
 await client.agents.list({ search: 'invoice' });
 await client.agents.get('invoice-agent');
 
-const { runId: agentRunId } = await client.run('agents.invoice-agent', {
+const { id: agentRunId } = await client.run('agents.invoice-agent', {
   invoice: file,
 });
 
@@ -181,7 +188,7 @@ try {
   const result = await client.workflows.executions.runAndWait('extract-invoice', {
     language: 'en',
   });
-  console.log(result.status, result.output);
+  console.log(result.finished, result.output);
 } catch (err) {
   if (err instanceof EigenpalValidationError) {
     for (const issue of err.issues) console.error(`${issue.field}: ${issue.message}`);

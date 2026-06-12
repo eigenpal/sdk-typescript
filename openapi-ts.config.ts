@@ -14,7 +14,6 @@ export default defineConfig({
   input: '../app/openapi/openapi.yaml',
   output: {
     path: './src/generated',
-    format: 'prettier',
     lint: false,
   },
   plugins: [

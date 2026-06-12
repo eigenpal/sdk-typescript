@@ -168,7 +168,7 @@ export interface MultipartParts {
   fileCount: number;
 }
 
-/** Drain `input` into a FormData, appending each detected file as a field. */
+/** Drain `input` into a FormData, appending each detected file as `files.<name>`. */
 async function appendFiles(
   fd: FormData,
   input: Record<string, unknown> | undefined
@@ -178,7 +178,7 @@ async function appendFiles(
   for (const [key, value] of Object.entries(input ?? {})) {
     if (isFileInput(value)) {
       const { blob, filename } = await resolveFileBlob(value);
-      fd.append(key, blob, filename);
+      fd.append(`files.${key}`, blob, filename);
       fileCount += 1;
     } else {
       scalars[key] = value;
@@ -188,39 +188,52 @@ async function appendFiles(
 }
 
 /**
- * JSON-body counterpart of {@link buildRunMultipart}: per-step overrides ride
- * in the reserved `_overrides` body key.
+ * JSON-body counterpart of {@link buildRunMultipart}: canonical envelope
+ * `{ target, input, overrides?, metadata? }`.
  */
 export function buildRunJsonBody(
+  target: string,
   input: Record<string, unknown> | undefined,
-  overrides?: { steps?: Record<string, Record<string, unknown>> }
+  overrides?: { steps?: Record<string, Record<string, unknown>> },
+  metadata?: Record<string, unknown>
 ): Record<string, unknown> {
-  return overrides ? { ...(input ?? {}), _overrides: overrides } : (input ?? {});
+  const body: Record<string, unknown> = {
+    target,
+    input: input ?? {},
+  };
+  if (overrides) body.overrides = overrides;
+  if (metadata) body.metadata = metadata;
+  return body;
 }
 
 /**
  * Build multipart for the canonical `client.run(...)` endpoint
- * (`POST /api/v1/run/{target}`):
+ * (`POST /api/v1/runs`):
  *
- *   - Each top-level file in `input` becomes a form field (key = input name).
- *   - Non-file inputs go in the `_json` text field (the input object itself).
- *   - Per-step overrides go in the reserved `_overrides` text field.
+ *   - `target` is a required text field.
+ *   - Scalar inputs go in the `input` JSON text field.
+ *   - Each top-level file in `input` becomes `files.<fieldName>`.
+ *   - Per-step overrides and caller metadata use `overrides` / `metadata` JSON parts.
  *
  * Async because stream inputs are drained to bytes here. Only top-level file
  * values are extracted — files nested inside arrays / objects keep their
  * position in the JSON sidecar (the server has no nested-upload path).
  */
 export async function buildRunMultipart(args: {
+  target: string;
   input?: Record<string, unknown>;
   overrides?: { steps?: Record<string, Record<string, unknown>> };
+  metadata?: Record<string, unknown>;
 }): Promise<MultipartParts> {
   const fd = new FormData();
+  fd.append('target', args.target);
   const { scalars, fileCount } = await appendFiles(fd, args.input);
-  if (Object.keys(scalars).length > 0) {
-    fd.append('_json', JSON.stringify(scalars));
-  }
+  fd.append('input', JSON.stringify(scalars));
   if (args.overrides) {
-    fd.append('_overrides', JSON.stringify(args.overrides));
+    fd.append('overrides', JSON.stringify(args.overrides));
+  }
+  if (args.metadata) {
+    fd.append('metadata', JSON.stringify(args.metadata));
   }
   return { formData: fd, fileCount };
 }

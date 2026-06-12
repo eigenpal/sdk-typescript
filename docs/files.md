@@ -47,11 +47,11 @@ await client.run('workflows.compare-versions', {
 });
 ```
 
-Each file becomes a top-level form field. Mix files and scalar inputs freely; scalars ride along in a single `_json` text field automatically.
+Each file becomes a `files.<fieldName>` multipart part. Mix files and scalar inputs freely; scalars ride in the `input` JSON part automatically.
 
 ## Nested files aren't extracted
 
-Only top-level file values become multipart fields. Files inside arrays or nested objects stay in the JSON sidecar and the server won't see them as uploads:
+Only top-level file values become multipart fields. Files inside arrays or nested objects stay in the `input` JSON part and the server won't see them as uploads:
 
 ```ts
 // DON'T — `documents` becomes a JSON array of `{}` objects, no upload.

@@ -30,16 +30,14 @@ if (!apiKey) {
 const PUBLIC_WORKFLOW_FIELDS = new Set(['id', 'name', 'version', 'createdAt', 'updatedAt']);
 const PUBLIC_EXECUTION_FIELDS = new Set([
   'id',
-  'workflowId',
+  'type',
   'status',
-  'triggerType',
-  'triggerInput',
+  'timing',
+  'source',
+  'trigger',
+  'execution',
   'result',
-  'error',
-  'createdAt',
-  'startedAt',
-  'completedAt',
-  'workflow',
+  'eval',
 ]);
 const PUBLIC_VERSION_FIELDS = new Set([
   'id',
@@ -138,7 +136,7 @@ if (execs.runs?.length)
 // 5. runs.list is workflow-scoped
 if (wfId && execs.runs?.length) {
   const filtered = await client.runs.list({ type: 'workflow', source: wfId, limit: 5 });
-  const allMatch = filtered.runs.every((e) => e.workflowId === wfId);
+  const allMatch = filtered.runs.every((e) => e.source?.id === wfId);
   pass(
     'runs.list returns only the requested workflow',
     allMatch,
@@ -161,20 +159,21 @@ pass(
 const completedExec = execs.runs?.find((e) => e.status === 'completed') ?? execs.runs?.[0];
 if (completedExec) {
   const detail = await client.runs.get(completedExec.id);
-  const detailId = (detail as { id?: string; executionId?: string }).id ?? detail.executionId;
-  pass('runs.get returns matching id', detailId === completedExec.id, `id=${detailId}`);
-  pass('runs.get has status', typeof detail.status === 'string', `status=${detail.status}`);
+  pass('runs.get returns matching id', detail.id === completedExec.id, `id=${detail.id}`);
+  pass(
+    'runs.get has status',
+    typeof detail.execution?.status === 'string',
+    `status=${detail.execution?.status}`
+  );
 }
 
-// 8. runs.get with include=detail — heavier per-step payload
+// 8. runs.get with expand sections — optional sections merged onto detail
 if (completedExec) {
-  const stepDetail = await client.runs.get(completedExec.id, { include: 'detail' });
-  // The full artifact is a discriminated union with the summary; both shapes
-  // carry executionId, the artifact additionally has steps/overrides/etc.
-  const k = new Set(Object.keys((stepDetail as object) ?? {}));
+  const expanded = await client.runs.get(completedExec.id, { expand: ['usage', 'execution'] });
+  const k = new Set(Object.keys((expanded as object) ?? {}));
   pass(
-    'runs.get include=detail returns artifact',
-    k.has('executionId') && k.has('status'),
+    'runs.get expand returns optional grouped sections',
+    k.has('id') && k.has('status') && k.has('usage') && k.has('execution'),
     `keys: ${[...k].slice(0, 8).join(', ')}…`
   );
 }
@@ -206,11 +205,11 @@ if (apiWorkflow) {
       { type: 'workflow', id: apiWorkflow.id, version: 'latest' },
       {}
     );
-    triggeredId = triggered.runId;
+    triggeredId = triggered.id;
     pass(
-      'client.run (no input) returns runId',
-      typeof triggered.runId === 'string' && triggered.runId.startsWith('exec_'),
-      `runId=${triggered.runId}`
+      'client.run (no input) returns id',
+      typeof triggered.id === 'string' && triggered.id.startsWith('exec_'),
+      `id=${triggered.id}`
     );
   } catch (e) {
     // Workflow may require specific input — that's fine, we're testing the

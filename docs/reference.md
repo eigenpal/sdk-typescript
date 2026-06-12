@@ -12,7 +12,7 @@ const result = await client.workflows.executions.runAndWait('extract-invoice', {
   contract: file, // File / Blob / { content, filename, mimeType }
 });
 
-console.log(result.status, result.output);
+console.log(result.finished, result.output);
 ```
 
 ## Surface
@@ -47,6 +47,7 @@ client
 │   ├── list
 │   ├── get
 │   ├── artifacts
+│   │   ├── list
 │   │   ├── download
 │   │   └── downloadZip
 │   ├── cancel
@@ -54,6 +55,7 @@ client
 │   ├── comparison
 │   │   └── get
 │   ├── connect
+│   ├── definition
 │   ├── expected
 │   │   ├── list
 │   │   ├── copyOutput
@@ -87,7 +89,7 @@ Start runs with `client.run(...)` and create a new run from a previous snapshot 
 
 Run inspection and artifact/feedback/file mutation lives under `client.runs.*`, which maps to `/api/v1/runs`.
 
-`client.runs.files.*` is currently for DB-backed workflow run files. `client.runs.artifacts.*` is currently for agent run artifacts such as traces, metadata, and output files; workflow artifacts will be unified in a future refactor.
+`client.runs.artifacts.*` lists and downloads artifacts for both workflow and agent runs. Output artifacts live under `output/`; workflow outputs may include `stepName`, and agent diagnostics use root paths such as `trace.jsonl`, `issues.md`, and `eigenpal.lock`. `client.runs.files.*` remains the DB-backed workflow file surface for input management and structured file listings.
 
 `client.workflows.executions.runAndWait` remains a workflow-specific helper because it triggers a workflow and then polls the canonical runs API until completion.
 
@@ -118,7 +120,7 @@ The constructor option always wins; the env var is a fallback so scripts don't h
 
 ### `client.agents.listFiles`
 
-**`GET /api/v1/agents/{agentId}/files`**
+**`GET /api/v1/agents/:agentId/files`**
 
 List or download agent source files
 
@@ -146,7 +148,7 @@ Lists or reads files from the agent Git package (`agents/{slug}/` on organizatio
 
 ### `client.agents.putFile`
 
-**`PUT /api/v1/agents/{agentId}/files`**
+**`PUT /api/v1/agents/:agentId/files`**
 
 Upload one agent file (deprecated)
 
@@ -174,7 +176,7 @@ Agent source is Git-backed. Use Git push or the builder instead.
 
 ### `client.agents.uploadFiles`
 
-**`POST /api/v1/agents/{agentId}/files`**
+**`POST /api/v1/agents/:agentId/files`**
 
 Upload agent files (deprecated)
 
@@ -194,7 +196,7 @@ Agent source is Git-backed. Use Git push or the builder instead.
 
 ### `client.agents.get`
 
-**`GET /api/v1/agents/{agentId}`**
+**`GET /api/v1/agents/:agentId`**
 
 Get an agent
 
@@ -220,7 +222,7 @@ Returns one agent by id or slug.
 
 ### `client.agents.update`
 
-**`PATCH /api/v1/agents/{agentId}`**
+**`PATCH /api/v1/agents/:agentId`**
 
 Update an agent
 
@@ -246,7 +248,7 @@ Updates mutable agent metadata and configuration.
 
 ### `client.agents.emailTriggers.updateAlias`
 
-**`PATCH /api/v1/agents/{agentId}/triggers/email/{emailId}`**
+**`PATCH /api/v1/agents/:agentId/triggers/email/:emailId`**
 
 Update an agent email alias
 
@@ -273,7 +275,7 @@ Updates an email trigger alias for one agent.
 
 ### `client.agents.emailTriggers.deleteAlias`
 
-**`DELETE /api/v1/agents/{agentId}/triggers/email/{emailId}`**
+**`DELETE /api/v1/agents/:agentId/triggers/email/:emailId`**
 
 Delete an agent email alias
 
@@ -294,7 +296,7 @@ Revokes an email trigger alias for one agent.
 
 ### `client.agents.emailTriggers.get`
 
-**`GET /api/v1/agents/{agentId}/triggers/email`**
+**`GET /api/v1/agents/:agentId/triggers/email`**
 
 Get an agent email trigger
 
@@ -314,7 +316,7 @@ Returns email trigger configuration and aliases for one agent.
 
 ### `client.agents.emailTriggers.update`
 
-**`PATCH /api/v1/agents/{agentId}/triggers/email`**
+**`PATCH /api/v1/agents/:agentId/triggers/email`**
 
 Update an agent email trigger
 
@@ -340,7 +342,7 @@ Enables or disables the email trigger for one agent.
 
 ### `client.agents.emailTriggers.createAlias`
 
-**`POST /api/v1/agents/{agentId}/triggers/email`**
+**`POST /api/v1/agents/:agentId/triggers/email`**
 
 Create an agent email alias
 
@@ -366,7 +368,7 @@ Creates an email trigger alias for one agent.
 
 ### `client.agents.versions`
 
-**`GET /api/v1/agents/{agentId}/versions`**
+**`GET /api/v1/agents/:agentId/versions`**
 
 List agent Git versions
 
@@ -446,7 +448,7 @@ Lists email trigger aliases for the authenticated organization.
 
 ### `client.automations.sync`
 
-**`POST /api/v1/automations/{automation}/sync`**
+**`POST /api/v1/automations/:automation/sync`**
 
 Sync an automation from latest source
 
@@ -468,405 +470,29 @@ Reconciles lightweight automation metadata from the latest released Git source p
 
 ### `client.run`
 
-**`POST /api/v1/run/{target}`**
+**`POST /api/v1/runs`**
 
 Start a workflow or agent run
 
-Starts a run for a workflow or agent target. The target lives in the URL path; the optional `version` query parameter selects a release/ref and defaults to `latest`. The request body is the input object; a reserved `_overrides` key (workflow targets only) carries per-step output overrides for replay. Run provenance may be declared with the `X-Eigenpal-Trigger` header (`api` or `cli`).
-
-**Path parameters**
-
-| Name     | Type     | Description                                 |
-| -------- | -------- | ------------------------------------------- |
-| `target` | `string` | Automation target without a version suffix. |
+Starts a run for a workflow or agent target. JSON and multipart bodies share the same envelope: `{ target, input, files?, overrides?, metadata? }`. In JSON, `files` carries `{ fileId, filename, mimeType }` references. In multipart (`Content-Type: multipart/form-data`), send `input`, `overrides`, and `metadata` as JSON text parts and each file as `files.<fieldName>`. Legacy 0.5.12 shapes (`_json`, top-level file fields, `input._overrides`) remain accepted. Run provenance may be declared with the `X-Eigenpal-Trigger` header (`api` or `cli`).
 
 **Query parameters**
 
-| Name                  | Type     | Description                                                   |
-| --------------------- | -------- | ------------------------------------------------------------- |
-| `version`             | `string` | (optional)Optional version or source ref. Defaults to latest. |
-| `wait_for_completion` | `number` | (optional)                                                    |
+| Name                  | Type     | Description                                                           |
+| --------------------- | -------- | --------------------------------------------------------------------- |
+| `version`             | `string` | (optional)Release or git ref. Defaults to latest.                     |
+| `wait_for_completion` | `number` | (optional)Seconds to wait before returning (max 600). Omit for async. |
 
 **Request body**
 
 ```ts
-// RunTargetInputBody
+// RunStartBody
 ```
 
 **Response**
 
 ```ts
 // RunStartResponse
-```
-
-### `client.runs.artifacts.download`
-
-**`GET /api/v1/runs/{id}/artifact/{path}`**
-
-Download run artifact
-
-Download an agent run artifact such as input/output JSON, trace.jsonl, issues.md, metadata, or files under input/ and output/. Workflow run file rows are exposed through /files.
-
-**Path parameters**
-
-| Name   | Type     | Description |
-| ------ | -------- | ----------- |
-| `id`   | `string` |             |
-| `path` | `string` |             |
-
-### `client.runs.cancel`
-
-**`POST /api/v1/runs/{id}/cancel`**
-
-Cancel run
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` |             |
-
-**Response**
-
-```ts
-// Record<string, unknown>
-```
-
-### `client.runs.comparison.get`
-
-**`GET /api/v1/runs/{id}/comparison`**
-
-Get run comparison
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` |             |
-
-**Response**
-
-```ts
-// Record<string, unknown>
-```
-
-### `client.runs.connect`
-
-**`POST /api/v1/runs/{id}/connect`**
-
-Connect to live run
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` |             |
-
-**Response**
-
-```ts
-// Record<string, unknown>
-```
-
-### `client.runs.expected.download`
-
-**`GET /api/v1/runs/{id}/expected/{filename}`**
-
-Download expected artifact file
-
-**Path parameters**
-
-| Name       | Type     | Description |
-| ---------- | -------- | ----------- |
-| `id`       | `string` |             |
-| `filename` | `string` |             |
-
-### `client.runs.expected.rename`
-
-**`PATCH /api/v1/runs/{id}/expected/{filename}`**
-
-Rename expected artifact file
-
-**Path parameters**
-
-| Name       | Type     | Description |
-| ---------- | -------- | ----------- |
-| `id`       | `string` |             |
-| `filename` | `string` |             |
-
-**Request body**
-
-```ts
-// Record<string, unknown>
-```
-
-**Response**
-
-```ts
-// Record<string, unknown>
-```
-
-### `client.runs.expected.delete`
-
-**`DELETE /api/v1/runs/{id}/expected/{filename}`**
-
-Delete expected artifact file
-
-**Path parameters**
-
-| Name       | Type     | Description |
-| ---------- | -------- | ----------- |
-| `id`       | `string` |             |
-| `filename` | `string` |             |
-
-### `client.runs.expected.list`
-
-**`GET /api/v1/runs/{id}/expected`**
-
-Get run expected artifacts
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` |             |
-
-**Response**
-
-```ts
-// Record<string, unknown>
-```
-
-### `client.runs.expected.copyOutput`
-
-**`POST /api/v1/runs/{id}/expected`**
-
-Create or update expected artifacts
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` |             |
-
-**Request body**
-
-```ts
-// Record<string, unknown>
-```
-
-**Response**
-
-```ts
-// Record<string, unknown>
-```
-
-### `client.runs.feedback.get`
-
-**`GET /api/v1/runs/{id}/feedback`**
-
-Get run feedback
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` |             |
-
-**Response**
-
-```ts
-// Record<string, unknown>
-```
-
-### `client.runs.feedback.update`
-
-**`PATCH /api/v1/runs/{id}/feedback`**
-
-Update run feedback
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` |             |
-
-**Request body**
-
-```ts
-// RunFeedbackRequest
-```
-
-**Response**
-
-```ts
-// Record<string, unknown>
-```
-
-### `client.runs.feedback.clear`
-
-**`DELETE /api/v1/runs/{id}/feedback`**
-
-Clear run feedback
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` |             |
-
-**Response**
-
-```ts
-// Record<string, unknown>
-```
-
-### `client.runs.artifacts.downloadZip`
-
-**`GET /api/v1/runs/{id}/files-zip`**
-
-Download run output files zip
-
-Download agent run output artifacts as a zip. Workflow run files use /files and will be folded into artifacts in a future refactor.
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` |             |
-
-**Query parameters**
-
-| Name    | Type     | Description |
-| ------- | -------- | ----------- |
-| `files` | `string` | (optional)  |
-| `token` | `string` | (optional)  |
-
-### `client.runs.files.delete`
-
-**`DELETE /api/v1/runs/{id}/files/{fileId}`**
-
-Delete run input file
-
-**Path parameters**
-
-| Name     | Type     | Description |
-| -------- | -------- | ----------- |
-| `id`     | `string` |             |
-| `fileId` | `string` |             |
-
-### `client.runs.files.list`
-
-**`GET /api/v1/runs/{id}/files`**
-
-List run files
-
-List DB-backed workflow run files: mutable workflow inputs before execution starts, plus workflow/eval input and output file rows. Agent debug outputs are exposed as run artifacts instead.
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` |             |
-
-**Response**
-
-```ts
-// RunFilesResponse
-```
-
-### `client.runs.files.upload`
-
-**`POST /api/v1/runs/{id}/files`**
-
-Upload run input file
-
-Upload a DB-backed workflow run input file. This endpoint is for workflow runs before execution starts; agent run downloads use artifacts.
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` |             |
-
-**Response**
-
-```ts
-// Record<string, unknown>
-```
-
-### `client.rerun`
-
-**`POST /api/v1/runs/{id}/rerun`**
-
-Rerun run
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` |             |
-
-**Query parameters**
-
-| Name                  | Type     | Description |
-| --------------------- | -------- | ----------- |
-| `wait_for_completion` | `number` | (optional)  |
-
-**Request body**
-
-```ts
-// RunRerunRequest
-```
-
-**Response**
-
-```ts
-// RunRerunResponse
-```
-
-### `client.runs.get`
-
-**`GET /api/v1/runs/{id}`**
-
-Get run
-
-Returns a run summary by default. Pass include=detail for the rich type-specific workflow or agent run payload.
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` | Run id      |
-
-**Query parameters**
-
-| Name      | Type     | Description                                                            |
-| --------- | -------- | ---------------------------------------------------------------------- |
-| `include` | `string` | (optional)Comma-separated sections. Include `detail` for rich payload. |
-
-**Response**
-
-```ts
-// RunEnvelope
-```
-
-### `client.runs.trace.get`
-
-**`GET /api/v1/runs/{id}/trace`**
-
-Get run trace
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` |             |
-
-**Response**
-
-```ts
-// Record<string, unknown>
 ```
 
 ### `client.runs.list`
@@ -905,6 +531,413 @@ Tenant-scoped, cursor-paginated feed of workflow and agent runs. Use type and so
 
 ```ts
 // RunsListResponse
+```
+
+### `client.runs.artifacts.download`
+
+**`GET /api/v1/runs/:id/artifacts/:path`**
+
+Download run artifact
+
+Download a run artifact. Workflow output artifacts resolve through DB-backed file rows; agent artifacts resolve through S3. Output files for both run types live under `output/` paths.
+
+**Path parameters**
+
+| Name   | Type     | Description |
+| ------ | -------- | ----------- |
+| `id`   | `string` |             |
+| `path` | `string` |             |
+
+### `client.runs.artifacts.list`
+
+**`GET /api/v1/runs/:id/artifacts`**
+
+List run artifacts
+
+Lists every downloadable artifact path for a run. Download each with `GET /api/v1/runs/:id/artifacts/:path`.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` | Run id      |
+
+**Response**
+
+```ts
+// RunArtifactsResponse
+```
+
+### `client.runs.cancel`
+
+**`POST /api/v1/runs/:id/cancel`**
+
+Cancel run
+
+Cancels a queued run immediately, or requests cancellation of an in-flight run. Returns the partial canonical run with a `cancellation` block describing the outcome.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// RunCancelResponse
+```
+
+### `client.runs.comparison.get`
+
+**`GET /api/v1/runs/:id/comparison`**
+
+Get run comparison
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.connect`
+
+**`POST /api/v1/runs/:id/connect`**
+
+Connect to live run
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.definition`
+
+**`GET /api/v1/runs/:id/definition`**
+
+Get run definition snapshot
+
+Returns the workflow definition snapshot that ran — the exact definition captured at run creation, independent of later edits. Workflow runs only; agent runs return 404 (agent source lives in git, see `source.git` on the run).
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` | Run id      |
+
+**Response**
+
+```ts
+// RunDefinitionResponse
+```
+
+### `client.runs.expected.download`
+
+**`GET /api/v1/runs/:id/expected/:filename`**
+
+Download expected artifact file
+
+**Path parameters**
+
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| `id`       | `string` |             |
+| `filename` | `string` |             |
+
+### `client.runs.expected.rename`
+
+**`PATCH /api/v1/runs/:id/expected/:filename`**
+
+Rename expected artifact file
+
+**Path parameters**
+
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| `id`       | `string` |             |
+| `filename` | `string` |             |
+
+**Request body**
+
+```ts
+// Record<string, unknown>
+```
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.expected.delete`
+
+**`DELETE /api/v1/runs/:id/expected/:filename`**
+
+Delete expected artifact file
+
+**Path parameters**
+
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| `id`       | `string` |             |
+| `filename` | `string` |             |
+
+### `client.runs.expected.list`
+
+**`GET /api/v1/runs/:id/expected`**
+
+Get run expected artifacts
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.expected.copyOutput`
+
+**`POST /api/v1/runs/:id/expected`**
+
+Create or update expected artifacts
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Request body**
+
+```ts
+// Record<string, unknown>
+```
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.feedback.get`
+
+**`GET /api/v1/runs/:id/feedback`**
+
+Get run feedback
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.feedback.update`
+
+**`PATCH /api/v1/runs/:id/feedback`**
+
+Update run feedback
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Request body**
+
+```ts
+// RunFeedbackRequest
+```
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.feedback.clear`
+
+**`DELETE /api/v1/runs/:id/feedback`**
+
+Clear run feedback
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.runs.artifacts.downloadZip`
+
+**`GET /api/v1/runs/:id/files-zip`**
+
+Download run output files zip
+
+Download agent run output artifacts as a zip. Completed workflow output files are listed in top-level `files` and downloaded individually through GET /api/v1/runs/:id/artifacts/:path; zip download remains agent-only.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Query parameters**
+
+| Name    | Type     | Description |
+| ------- | -------- | ----------- |
+| `files` | `string` | (optional)  |
+| `token` | `string` | (optional)  |
+
+### `client.runs.files.delete`
+
+**`DELETE /api/v1/runs/:id/files/:fileId`**
+
+Delete run input file
+
+**Path parameters**
+
+| Name     | Type     | Description |
+| -------- | -------- | ----------- |
+| `id`     | `string` |             |
+| `fileId` | `string` |             |
+
+### `client.runs.files.list`
+
+**`GET /api/v1/runs/:id/files`**
+
+List run files
+
+List DB-backed workflow run files: mutable workflow inputs before execution starts, plus workflow/eval input and output file rows for structured inspection. Download generated output artifacts for completed workflow and agent runs through top-level `files` and GET /api/v1/runs/:id/artifacts/:path.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// RunFilesResponse
+```
+
+### `client.runs.files.upload`
+
+**`POST /api/v1/runs/:id/files`**
+
+Upload run input file
+
+Upload a DB-backed workflow run input file. This endpoint is for workflow runs before execution starts; generated output downloads use artifacts.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
+```
+
+### `client.rerun`
+
+**`POST /api/v1/runs/:id/rerun`**
+
+Rerun run
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Query parameters**
+
+| Name                  | Type     | Description                                                                            |
+| --------------------- | -------- | -------------------------------------------------------------------------------------- |
+| `version`             | `string` | (optional)Version for the new run. `original` pins the source run. Defaults to latest. |
+| `wait_for_completion` | `number` | (optional)Seconds to wait before returning (max 600). Omit for async.                  |
+
+**Response**
+
+```ts
+// RunRerunResponse
+```
+
+### `client.runs.get`
+
+**`GET /api/v1/runs/:id`**
+
+Get run
+
+Returns the grouped run object — identity, `finished`, slim `execution`, `timing`, `source`, `trigger`, optional `eval`, and terminal `output`/`files`/`error` at the top level once `finished` is true. Pass `expand` (`input`, `usage`, `execution`, `debug`) to add nested detail objects; `expand=execution` adds steps (workflow) or files, feedback, and expected (agent). Download artifacts through `GET /api/v1/runs/:id/artifacts/:path`. Workflow definition snapshot: `GET /api/v1/runs/:id/definition`.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` | Run id      |
+
+**Query parameters**
+
+| Name     | Type     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `expand` | `string` | (optional)Comma-separated expand sections: `input`, `usage`, `execution`, `debug`. Each adds one nested object onto the run. `finished` and slim `execution` (status, schemaValid, batch, retry, annotation) are always present; `output`, `files`, and `error` appear at the top level once the run is terminal. Use `expand=execution` for steps (workflow) or files, feedback, and expected (agent). Unknown tokens return 400 with a migration hint. |
+
+**Response**
+
+```ts
+// Run
+```
+
+### `client.runs.trace.get`
+
+**`GET /api/v1/runs/:id/trace`**
+
+Get run trace
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` |             |
+
+**Response**
+
+```ts
+// Record<string, unknown>
 ```
 
 ## Source
@@ -1029,7 +1062,7 @@ Encrypts one or more plaintext secret values for the authenticated tenant using 
 
 ### `client.workflows.get`
 
-**`GET /api/v1/workflows/{id}`**
+**`GET /api/v1/workflows/:id`**
 
 Get a workflow by id
 
@@ -1049,7 +1082,7 @@ Returns the workflow summary plus the current version YAML. Use `versions list` 
 
 ### `client.workflows.versions`
 
-**`GET /api/v1/workflows/{id}/versions`**
+**`GET /api/v1/workflows/:id/versions`**
 
 List tagged versions for a workflow
 

@@ -2,10 +2,11 @@ import type { OperationResult } from '../client';
 import { EigenpalError } from '../errors';
 import type { Client } from '../generated/client';
 import {
-  runsArtifactGet,
+  runsArtifactsList,
   runsCancel,
   runsComparisonGet,
   runsConnect,
+  runsDefinitionGet,
   runsExpectedCreate,
   runsExpectedFileDelete,
   runsExpectedFileGet,
@@ -24,7 +25,8 @@ import {
   runsTraceGet,
 } from '../generated/sdk.gen';
 import type {
-  RunRerunRequest,
+  RunArtifactsResponse,
+  RunDefinitionResponse,
   RunsCancelResponse,
   RunsComparisonGetResponse,
   RunsConnectResponse,
@@ -54,6 +56,21 @@ type Dispatch = <T>(call: () => Promise<OperationResult<T>>) => Promise<T>;
 export type ListRunsOptions = NonNullable<RunsListData['query']> & { signal?: AbortSignal };
 type SignalOptions = { signal?: AbortSignal };
 
+/**
+ * Expandable sections for `runs.get`. Each token adds one nested object with
+ * the same name. Terminal runs expose top-level `output`, `files`, and `error`.
+ */
+export type RunExpandSection = 'input' | 'usage' | 'execution' | 'debug';
+
+/** Typed section list, or a raw comma-separated string for forward compat. */
+export type RunExpand = readonly RunExpandSection[] | (string & {});
+
+function formatExpand(expand: RunExpand | undefined): string | undefined {
+  if (expand === undefined) return undefined;
+  const joined = typeof expand === 'string' ? expand : expand.join(',');
+  return joined.length > 0 ? joined : undefined;
+}
+
 export class RunsResource {
   public readonly feedback: RunsFeedbackResource;
   public readonly expected: RunsExpectedResource;
@@ -69,7 +86,7 @@ export class RunsResource {
     this.feedback = new RunsFeedbackResource(client, dispatch);
     this.expected = new RunsExpectedResource(client, dispatch);
     this.files = new RunsFilesResource(client, dispatch);
-    this.artifacts = new RunsArtifactsResource(client);
+    this.artifacts = new RunsArtifactsResource(client, dispatch);
     this.comparison = new RunsComparisonResource(client, dispatch);
     this.trace = new RunsTraceResource(client, dispatch);
   }
@@ -79,16 +96,24 @@ export class RunsResource {
     return this.dispatch(() => runsList({ client: this.client, query, signal }));
   }
 
-  async get(runId: string, options: { include?: string; signal?: AbortSignal } = {}) {
-    const response = await this.dispatch<RunsGetResponse>(() =>
+  /**
+   * Fetch the canonical grouped run object. Terminal runs include top-level
+   * `output`, `files`, and `error`. Pass `expand` (for example
+   * `['usage', 'execution']`) to add optional nested detail objects.
+   */
+  async get(
+    runId: string,
+    options: { expand?: RunExpand; signal?: AbortSignal } = {}
+  ): Promise<RunsGetResponse> {
+    const expand = formatExpand(options.expand);
+    return this.dispatch<RunsGetResponse>(() =>
       runsGet({
         client: this.client,
         path: { id: runId },
-        query: options.include ? { include: options.include } : {},
+        query: expand ? { expand } : {},
         signal: options.signal,
       })
     );
-    return response.run;
   }
 
   async cancel(runId: string, options: SignalOptions = {}): Promise<RunsCancelResponse> {
@@ -99,11 +124,11 @@ export class RunsResource {
 
   async rerun(
     runId: string,
-    body: RunRerunRequest = {},
+    query: { version?: string; wait_for_completion?: number } = {},
     options: SignalOptions = {}
   ): Promise<RunsRerunResponse> {
     return this.dispatch(() =>
-      runsRerun({ client: this.client, path: { id: runId }, body, signal: options.signal })
+      runsRerun({ client: this.client, path: { id: runId }, query, signal: options.signal })
     );
   }
 
@@ -120,10 +145,10 @@ export class RunsResource {
     const mode = options.baseline ? 'baseline' : 'expected';
     const [reference, target] = await Promise.all([
       this.get(referenceRunId, {
-        include: mode === 'baseline' ? 'detail,files,output' : 'detail,expected',
+        expand: ['execution'],
         signal: options.signal,
       }),
-      this.get(runId, { include: 'detail,files,output', signal: options.signal }),
+      this.get(runId, { expand: ['execution'], signal: options.signal }),
     ]);
 
     if (isWorkflowRun(reference) && isWorkflowRun(target)) {
@@ -156,6 +181,12 @@ export class RunsResource {
       runsConnect({ client: this.client, path: { id: runId }, signal: options.signal })
     );
   }
+
+  async definition(runId: string, options: SignalOptions = {}): Promise<RunDefinitionResponse> {
+    return this.dispatch(() =>
+      runsDefinitionGet({ client: this.client, path: { id: runId }, signal: options.signal })
+    );
+  }
 }
 
 type RunRecord = Record<string, unknown>;
@@ -174,19 +205,57 @@ export type RunComparisonReport = {
   warnings?: string[];
 };
 
-function isWorkflowRun(run: unknown): run is RunRecord & { stepExecutions: unknown[] } {
-  return isRecord(run) && Array.isArray(run.stepExecutions);
+function isWorkflowRun(run: unknown): run is RunRecord {
+  return isRecord(run) && run.type === 'workflow';
 }
 
 function isRecord(value: unknown): value is RunRecord {
   return value != null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function runExecution(run: RunRecord): RunRecord {
+  return isRecord(run.execution) ? run.execution : {};
+}
+
+function runResult(run: RunRecord): RunRecord {
+  return isRecord(run.result) ? run.result : {};
+}
+
+export function runOutput(run: unknown): unknown {
+  if (!isRecord(run)) return undefined;
+  if (run.output !== undefined) return run.output;
+  return runResult(run).output;
+}
+
+export function runUsage(run: unknown): unknown {
+  return isRecord(run) ? run.usage : undefined;
+}
+
+export function runExecutionDetails(run: unknown): unknown {
+  return isRecord(run) ? run.execution : undefined;
+}
+
+function workflowSteps(run: RunRecord): unknown[] {
+  const steps = runExecution(run).steps;
+  return Array.isArray(steps) ? steps : [];
+}
+
+function agentOutputFiles(run: RunRecord): unknown[] {
+  const rawFiles = runExecution(run).files;
+  const files: RunRecord = isRecord(rawFiles) ? rawFiles : {};
+  return Array.isArray(files.output) ? files.output : [];
+}
+
+function agentExpected(run: RunRecord): RunRecord {
+  const expected = runExecution(run).expected;
+  return isRecord(expected) ? expected : {};
+}
+
 function compareWorkflowRuns(
   referenceRunId: string,
-  reference: RunRecord & { stepExecutions: unknown[] },
+  reference: RunRecord,
   runId: string,
-  target: RunRecord & { stepExecutions: unknown[] },
+  target: RunRecord,
   stepFilter?: string
 ): RunComparisonReport {
   const wanted = stepFilter
@@ -194,11 +263,11 @@ function compareWorkflowRuns(
     .map((step) => step.trim())
     .filter(Boolean);
   const targetSteps = new Map(
-    target.stepExecutions
+    workflowSteps(target)
       .filter(isRecord)
       .map((step) => [String(step.stepName ?? step.name ?? step.id ?? ''), step])
   );
-  const steps = reference.stepExecutions
+  const steps = workflowSteps(reference)
     .filter(isRecord)
     .filter(
       (step) => !wanted?.length || wanted.includes(String(step.stepName ?? step.name ?? step.id))
@@ -237,10 +306,13 @@ function compareArtifactRuns(
 ): RunComparisonReport {
   const referenceRun = isRecord(reference) ? reference : {};
   const targetRun = isRecord(target) ? target : {};
-  const expectedValue = mode === 'baseline' ? referenceRun.output : referenceRun.expected;
+  const expectedValue =
+    mode === 'baseline' ? runOutput(referenceRun) : agentExpected(referenceRun).output;
   const expectedFiles =
-    mode === 'baseline' ? names(referenceRun.resultFiles) : names(referenceRun.expectedFiles);
-  const outputFiles = names(targetRun.resultFiles);
+    mode === 'baseline'
+      ? names(agentOutputFiles(referenceRun))
+      : names(agentExpected(referenceRun).files);
+  const outputFiles = names(agentOutputFiles(targetRun));
   const missing = expectedFiles.filter(
     (name) =>
       !outputFiles.some(
@@ -262,7 +334,7 @@ function compareArtifactRuns(
           (out) => comparableName(out, normalizeDates) === comparableName(name, normalizeDates)
         ) ?? name,
     }));
-  const jsonDifferences = diffJson(expectedValue, targetRun.output);
+  const jsonDifferences = diffJson(expectedValue, runOutput(targetRun));
   return {
     status:
       jsonDifferences.length === 0 && missing.length === 0 && extra.length === 0 ? 'pass' : 'fail',
@@ -479,14 +551,23 @@ export class RunsFilesResource {
 }
 
 export class RunsArtifactsResource {
-  constructor(private readonly client: Client) {}
+  constructor(
+    private readonly client: Client,
+    private readonly dispatch: Dispatch
+  ) {}
+
+  async list(runId: string, options: SignalOptions = {}): Promise<RunArtifactsResponse> {
+    const { signal } = options;
+    return this.dispatch(() =>
+      runsArtifactsList({ client: this.client, path: { id: runId }, signal })
+    );
+  }
 
   async download(runId: string, path: string, options: SignalOptions = {}): Promise<Blob> {
     return downloadBlob(
       () =>
-        runsArtifactGet({
-          client: this.client,
-          path: { id: runId, path },
+        this.client.get({
+          url: `/api/v1/runs/${encodeURIComponent(runId)}/artifacts/${encodeArtifactPath(path)}`,
           parseAs: 'blob',
           signal: options.signal,
         }) as Promise<OperationResult<Blob>>
@@ -545,4 +626,8 @@ async function downloadBlob(call: () => Promise<OperationResult<Blob>>): Promise
   throw new EigenpalError('Failed to download run artifact.', {
     status: result.response?.status ?? 0,
   });
+}
+
+function encodeArtifactPath(path: string): string {
+  return path.split('/').map(encodeURIComponent).join('/');
 }

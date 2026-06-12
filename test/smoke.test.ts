@@ -71,22 +71,40 @@ describe('EigenpalClient SDK', () => {
     expect(captured[0]?.auth).toBe('Bearer eg_test_key_123');
   });
 
-  test('client.run returns runId', async () => {
+  test('client.run returns id', async () => {
     const captured: { url: string; method: string; body?: string }[] = [];
     const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
-      fetch: mockFetch([{ status: 201, body: { runId: 'exec_abc', type: 'workflow' } }], captured),
+      fetch: mockFetch(
+        [{ status: 201, body: { id: 'exec_abc', type: 'workflow', finished: false } }],
+        captured
+      ),
       maxRetries: 0,
     });
 
-    const result = await client.run('workflows.wf_xyz', { input: { foo: 'bar' } });
+    const result = await client.run('workflows.wf_xyz', { foo: 'bar' });
 
-    expect(result.runId).toBe('exec_abc');
+    expect(result.id).toBe('exec_abc');
     expect(captured[0]?.method).toBe('POST');
-    expect(captured[0]?.url).toContain('/api/v1/run/workflows.wf_xyz');
+    expect(captured[0]?.url).toContain('/api/v1/runs');
     expect(captured[0]?.url).not.toContain('%40');
-    expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({ foo: 'bar' });
+    expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({
+      target: 'workflows.wf_xyz',
+      input: { foo: 'bar' },
+    });
+  });
+
+  test('client.run rejects options bag as second argument', async () => {
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      maxRetries: 0,
+    });
+
+    await expect(
+      client.run('workflows.wf_xyz', { input: { foo: 'bar' }, waitForCompletion: 30 })
+    ).rejects.toThrow(/as the third/i);
   });
 
   test('client.run accepts documented input and options arguments', async () => {
@@ -95,7 +113,7 @@ describe('EigenpalClient SDK', () => {
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
       fetch: mockFetch(
-        [{ status: 200, body: { runId: 'exec_abc', type: 'workflow', status: 'completed' } }],
+        [{ status: 200, body: { id: 'exec_abc', type: 'workflow', finished: true } }],
         captured
       ),
       maxRetries: 0,
@@ -103,30 +121,76 @@ describe('EigenpalClient SDK', () => {
 
     const result = await client.run('workflows.wf_xyz', { foo: 'bar' }, { waitForCompletion: 30 });
 
-    expect(result.runId).toBe('exec_abc');
+    expect(result.id).toBe('exec_abc');
     expect(captured[0]?.url).toContain('wait_for_completion=30');
-    expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({ foo: 'bar' });
+    expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({
+      target: 'workflows.wf_xyz',
+      input: { foo: 'bar' },
+    });
   });
 
-  test('client.run sends overrides under the reserved _overrides body key', async () => {
+  test('client.run object targets mirror canonical run-target grammar', async () => {
     const captured: { url: string; method: string; body?: string }[] = [];
     const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
-      fetch: mockFetch([{ status: 201, body: { runId: 'exec_ov', type: 'workflow' } }], captured),
+      fetch: mockFetch(
+        [
+          { status: 201, body: { id: 'exec_workflow', type: 'workflow', finished: false } },
+          { status: 201, body: { id: 'exec_agent', type: 'agent', finished: false } },
+          { status: 201, body: { id: 'exec_agent_rooted', type: 'agent', finished: false } },
+        ],
+        captured
+      ),
+      maxRetries: 0,
+    });
+
+    await client.run({ type: 'workflow', slug: 'finance/extract-invoice', version: '1.2.3' });
+    await client.run({ type: 'agent', slug: 'finance/invoice-agent', version: 'main' });
+    await client.run({ type: 'agent', slug: 'agents.finance.invoice-agent' });
+
+    expect(captured[0]?.url).toContain('/api/v1/runs');
+    expect(captured[0]?.url).toContain('version=1.2.3');
+    expect(JSON.parse(captured[0]?.body ?? '{}').target).toBe('workflows.finance.extract-invoice');
+    expect(captured[1]?.url).toContain('/api/v1/runs');
+    expect(captured[1]?.url).toContain('version=main');
+    expect(JSON.parse(captured[1]?.body ?? '{}').target).toBe('agents.finance.invoice-agent');
+    expect(captured[2]?.url).toContain('/api/v1/runs');
+    expect(JSON.parse(captured[2]?.body ?? '{}').target).toBe('agents.finance.invoice-agent');
+  });
+
+  test('client.run rejects ambiguous rooted agent object targets', async () => {
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      maxRetries: 0,
+    });
+
+    await expect(client.run({ type: 'agent', slug: 'workflows.extract-invoice' })).rejects.toThrow(
+      /rooted at "agents\."/i
+    );
+  });
+
+  test('client.run sends overrides in the canonical envelope body', async () => {
+    const captured: { url: string; method: string; body?: string }[] = [];
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch: mockFetch(
+        [{ status: 201, body: { id: 'exec_ov', type: 'workflow', finished: false } }],
+        captured
+      ),
       maxRetries: 0,
     });
 
     const overrides = { steps: { extract: { total: 42 } } };
-    const result = await client.run('workflows.wf_xyz', {
+    const result = await client.run('workflows.wf_xyz', { language: 'en' }, { overrides });
+
+    expect(result.id).toBe('exec_ov');
+    expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({
+      target: 'workflows.wf_xyz',
       input: { language: 'en' },
       overrides,
-    });
-
-    expect(result.runId).toBe('exec_ov');
-    expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({
-      language: 'en',
-      _overrides: overrides,
     });
   });
 
@@ -138,12 +202,13 @@ describe('EigenpalClient SDK', () => {
       fetch: mockFetch(
         [
           {
-            status: 201,
+            status: 200,
             body: {
-              runId: 'exec_abc',
+              id: 'exec_abc',
               type: 'workflow',
-              status: 'completed',
+              finished: true,
               output: { ok: true },
+              execution: { status: 'completed', schemaValid: true },
             },
           },
         ],
@@ -152,12 +217,10 @@ describe('EigenpalClient SDK', () => {
       maxRetries: 0,
     });
 
-    const result = await client.run('workflows.wf_xyz', {
-      input: { x: 1 },
-      waitForCompletion: 30,
-    });
+    const result = await client.run('workflows.wf_xyz', { x: 1 }, { waitForCompletion: 30 });
 
-    expect(result.status).toBe('completed');
+    expect(result.finished).toBe(true);
+    expect(result.output).toEqual({ ok: true });
     expect(captured[0]?.url).toContain('wait_for_completion=30');
   });
 
@@ -213,17 +276,15 @@ describe('EigenpalClient SDK', () => {
           {
             status: 200,
             body: {
-              run: {
-                id: 'run_123',
-                type: 'workflow',
-                status: 'completed',
-                source: { id: 'wf_123', name: 'Extract' },
-                createdAt: '2026-01-01T00:00:00.000Z',
-              },
+              id: 'run_123',
+              type: 'workflow',
+              finished: true,
+              source: { id: 'wf_123', name: 'Extract' },
+              createdAt: '2026-01-01T00:00:00.000Z',
             },
           },
           { status: 200, body: { ok: true } },
-          { status: 200, body: { executionId: 'run_rerun', status: 'pending' } },
+          { status: 201, body: { id: 'run_rerun', type: 'workflow', finished: false } },
           { status: 200, body: { ok: true } },
           { status: 200, body: { expected: null, files: [] } },
         ],
@@ -233,7 +294,7 @@ describe('EigenpalClient SDK', () => {
     });
 
     await client.runs.list({ type: 'workflow', source: 'wf_123', status: 'completed' });
-    const run = await client.runs.get('run_123', { include: 'detail' });
+    const run = await client.runs.get('run_123', { expand: ['usage', 'execution'] });
     await client.runs.cancel('run_123');
     await client.rerun('run_123');
     await client.runs.feedback.update('run_123', { status: 'open' });
@@ -243,7 +304,7 @@ describe('EigenpalClient SDK', () => {
     expect(captured[0]?.url).toContain('/api/v1/runs');
     expect(captured[0]?.url).toContain('type=workflow');
     expect(captured[1]?.url).toContain('/api/v1/runs/run_123');
-    expect(captured[1]?.url).toContain('include=detail');
+    expect(captured[1]?.url).toContain('expand=usage%2Cexecution');
     expect(captured[2]?.method).toBe('POST');
     expect(captured[2]?.url).toContain('/api/v1/runs/run_123/cancel');
     expect(captured[3]?.method).toBe('POST');
@@ -252,6 +313,22 @@ describe('EigenpalClient SDK', () => {
     expect(captured[4]?.url).toContain('/api/v1/runs/run_123/feedback');
     expect(captured[5]?.method).toBe('GET');
     expect(captured[5]?.url).toContain('/api/v1/runs/run_123/expected');
+  });
+
+  test('runs.artifacts.download preserves slash-delimited artifact paths', async () => {
+    const captured: { url: string; method: string }[] = [];
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch: mockFetch([{ status: 200 }], captured),
+      maxRetries: 0,
+    });
+
+    await client.runs.artifacts.download('run_123', 'output/file_123');
+
+    expect(captured[0]?.method).toBe('GET');
+    expect(captured[0]?.url).toContain('/api/v1/runs/run_123/artifacts/output/file_123');
+    expect(captured[0]?.url).not.toContain('output%2Ffile_123');
   });
 
   test('401 surfaces as EigenpalAuthError', async () => {
@@ -349,25 +426,27 @@ describe('EigenpalClient SDK', () => {
       fetch: mockFetch(
         [
           // 1: trigger run
-          { status: 201, body: { runId: 'exec_pq', type: 'workflow' } },
+          { status: 201, body: { id: 'exec_pq', type: 'workflow', finished: false } },
           // 2: poll — running
           {
             status: 200,
             body: {
-              run: { runId: 'exec_pq', status: 'running', createdAt: '2025-01-01T00:00:00Z' },
+              id: 'exec_pq',
+              finished: false,
+              execution: { status: 'running' },
+              createdAt: '2025-01-01T00:00:00Z',
             },
           },
           // 3: poll — completed
           {
             status: 200,
             body: {
-              run: {
-                runId: 'exec_pq',
-                status: 'completed',
-                output: { total: 42 },
-                createdAt: '2025-01-01T00:00:00Z',
-                completedAt: '2025-01-01T00:00:05Z',
-              },
+              id: 'exec_pq',
+              finished: true,
+              output: { total: 42 },
+              execution: { status: 'completed' },
+              createdAt: '2025-01-01T00:00:00Z',
+              completedAt: '2025-01-01T00:00:05Z',
             },
           },
         ],
@@ -382,11 +461,11 @@ describe('EigenpalClient SDK', () => {
       { pollIntervalMs: 5, timeoutMs: 5000 }
     );
 
-    expect(result.runId).toBe('exec_pq');
+    expect(result.id).toBe('exec_pq');
     expect(result.status).toBe('completed');
     expect(result.output).toEqual({ total: 42 });
-    expect(captured[1]?.url).toContain('include=detail');
-    expect(captured[2]?.url).toContain('include=detail');
+    expect(captured[1]?.url).toContain('expand=execution');
+    expect(captured[2]?.url).toContain('expand=execution');
   });
 
   test('runs.cancel cancels workflow runs through the public v1 runs API', async () => {
@@ -398,7 +477,13 @@ describe('EigenpalClient SDK', () => {
         [
           {
             status: 200,
-            body: { executionId: 'exec_pq', status: 'cancelled', wasStatus: 'pending' },
+            body: {
+              id: 'exec_pq',
+              type: 'workflow',
+              finished: true,
+              execution: { status: 'cancelled' },
+              cancellation: { state: 'cancelled', wasStatus: 'pending' },
+            },
           },
         ],
         captured
@@ -407,7 +492,8 @@ describe('EigenpalClient SDK', () => {
     });
 
     const r = await client.runs.cancel('exec_pq');
-    expect(r.status).toBe('cancelled');
+    expect(r.execution.status).toBe('cancelled');
+    expect(r.cancellation.state).toBe('cancelled');
     expect(captured[0]?.method).toBe('POST');
     expect(captured[0]?.url).toContain('/api/v1/runs/exec_pq');
   });
