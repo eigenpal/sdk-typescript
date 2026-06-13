@@ -705,6 +705,19 @@ export type WorkflowDetail = {
      * Current release tag (e.g. "1.2.4"). Null until a version is published.
      */
     version?: string | null;
+    /**
+     * Whether API trigger is enabled (runtime projection)
+     */
+    apiEnabled?: boolean;
+    /**
+     * Runtime trigger projection by type.
+     */
+    triggers?: {
+        api: boolean;
+        email: boolean;
+        manual: boolean;
+        cron: boolean;
+    };
     createdAt: string;
     updatedAt?: string;
     /**
@@ -761,6 +774,19 @@ export type WorkflowSummary = {
      * Current release tag (e.g. "1.2.4"). Null until a version is published.
      */
     version?: string | null;
+    /**
+     * Whether API trigger is enabled (runtime projection)
+     */
+    apiEnabled?: boolean;
+    /**
+     * Runtime trigger projection by type.
+     */
+    triggers?: {
+        api: boolean;
+        email: boolean;
+        manual: boolean;
+        cron: boolean;
+    };
     createdAt: string;
     updatedAt?: string;
 };
@@ -3150,6 +3176,10 @@ export type WorkflowsListData = {
          * Filter by workflow kind
          */
         kind?: 'workflow' | 'block';
+        /**
+         * Filter by folder: omit for all workflows, 'null' for root/unfiled only, or a folder id
+         */
+        folderId?: string | null;
         /**
          * Page size (max 100, default 50)
          */

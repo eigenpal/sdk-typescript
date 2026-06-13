@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.7.2
+
+### Minor Changes
+
+- c5a709c: Public workflow list/detail responses include `apiEnabled` and `triggers`; run definition docs note workflow-only scope.
+
 ## 0.7.1
 
 ### Patch Changes

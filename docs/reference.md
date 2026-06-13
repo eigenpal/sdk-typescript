@@ -630,7 +630,7 @@ Connect to live run
 
 Get run definition snapshot
 
-Workflow definition snapshot captured when the run was created.
+Workflow definition snapshot captured when the run was created. Workflow runs only; agent runs return not_found.
 
 **Path parameters**
 
@@ -1119,13 +1119,14 @@ List workflows with pagination.
 
 **Query parameters**
 
-| Name     | Type                    | Description                                          |
-| -------- | ----------------------- | ---------------------------------------------------- |
-| `search` | `string`                | (optional)Substring match against workflow name      |
-| `name`   | `string`                | (optional)Exact-match lookup by workflow name (slug) |
-| `kind`   | `"workflow" \| "block"` | (optional)Filter by workflow kind                    |
-| `limit`  | `number`                | (optional)Page size (max 100, default 50)            |
-| `offset` | `number`                | (optional)Page offset                                |
+| Name       | Type                    | Description                                                                                      |
+| ---------- | ----------------------- | ------------------------------------------------------------------------------------------------ |
+| `search`   | `string`                | (optional)Substring match against workflow name                                                  |
+| `name`     | `string`                | (optional)Exact-match lookup by workflow name (slug)                                             |
+| `kind`     | `"workflow" \| "block"` | (optional)Filter by workflow kind                                                                |
+| `folderId` | `string \| null`        | (optional)Filter by folder: omit for all workflows, 'null' for root/unfiled only, or a folder id |
+| `limit`    | `number`                | (optional)Page size (max 100, default 50)                                                        |
+| `offset`   | `number`                | (optional)Page offset                                                                            |
 
 **Response**
 

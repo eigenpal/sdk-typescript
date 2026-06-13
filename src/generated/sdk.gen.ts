@@ -291,7 +291,7 @@ export const runsConnect = <ThrowOnError extends boolean = false>(options: Optio
 /**
  * Get run definition snapshot
  *
- * Workflow definition snapshot captured when the run was created.
+ * Workflow definition snapshot captured when the run was created. Workflow runs only; agent runs return not_found.
  */
 export const runsDefinitionGet = <ThrowOnError extends boolean = false>(options: Options<RunsDefinitionGetData, ThrowOnError>) => (options.client ?? client).get<RunsDefinitionGetResponses, RunsDefinitionGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
