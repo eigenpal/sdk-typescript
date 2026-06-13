@@ -124,7 +124,7 @@ The constructor option always wins; the env var is a fallback so scripts don't h
 
 List or download agent source files
 
-Lists or reads files from the agent Git package (`agents/{slug}/` on organization source). Runtime artifacts (runs, dataset) are not served here.
+List or read agent source files from Git.
 
 **Path parameters**
 
@@ -372,7 +372,7 @@ Creates an email trigger alias for one agent.
 
 List agent Git versions
 
-Lists Git-backed release versions for an agent. Release notes are included when a matching legacy published-version message exists.
+List Git release versions for an agent.
 
 **Path parameters**
 
@@ -392,7 +392,7 @@ Lists Git-backed release versions for an agent. Release notes are included when 
 
 List agents
 
-Returns agents the caller has access to, with pagination and basic execution stats. Accepts session cookies or API keys.
+List agents with pagination.
 
 **Query parameters**
 
@@ -416,7 +416,7 @@ Returns agents the caller has access to, with pagination and basic execution sta
 
 Create an agent
 
-Creates a new agent, registers it in the automation table, and scaffolds its Git source package. Accepts session cookies or API keys.
+Create an agent and scaffold its Git source package.
 
 **Request body**
 
@@ -472,9 +472,9 @@ Reconciles lightweight automation metadata from the latest released Git source p
 
 **`POST /api/v1/runs`**
 
-Start a workflow or agent run
+Start a run
 
-Starts a run for a workflow or agent target. JSON and multipart bodies share the same envelope: `{ target, input, files?, overrides?, metadata? }`. In JSON, `files` carries `{ fileId, filename, mimeType }` references. In multipart (`Content-Type: multipart/form-data`), send `input`, `overrides`, and `metadata` as JSON text parts and each file as `files.<fieldName>`. Legacy 0.5.12 shapes (`_json`, top-level file fields, `input._overrides`) remain accepted. Run provenance may be declared with the `X-Eigenpal-Trigger` header (`api` or `cli`).
+Start a run. Send JSON or multipart/form-data.
 
 **Query parameters**
 
@@ -501,7 +501,7 @@ Starts a run for a workflow or agent target. JSON and multipart bodies share the
 
 List runs
 
-Tenant-scoped, cursor-paginated feed of workflow and agent runs. Use type and source filters to scope to one runtime or resource.
+List workflow and agent runs with cursor pagination.
 
 **Query parameters**
 
@@ -539,7 +539,7 @@ Tenant-scoped, cursor-paginated feed of workflow and agent runs. Use type and so
 
 Download run artifact
 
-Download a run artifact. Workflow output artifacts resolve through DB-backed file rows; agent artifacts resolve through S3. Output files for both run types live under `output/` paths.
+Download one artifact by path.
 
 **Path parameters**
 
@@ -554,7 +554,7 @@ Download a run artifact. Workflow output artifacts resolve through DB-backed fil
 
 List run artifacts
 
-Lists every downloadable artifact path for a run. Download each with `GET /api/v1/runs/:id/artifacts/:path`.
+List downloadable artifact paths for a run.
 
 **Path parameters**
 
@@ -574,7 +574,7 @@ Lists every downloadable artifact path for a run. Download each with `GET /api/v
 
 Cancel run
 
-Cancels a queued run immediately, or requests cancellation of an in-flight run. Returns the partial canonical run with a `cancellation` block describing the outcome.
+Cancel a queued run or request cancellation of an in-flight run.
 
 **Path parameters**
 
@@ -630,7 +630,7 @@ Connect to live run
 
 Get run definition snapshot
 
-Returns the workflow definition snapshot that ran — the exact definition captured at run creation, independent of later edits. Workflow runs only; agent runs return 404 (agent source lives in git, see `source.git` on the run).
+Workflow definition snapshot captured when the run was created.
 
 **Path parameters**
 
@@ -803,7 +803,7 @@ Clear run feedback
 
 Download run output files zip
 
-Download agent run output artifacts as a zip. Completed workflow output files are listed in top-level `files` and downloaded individually through GET /api/v1/runs/:id/artifacts/:path; zip download remains agent-only.
+Download agent run output files as a zip.
 
 **Path parameters**
 
@@ -837,7 +837,7 @@ Delete run input file
 
 List run files
 
-List DB-backed workflow run files: mutable workflow inputs before execution starts, plus workflow/eval input and output file rows for structured inspection. Download generated output artifacts for completed workflow and agent runs through top-level `files` and GET /api/v1/runs/:id/artifacts/:path.
+List workflow run input and output file rows.
 
 **Path parameters**
 
@@ -857,7 +857,7 @@ List DB-backed workflow run files: mutable workflow inputs before execution star
 
 Upload run input file
 
-Upload a DB-backed workflow run input file. This endpoint is for workflow runs before execution starts; generated output downloads use artifacts.
+Upload a workflow run input file before execution starts.
 
 **Path parameters**
 
@@ -876,6 +876,8 @@ Upload a DB-backed workflow run input file. This endpoint is for workflow runs b
 **`POST /api/v1/runs/:id/rerun`**
 
 Rerun run
+
+Start a new run from an existing run id.
 
 **Path parameters**
 
@@ -902,7 +904,7 @@ Rerun run
 
 Get run
 
-Returns the grouped run object — identity, `finished`, slim `execution`, `timing`, `source`, `trigger`, optional `eval`, and terminal `output`/`files`/`error` at the top level once `finished` is true. Pass `expand` (`input`, `usage`, `execution`, `debug`) to add nested detail objects; `expand=execution` adds steps (workflow) or files, feedback, and expected (agent). Download artifacts through `GET /api/v1/runs/:id/artifacts/:path`. Workflow definition snapshot: `GET /api/v1/runs/:id/definition`.
+Fetch one run by id. Use `expand` for input, usage, execution, and debug detail.
 
 **Path parameters**
 
@@ -912,9 +914,9 @@ Returns the grouped run object — identity, `finished`, slim `execution`, `timi
 
 **Query parameters**
 
-| Name     | Type     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `expand` | `string` | (optional)Comma-separated expand sections: `input`, `usage`, `execution`, `debug`. Each adds one nested object onto the run. `finished` and slim `execution` (status, schemaValid, batch, retry, annotation) are always present; `output`, `files`, and `error` appear at the top level once the run is terminal. Use `expand=execution` for steps (workflow) or files, feedback, and expected (agent). Unknown tokens return 400 with a migration hint. |
+| Name     | Type     | Description                                                                                                                           |
+| -------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `expand` | `string` | (optional)Optional sections: `input`, `usage`, `execution`, `debug`. Terminal runs always include top-level output, files, and error. |
 
 **Response**
 
@@ -1066,7 +1068,7 @@ Encrypts one or more plaintext secret values for the authenticated tenant using 
 
 Get a workflow by id
 
-Returns the workflow summary plus the current version YAML. Use `versions list` for historical YAML.
+Get a workflow by id, including current YAML.
 
 **Path parameters**
 
@@ -1086,7 +1088,7 @@ Returns the workflow summary plus the current version YAML. Use `versions list` 
 
 List tagged versions for a workflow
 
-Returns released versions in reverse-chronological order, paginated.
+List published workflow versions.
 
 **Path parameters**
 
@@ -1113,7 +1115,7 @@ Returns released versions in reverse-chronological order, paginated.
 
 List workflows
 
-Returns workflows the API key has access to, with pagination. Use `name` for exact-match slug lookup, `search` for substring match.
+List workflows with pagination.
 
 **Query parameters**
 

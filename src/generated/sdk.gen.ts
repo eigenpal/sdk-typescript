@@ -21,7 +21,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 /**
  * List or download agent source files
  *
- * Lists or reads files from the agent Git package (`agents/{slug}/` on organization source). Runtime artifacts (runs, dataset) are not served here.
+ * List or read agent source files from Git.
  */
 export const agentsFilesListOrGet = <ThrowOnError extends boolean = false>(options: Options<AgentsFilesListOrGetData, ThrowOnError>) => (options.client ?? client).get<AgentsFilesListOrGetResponses, AgentsFilesListOrGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -155,7 +155,7 @@ export const agentsTriggersEmailCreateAlias = <ThrowOnError extends boolean = fa
 /**
  * List agent Git versions
  *
- * Lists Git-backed release versions for an agent. Release notes are included when a matching legacy published-version message exists.
+ * List Git release versions for an agent.
  */
 export const agentsVersionsList = <ThrowOnError extends boolean = false>(options: Options<AgentsVersionsListData, ThrowOnError>) => (options.client ?? client).get<AgentsVersionsListResponses, AgentsVersionsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -166,7 +166,7 @@ export const agentsVersionsList = <ThrowOnError extends boolean = false>(options
 /**
  * List agents
  *
- * Returns agents the caller has access to, with pagination and basic execution stats. Accepts session cookies or API keys.
+ * List agents with pagination.
  */
 export const agentsList = <ThrowOnError extends boolean = false>(options?: Options<AgentsListData, ThrowOnError>) => (options?.client ?? client).get<AgentsListResponses, AgentsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -177,7 +177,7 @@ export const agentsList = <ThrowOnError extends boolean = false>(options?: Optio
 /**
  * Create an agent
  *
- * Creates a new agent, registers it in the automation table, and scaffolds its Git source package. Accepts session cookies or API keys.
+ * Create an agent and scaffold its Git source package.
  */
 export const agentsCreate = <ThrowOnError extends boolean = false>(options: Options<AgentsCreateData, ThrowOnError>) => (options.client ?? client).post<AgentsCreateResponses, AgentsCreateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -214,7 +214,7 @@ export const automationsSync = <ThrowOnError extends boolean = false>(options: O
 /**
  * List runs
  *
- * Tenant-scoped, cursor-paginated feed of workflow and agent runs. Use type and source filters to scope to one runtime or resource.
+ * List workflow and agent runs with cursor pagination.
  */
 export const runsList = <ThrowOnError extends boolean = false>(options?: Options<RunsListData, ThrowOnError>) => (options?.client ?? client).get<RunsListResponses, RunsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -223,9 +223,9 @@ export const runsList = <ThrowOnError extends boolean = false>(options?: Options
 });
 
 /**
- * Start a workflow or agent run
+ * Start a run
  *
- * Starts a run for a workflow or agent target. JSON and multipart bodies share the same envelope: `{ target, input, files?, overrides?, metadata? }`. In JSON, `files` carries `{ fileId, filename, mimeType }` references. In multipart (`Content-Type: multipart/form-data`), send `input`, `overrides`, and `metadata` as JSON text parts and each file as `files.<fieldName>`. Legacy 0.5.12 shapes (`_json`, top-level file fields, `input._overrides`) remain accepted. Run provenance may be declared with the `X-Eigenpal-Trigger` header (`api` or `cli`).
+ * Start a run. Send JSON or multipart/form-data.
  */
 export const runsStart = <ThrowOnError extends boolean = false>(options: Options<RunsStartData, ThrowOnError>) => (options.client ?? client).post<RunsStartResponses, RunsStartErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -240,7 +240,7 @@ export const runsStart = <ThrowOnError extends boolean = false>(options: Options
 /**
  * Download run artifact
  *
- * Download a run artifact. Workflow output artifacts resolve through DB-backed file rows; agent artifacts resolve through S3. Output files for both run types live under `output/` paths.
+ * Download one artifact by path.
  */
 export const runsArtifactsGet = <ThrowOnError extends boolean = false>(options: Options<RunsArtifactsGetData, ThrowOnError>) => (options.client ?? client).get<RunsArtifactsGetResponses, RunsArtifactsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -251,7 +251,7 @@ export const runsArtifactsGet = <ThrowOnError extends boolean = false>(options: 
 /**
  * List run artifacts
  *
- * Lists every downloadable artifact path for a run. Download each with `GET /api/v1/runs/:id/artifacts/:path`.
+ * List downloadable artifact paths for a run.
  */
 export const runsArtifactsList = <ThrowOnError extends boolean = false>(options: Options<RunsArtifactsListData, ThrowOnError>) => (options.client ?? client).get<RunsArtifactsListResponses, RunsArtifactsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -262,7 +262,7 @@ export const runsArtifactsList = <ThrowOnError extends boolean = false>(options:
 /**
  * Cancel run
  *
- * Cancels a queued run immediately, or requests cancellation of an in-flight run. Returns the partial canonical run with a `cancellation` block describing the outcome.
+ * Cancel a queued run or request cancellation of an in-flight run.
  */
 export const runsCancel = <ThrowOnError extends boolean = false>(options: Options<RunsCancelData, ThrowOnError>) => (options.client ?? client).post<RunsCancelResponses, RunsCancelErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -291,7 +291,7 @@ export const runsConnect = <ThrowOnError extends boolean = false>(options: Optio
 /**
  * Get run definition snapshot
  *
- * Returns the workflow definition snapshot that ran — the exact definition captured at run creation, independent of later edits. Workflow runs only; agent runs return 404 (agent source lives in git, see `source.git` on the run).
+ * Workflow definition snapshot captured when the run was created.
  */
 export const runsDefinitionGet = <ThrowOnError extends boolean = false>(options: Options<RunsDefinitionGetData, ThrowOnError>) => (options.client ?? client).get<RunsDefinitionGetResponses, RunsDefinitionGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -386,7 +386,7 @@ export const runsFeedbackUpdate = <ThrowOnError extends boolean = false>(options
 /**
  * Download run output files zip
  *
- * Download agent run output artifacts as a zip. Completed workflow output files are listed in top-level `files` and downloaded individually through GET /api/v1/runs/:id/artifacts/:path; zip download remains agent-only.
+ * Download agent run output files as a zip.
  */
 export const runsFilesZipGet = <ThrowOnError extends boolean = false>(options: Options<RunsFilesZipGetData, ThrowOnError>) => (options.client ?? client).get<RunsFilesZipGetResponses, RunsFilesZipGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -406,7 +406,7 @@ export const runsFilesDelete = <ThrowOnError extends boolean = false>(options: O
 /**
  * List run files
  *
- * List DB-backed workflow run files: mutable workflow inputs before execution starts, plus workflow/eval input and output file rows for structured inspection. Download generated output artifacts for completed workflow and agent runs through top-level `files` and GET /api/v1/runs/:id/artifacts/:path.
+ * List workflow run input and output file rows.
  */
 export const runsFilesList = <ThrowOnError extends boolean = false>(options: Options<RunsFilesListData, ThrowOnError>) => (options.client ?? client).get<RunsFilesListResponses, RunsFilesListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -417,7 +417,7 @@ export const runsFilesList = <ThrowOnError extends boolean = false>(options: Opt
 /**
  * Upload run input file
  *
- * Upload a DB-backed workflow run input file. This endpoint is for workflow runs before execution starts; generated output downloads use artifacts.
+ * Upload a workflow run input file before execution starts.
  */
 export const runsFilesUpload = <ThrowOnError extends boolean = false>(options: Options<RunsFilesUploadData, ThrowOnError>) => (options.client ?? client).post<RunsFilesUploadResponses, RunsFilesUploadErrors, ThrowOnError>({
     ...formDataBodySerializer,
@@ -432,6 +432,8 @@ export const runsFilesUpload = <ThrowOnError extends boolean = false>(options: O
 
 /**
  * Rerun run
+ *
+ * Start a new run from an existing run id.
  */
 export const runsRerun = <ThrowOnError extends boolean = false>(options: Options<RunsRerunData, ThrowOnError>) => (options.client ?? client).post<RunsRerunResponses, RunsRerunErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -442,7 +444,7 @@ export const runsRerun = <ThrowOnError extends boolean = false>(options: Options
 /**
  * Get run
  *
- * Returns the grouped run object — identity, `finished`, slim `execution`, `timing`, `source`, `trigger`, optional `eval`, and terminal `output`/`files`/`error` at the top level once `finished` is true. Pass `expand` (`input`, `usage`, `execution`, `debug`) to add nested detail objects; `expand=execution` adds steps (workflow) or files, feedback, and expected (agent). Download artifacts through `GET /api/v1/runs/:id/artifacts/:path`. Workflow definition snapshot: `GET /api/v1/runs/:id/definition`.
+ * Fetch one run by id. Use `expand` for input, usage, execution, and debug detail.
  */
 export const runsGet = <ThrowOnError extends boolean = false>(options: Options<RunsGetData, ThrowOnError>) => (options.client ?? client).get<RunsGetResponses, RunsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -536,7 +538,7 @@ export const sourceSecretsEncrypt = <ThrowOnError extends boolean = false>(optio
 /**
  * Get a workflow by id
  *
- * Returns the workflow summary plus the current version YAML. Use `versions list` for historical YAML.
+ * Get a workflow by id, including current YAML.
  */
 export const workflowsGet = <ThrowOnError extends boolean = false>(options: Options<WorkflowsGetData, ThrowOnError>) => (options.client ?? client).get<WorkflowsGetResponses, WorkflowsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -547,7 +549,7 @@ export const workflowsGet = <ThrowOnError extends boolean = false>(options: Opti
 /**
  * List tagged versions for a workflow
  *
- * Returns released versions in reverse-chronological order, paginated.
+ * List published workflow versions.
  */
 export const workflowsVersionsList = <ThrowOnError extends boolean = false>(options: Options<WorkflowsVersionsListData, ThrowOnError>) => (options.client ?? client).get<WorkflowsVersionsListResponses, WorkflowsVersionsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -558,7 +560,7 @@ export const workflowsVersionsList = <ThrowOnError extends boolean = false>(opti
 /**
  * List workflows
  *
- * Returns workflows the API key has access to, with pagination. Use `name` for exact-match slug lookup, `search` for substring match.
+ * List workflows with pagination.
  */
 export const workflowsList = <ThrowOnError extends boolean = false>(options?: Options<WorkflowsListData, ThrowOnError>) => (options?.client ?? client).get<WorkflowsListResponses, WorkflowsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],

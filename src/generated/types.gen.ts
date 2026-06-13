@@ -21,6 +21,9 @@ export type CreateAgentBody = {
     };
 };
 
+/**
+ * Run envelope. Declare provenance with the `X-Eigenpal-Trigger` header (`api` or `cli`). Legacy 0.5.12 body shapes remain accepted.
+ */
 export type RunStartBody = {
     /**
      * Automation target without a version suffix, e.g. workflows.invoice or agents.support.
@@ -147,7 +150,7 @@ export type ApiErrorIssue = {
      */
     message: string;
     /**
-     * Machine-readable error code (e.g. invalid_value, not_found)
+     * Machine-readable error code (e.g. invalid_value, not_found, api_trigger_disabled, manual_trigger_disabled)
      */
     code: string;
     /**
@@ -165,6 +168,19 @@ export type AgentSummary = {
     slug: string;
     name: string;
     description?: string | null;
+    /**
+     * Whether API trigger is enabled (runtime projection)
+     */
+    apiEnabled?: boolean;
+    /**
+     * Runtime trigger projection by type.
+     */
+    triggers?: {
+        api: boolean;
+        email: boolean;
+        manual: boolean;
+        cron: boolean;
+    };
     sourceIntegrity?: 'healthy' | 'source_missing' | 'unregistered';
     latestVersion?: string | null;
     latestCommit?: string | null;
@@ -1651,7 +1667,7 @@ export type RunsStartErrors = {
      */
     401: ApiErrorEnvelope;
     /**
-     * API key lacks required scope
+     * Trigger disabled or insufficient scope. Run start may return api_trigger_disabled when the API trigger is off, or manual_trigger_disabled for dashboard runs on API-only workflows.
      */
     403: ApiErrorEnvelope;
     /**
@@ -2637,7 +2653,7 @@ export type RunsGetData = {
     };
     query?: {
         /**
-         * Comma-separated expand sections: `input`, `usage`, `execution`, `debug`. Each adds one nested object onto the run. `finished` and slim `execution` (status, schemaValid, batch, retry, annotation) are always present; `output`, `files`, and `error` appear at the top level once the run is terminal. Use `expand=execution` for steps (workflow) or files, feedback, and expected (agent). Unknown tokens return 400 with a migration hint.
+         * Optional sections: `input`, `usage`, `execution`, `debug`. Terminal runs always include top-level output, files, and error.
          */
         expand?: string;
     };

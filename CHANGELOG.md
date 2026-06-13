@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.7.1
+
+### Patch Changes
+
+- 9db3f01: Expose `apiEnabled` and `triggers` on `AgentSummary` for runtime trigger projection.
+
 ## 0.7.0
 
 ### Minor Changes
