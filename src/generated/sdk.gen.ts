@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AgentsCreateData, AgentsCreateErrors, AgentsCreateResponses, AgentsFilesListOrGetData, AgentsFilesListOrGetErrors, AgentsFilesListOrGetResponses, AgentsFilesPutData, AgentsFilesPutErrors, AgentsFilesUploadBatchData, AgentsFilesUploadBatchErrors, AgentsGetData, AgentsGetErrors, AgentsGetResponses, AgentsListData, AgentsListErrors, AgentsListResponses, AgentsTriggersEmailCreateAliasData, AgentsTriggersEmailCreateAliasErrors, AgentsTriggersEmailCreateAliasResponses, AgentsTriggersEmailDeleteAliasData, AgentsTriggersEmailDeleteAliasErrors, AgentsTriggersEmailDeleteAliasResponses, AgentsTriggersEmailGetData, AgentsTriggersEmailGetErrors, AgentsTriggersEmailGetResponses, AgentsTriggersEmailListData, AgentsTriggersEmailListErrors, AgentsTriggersEmailListResponses, AgentsTriggersEmailUpdateAliasData, AgentsTriggersEmailUpdateAliasErrors, AgentsTriggersEmailUpdateAliasResponses, AgentsTriggersEmailUpdateData, AgentsTriggersEmailUpdateErrors, AgentsTriggersEmailUpdateResponses, AgentsUpdateData, AgentsUpdateErrors, AgentsUpdateResponses, AgentsVersionsListData, AgentsVersionsListErrors, AgentsVersionsListResponses, AutomationsSyncData, AutomationsSyncErrors, AutomationsSyncResponses, RunsArtifactsGetData, RunsArtifactsGetErrors, RunsArtifactsGetResponses, RunsArtifactsListData, RunsArtifactsListErrors, RunsArtifactsListResponses, RunsCancelData, RunsCancelErrors, RunsCancelResponses, RunsComparisonGetData, RunsComparisonGetErrors, RunsComparisonGetResponses, RunsConnectData, RunsConnectErrors, RunsConnectResponses, RunsDefinitionGetData, RunsDefinitionGetErrors, RunsDefinitionGetResponses, RunsExpectedCreateData, RunsExpectedCreateErrors, RunsExpectedCreateResponses, RunsExpectedFileDeleteData, RunsExpectedFileDeleteErrors, RunsExpectedFileDeleteResponses, RunsExpectedFileGetData, RunsExpectedFileGetErrors, RunsExpectedFileGetResponses, RunsExpectedFileUpdateData, RunsExpectedFileUpdateErrors, RunsExpectedFileUpdateResponses, RunsExpectedGetData, RunsExpectedGetErrors, RunsExpectedGetResponses, RunsFeedbackClearData, RunsFeedbackClearErrors, RunsFeedbackClearResponses, RunsFeedbackGetData, RunsFeedbackGetErrors, RunsFeedbackGetResponses, RunsFeedbackUpdateData, RunsFeedbackUpdateErrors, RunsFeedbackUpdateResponses, RunsFilesDeleteData, RunsFilesDeleteErrors, RunsFilesDeleteResponses, RunsFilesListData, RunsFilesListErrors, RunsFilesListResponses, RunsFilesUploadData, RunsFilesUploadErrors, RunsFilesUploadResponses, RunsFilesZipGetData, RunsFilesZipGetErrors, RunsFilesZipGetResponses, RunsGetData, RunsGetErrors, RunsGetResponses, RunsListData, RunsListErrors, RunsListResponses, RunsRerunData, RunsRerunErrors, RunsRerunResponses, RunsStartData, RunsStartErrors, RunsStartResponses, RunsTraceGetData, RunsTraceGetErrors, RunsTraceGetResponses, SourceLockfilePreviewData, SourceLockfilePreviewErrors, SourceLockfilePreviewResponses, SourceRawData, SourceRawErrors, SourceRawResponses, SourceReleasesData, SourceReleasesErrors, SourceReleasesResponses, SourceRepositoryData, SourceRepositoryErrors, SourceRepositoryResponses, SourceSecretsDecryptData, SourceSecretsDecryptErrors, SourceSecretsDecryptResponses, SourceSecretsEncryptData, SourceSecretsEncryptErrors, SourceSecretsEncryptResponses, WorkflowsGetData, WorkflowsGetErrors, WorkflowsGetResponses, WorkflowsListData, WorkflowsListErrors, WorkflowsListResponses, WorkflowsVersionsListData, WorkflowsVersionsListErrors, WorkflowsVersionsListResponses } from './types.gen';
+import type { AuthCheckData, AuthCheckErrors, AuthCheckResponses, AutomationsDatasetExportData, AutomationsDatasetExportErrors, AutomationsDatasetExportResponses, AutomationsDatasetImportData, AutomationsDatasetImportErrors, AutomationsDatasetImportResponses, AutomationsEvaluatorsGetData, AutomationsEvaluatorsGetErrors, AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsUpdateData, AutomationsEvaluatorsUpdateErrors, AutomationsEvaluatorsUpdateResponses, AutomationsExamplesCreateData, AutomationsExamplesCreateErrors, AutomationsExamplesCreateResponses, AutomationsExamplesDeleteData, AutomationsExamplesDeleteErrors, AutomationsExamplesDeleteResponses, AutomationsExamplesGetData, AutomationsExamplesGetErrors, AutomationsExamplesGetResponses, AutomationsExamplesListData, AutomationsExamplesListErrors, AutomationsExamplesListResponses, AutomationsExamplesRunData, AutomationsExamplesRunErrors, AutomationsExamplesRunResponses, AutomationsExamplesUpdateData, AutomationsExamplesUpdateErrors, AutomationsExamplesUpdateResponses, AutomationsExperimentsCancelData, AutomationsExperimentsCancelErrors, AutomationsExperimentsCancelResponses, AutomationsExperimentsCreateData, AutomationsExperimentsCreateErrors, AutomationsExperimentsCreateResponses, AutomationsExperimentsGetData, AutomationsExperimentsGetErrors, AutomationsExperimentsGetResponses, AutomationsExperimentsListData, AutomationsExperimentsListErrors, AutomationsExperimentsListResponses, AutomationsGetData, AutomationsGetErrors, AutomationsGetResponses, AutomationsListData, AutomationsListErrors, AutomationsListResponses, AutomationsTriggersGetData, AutomationsTriggersGetErrors, AutomationsTriggersGetResponses, AutomationsVersionsListData, AutomationsVersionsListErrors, AutomationsVersionsListResponses, FilesContentGetData, FilesContentGetErrors, FilesContentGetResponses, FilesCreateData, FilesCreateErrors, FilesCreateResponses, FilesDeleteData, FilesDeleteErrors, FilesDeleteResponses, FilesGetData, FilesGetErrors, FilesGetResponses, RunsArtifactsGetData, RunsArtifactsGetErrors, RunsArtifactsGetResponses, RunsArtifactsListData, RunsArtifactsListErrors, RunsArtifactsListResponses, RunsCancelData, RunsCancelErrors, RunsCancelResponses, RunsEvalResultsListData, RunsEvalResultsListErrors, RunsEvalResultsListResponses, RunsEventsListData, RunsEventsListErrors, RunsEventsListResponses, RunsFeedbackClearData, RunsFeedbackClearErrors, RunsFeedbackClearResponses, RunsFeedbackGetData, RunsFeedbackGetErrors, RunsFeedbackGetResponses, RunsFeedbackUpdateData, RunsFeedbackUpdateErrors, RunsFeedbackUpdateResponses, RunsGetData, RunsGetErrors, RunsGetResponses, RunsListData, RunsListErrors, RunsListResponses, RunsPromoteData, RunsPromoteErrors, RunsPromoteResponses, RunsRerunData, RunsRerunErrors, RunsRerunResponses, RunsStartData, RunsStartErrors, RunsStartResponses, RunsStepsListData, RunsStepsListErrors, RunsStepsListResponses, RunsTraceGetData, RunsTraceGetErrors, RunsTraceGetResponses, RunsUsageGetData, RunsUsageGetErrors, RunsUsageGetResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -19,24 +19,54 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 };
 
 /**
- * List or download agent source files
+ * Check API key identity
  *
- * List or read agent source files from Git.
+ * Return the tenant, user, API key, and scope represented by the current API key.
  */
-export const agentsFilesListOrGet = <ThrowOnError extends boolean = false>(options: Options<AgentsFilesListOrGetData, ThrowOnError>) => (options.client ?? client).get<AgentsFilesListOrGetResponses, AgentsFilesListOrGetErrors, ThrowOnError>({
+export const authCheck = <ThrowOnError extends boolean = false>(options?: Options<AuthCheckData, ThrowOnError>) => (options?.client ?? client).get<AuthCheckResponses, AuthCheckErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/{agentId}/files',
+    url: '/api/v1/auth/check',
     ...options
 });
 
 /**
- * Upload agent files (deprecated)
- *
- * Agent source is Git-backed. Use Git push or the builder instead.
+ * Export automation dataset
  */
-export const agentsFilesUploadBatch = <ThrowOnError extends boolean = false>(options: Options<AgentsFilesUploadBatchData, ThrowOnError>) => (options.client ?? client).post<unknown, AgentsFilesUploadBatchErrors, ThrowOnError>({
+export const automationsDatasetExport = <ThrowOnError extends boolean = false>(options: Options<AutomationsDatasetExportData, ThrowOnError>) => (options.client ?? client).get<AutomationsDatasetExportResponses, AutomationsDatasetExportErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/{agentId}/files',
+    url: '/api/v1/automations/{id}/dataset/export',
+    ...options
+});
+
+/**
+ * Import automation dataset
+ */
+export const automationsDatasetImport = <ThrowOnError extends boolean = false>(options: Options<AutomationsDatasetImportData, ThrowOnError>) => (options.client ?? client).post<AutomationsDatasetImportResponses, AutomationsDatasetImportErrors, ThrowOnError>({
+    ...formDataBodySerializer,
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/dataset/import',
+    ...options,
+    headers: {
+        'Content-Type': null,
+        ...options.headers
+    }
+});
+
+/**
+ * Get automation evaluators
+ */
+export const automationsEvaluatorsGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsEvaluatorsGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/evaluators',
+    ...options
+});
+
+/**
+ * Replace automation evaluators
+ */
+export const automationsEvaluatorsUpdate = <ThrowOnError extends boolean = false>(options: Options<AutomationsEvaluatorsUpdateData, ThrowOnError>) => (options.client ?? client).put<AutomationsEvaluatorsUpdateResponses, AutomationsEvaluatorsUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/evaluators',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -45,13 +75,29 @@ export const agentsFilesUploadBatch = <ThrowOnError extends boolean = false>(opt
 });
 
 /**
- * Upload one agent file (deprecated)
- *
- * Agent source is Git-backed. Use Git push or the builder instead.
+ * Delete automation example
  */
-export const agentsFilesPut = <ThrowOnError extends boolean = false>(options: Options<AgentsFilesPutData, ThrowOnError>) => (options.client ?? client).put<unknown, AgentsFilesPutErrors, ThrowOnError>({
+export const automationsExamplesDelete = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesDeleteData, ThrowOnError>) => (options.client ?? client).delete<AutomationsExamplesDeleteResponses, AutomationsExamplesDeleteErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/{agentId}/files',
+    url: '/api/v1/automations/{id}/examples/{exampleId}',
+    ...options
+});
+
+/**
+ * Get automation example
+ */
+export const automationsExamplesGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesGetResponses, AutomationsExamplesGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}',
+    ...options
+});
+
+/**
+ * Update automation example
+ */
+export const automationsExamplesUpdate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesUpdateData, ThrowOnError>) => (options.client ?? client).patch<AutomationsExamplesUpdateResponses, AutomationsExamplesUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -60,24 +106,29 @@ export const agentsFilesPut = <ThrowOnError extends boolean = false>(options: Op
 });
 
 /**
- * Get an agent
- *
- * Returns one agent by id or slug.
+ * Run automation example
  */
-export const agentsGet = <ThrowOnError extends boolean = false>(options: Options<AgentsGetData, ThrowOnError>) => (options.client ?? client).get<AgentsGetResponses, AgentsGetErrors, ThrowOnError>({
+export const automationsExamplesRun = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesRunData, ThrowOnError>) => (options.client ?? client).post<AutomationsExamplesRunResponses, AutomationsExamplesRunErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/{agentId}',
+    url: '/api/v1/automations/{id}/examples/{exampleId}/run',
     ...options
 });
 
 /**
- * Update an agent
- *
- * Updates mutable agent metadata and configuration.
+ * List automation examples
  */
-export const agentsUpdate = <ThrowOnError extends boolean = false>(options: Options<AgentsUpdateData, ThrowOnError>) => (options.client ?? client).patch<AgentsUpdateResponses, AgentsUpdateErrors, ThrowOnError>({
+export const automationsExamplesList = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesListData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesListResponses, AutomationsExamplesListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/{agentId}',
+    url: '/api/v1/automations/{id}/examples',
+    ...options
+});
+
+/**
+ * Create automation example
+ */
+export const automationsExamplesCreate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesCreateData, ThrowOnError>) => (options.client ?? client).post<AutomationsExamplesCreateResponses, AutomationsExamplesCreateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -86,24 +137,20 @@ export const agentsUpdate = <ThrowOnError extends boolean = false>(options: Opti
 });
 
 /**
- * Delete an agent email alias
- *
- * Revokes an email trigger alias for one agent.
+ * List automation experiments
  */
-export const agentsTriggersEmailDeleteAlias = <ThrowOnError extends boolean = false>(options: Options<AgentsTriggersEmailDeleteAliasData, ThrowOnError>) => (options.client ?? client).delete<AgentsTriggersEmailDeleteAliasResponses, AgentsTriggersEmailDeleteAliasErrors, ThrowOnError>({
+export const automationsExperimentsList = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsListData, ThrowOnError>) => (options.client ?? client).get<AutomationsExperimentsListResponses, AutomationsExperimentsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/{agentId}/triggers/email/{emailId}',
+    url: '/api/v1/automations/{id}/experiments',
     ...options
 });
 
 /**
- * Update an agent email alias
- *
- * Updates an email trigger alias for one agent.
+ * Create automation experiment
  */
-export const agentsTriggersEmailUpdateAlias = <ThrowOnError extends boolean = false>(options: Options<AgentsTriggersEmailUpdateAliasData, ThrowOnError>) => (options.client ?? client).patch<AgentsTriggersEmailUpdateAliasResponses, AgentsTriggersEmailUpdateAliasErrors, ThrowOnError>({
+export const automationsExperimentsCreate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsCreateData, ThrowOnError>) => (options.client ?? client).post<AutomationsExperimentsCreateResponses, AutomationsExperimentsCreateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/{agentId}/triggers/email/{emailId}',
+    url: '/api/v1/automations/{id}/experiments',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -112,103 +159,114 @@ export const agentsTriggersEmailUpdateAlias = <ThrowOnError extends boolean = fa
 });
 
 /**
- * Get an agent email trigger
- *
- * Returns email trigger configuration and aliases for one agent.
+ * Cancel automation experiment
  */
-export const agentsTriggersEmailGet = <ThrowOnError extends boolean = false>(options: Options<AgentsTriggersEmailGetData, ThrowOnError>) => (options.client ?? client).get<AgentsTriggersEmailGetResponses, AgentsTriggersEmailGetErrors, ThrowOnError>({
+export const automationsExperimentsCancel = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsCancelData, ThrowOnError>) => (options.client ?? client).post<AutomationsExperimentsCancelResponses, AutomationsExperimentsCancelErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/{agentId}/triggers/email',
+    url: '/api/v1/automations/{id}/experiments/{experimentId}/cancel',
     ...options
 });
 
 /**
- * Update an agent email trigger
- *
- * Enables or disables the email trigger for one agent.
+ * Get automation experiment
  */
-export const agentsTriggersEmailUpdate = <ThrowOnError extends boolean = false>(options: Options<AgentsTriggersEmailUpdateData, ThrowOnError>) => (options.client ?? client).patch<AgentsTriggersEmailUpdateResponses, AgentsTriggersEmailUpdateErrors, ThrowOnError>({
+export const automationsExperimentsGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsExperimentsGetResponses, AutomationsExperimentsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/{agentId}/triggers/email',
+    url: '/api/v1/automations/{id}/experiments/{experimentId}',
+    ...options
+});
+
+/**
+ * Get automation
+ *
+ * Get one runnable workflow or agent automation by id or typed alias.
+ */
+export const automationsGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsGetResponses, AutomationsGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}',
+    ...options
+});
+
+/**
+ * Get automation triggers
+ *
+ * Read trigger state for a workflow or agent automation. Trigger mutation is not public v1.
+ */
+export const automationsTriggersGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsTriggersGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsTriggersGetResponses, AutomationsTriggersGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/triggers',
+    ...options
+});
+
+/**
+ * List automation versions
+ *
+ * List versions for a workflow or agent automation through one read-only route.
+ */
+export const automationsVersionsList = <ThrowOnError extends boolean = false>(options: Options<AutomationsVersionsListData, ThrowOnError>) => (options.client ?? client).get<AutomationsVersionsListResponses, AutomationsVersionsListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/versions',
+    ...options
+});
+
+/**
+ * List automations
+ *
+ * List runnable workflow and agent automations in one collection.
+ */
+export const automationsList = <ThrowOnError extends boolean = false>(options?: Options<AutomationsListData, ThrowOnError>) => (options?.client ?? client).get<AutomationsListResponses, AutomationsListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations',
+    ...options
+});
+
+/**
+ * Download file content
+ *
+ * Download bytes for a reusable uploaded file.
+ */
+export const filesContentGet = <ThrowOnError extends boolean = false>(options: Options<FilesContentGetData, ThrowOnError>) => (options.client ?? client).get<FilesContentGetResponses, FilesContentGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/files/{id}/content',
+    ...options
+});
+
+/**
+ * Delete file
+ *
+ * Delete a reusable uploaded file. Historical run and dataset snapshots are separate artifacts.
+ */
+export const filesDelete = <ThrowOnError extends boolean = false>(options: Options<FilesDeleteData, ThrowOnError>) => (options.client ?? client).delete<FilesDeleteResponses, FilesDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/files/{id}',
+    ...options
+});
+
+/**
+ * Get file metadata
+ *
+ * Get metadata for a reusable uploaded file.
+ */
+export const filesGet = <ThrowOnError extends boolean = false>(options: Options<FilesGetData, ThrowOnError>) => (options.client ?? client).get<FilesGetResponses, FilesGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/files/{id}',
+    ...options
+});
+
+/**
+ * Upload file
+ *
+ * Upload a reusable file that can later be referenced by run inputs or dataset examples.
+ */
+export const filesCreate = <ThrowOnError extends boolean = false>(options: Options<FilesCreateData, ThrowOnError>) => (options.client ?? client).post<FilesCreateResponses, FilesCreateErrors, ThrowOnError>({
+    ...formDataBodySerializer,
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/files',
     ...options,
     headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': null,
         ...options.headers
     }
-});
-
-/**
- * Create an agent email alias
- *
- * Creates an email trigger alias for one agent.
- */
-export const agentsTriggersEmailCreateAlias = <ThrowOnError extends boolean = false>(options: Options<AgentsTriggersEmailCreateAliasData, ThrowOnError>) => (options.client ?? client).post<AgentsTriggersEmailCreateAliasResponses, AgentsTriggersEmailCreateAliasErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/{agentId}/triggers/email',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * List agent Git versions
- *
- * List Git release versions for an agent.
- */
-export const agentsVersionsList = <ThrowOnError extends boolean = false>(options: Options<AgentsVersionsListData, ThrowOnError>) => (options.client ?? client).get<AgentsVersionsListResponses, AgentsVersionsListErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/{agentId}/versions',
-    ...options
-});
-
-/**
- * List agents
- *
- * List agents with pagination.
- */
-export const agentsList = <ThrowOnError extends boolean = false>(options?: Options<AgentsListData, ThrowOnError>) => (options?.client ?? client).get<AgentsListResponses, AgentsListErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents',
-    ...options
-});
-
-/**
- * Create an agent
- *
- * Create an agent and scaffold its Git source package.
- */
-export const agentsCreate = <ThrowOnError extends boolean = false>(options: Options<AgentsCreateData, ThrowOnError>) => (options.client ?? client).post<AgentsCreateResponses, AgentsCreateErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * List agent email triggers
- *
- * Lists email trigger aliases for the authenticated organization.
- */
-export const agentsTriggersEmailList = <ThrowOnError extends boolean = false>(options?: Options<AgentsTriggersEmailListData, ThrowOnError>) => (options?.client ?? client).get<AgentsTriggersEmailListResponses, AgentsTriggersEmailListErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/agents/triggers/email',
-    ...options
-});
-
-/**
- * Sync an automation from latest source
- *
- * Reconciles lightweight automation metadata from the latest released Git source package. This does not enqueue executions.
- */
-export const automationsSync = <ThrowOnError extends boolean = false>(options: Options<AutomationsSyncData, ThrowOnError>) => (options.client ?? client).post<AutomationsSyncResponses, AutomationsSyncErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{automation}/sync',
-    ...options
 });
 
 /**
@@ -271,85 +329,23 @@ export const runsCancel = <ThrowOnError extends boolean = false>(options: Option
 });
 
 /**
- * Get run comparison
+ * List run eval results
  */
-export const runsComparisonGet = <ThrowOnError extends boolean = false>(options: Options<RunsComparisonGetData, ThrowOnError>) => (options.client ?? client).get<RunsComparisonGetResponses, RunsComparisonGetErrors, ThrowOnError>({
+export const runsEvalResultsList = <ThrowOnError extends boolean = false>(options: Options<RunsEvalResultsListData, ThrowOnError>) => (options.client ?? client).get<RunsEvalResultsListResponses, RunsEvalResultsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/comparison',
+    url: '/api/v1/runs/{id}/eval-results',
     ...options
 });
 
 /**
- * Connect to live run
- */
-export const runsConnect = <ThrowOnError extends boolean = false>(options: Options<RunsConnectData, ThrowOnError>) => (options.client ?? client).post<RunsConnectResponses, RunsConnectErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/connect',
-    ...options
-});
-
-/**
- * Get run definition snapshot
+ * List run events
  *
- * Workflow definition snapshot captured when the run was created. Workflow runs only; agent runs return not_found.
+ * List a stable chronological lifecycle timeline for a run.
  */
-export const runsDefinitionGet = <ThrowOnError extends boolean = false>(options: Options<RunsDefinitionGetData, ThrowOnError>) => (options.client ?? client).get<RunsDefinitionGetResponses, RunsDefinitionGetErrors, ThrowOnError>({
+export const runsEventsList = <ThrowOnError extends boolean = false>(options: Options<RunsEventsListData, ThrowOnError>) => (options.client ?? client).get<RunsEventsListResponses, RunsEventsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/definition',
+    url: '/api/v1/runs/{id}/events',
     ...options
-});
-
-/**
- * Delete expected artifact file
- */
-export const runsExpectedFileDelete = <ThrowOnError extends boolean = false>(options: Options<RunsExpectedFileDeleteData, ThrowOnError>) => (options.client ?? client).delete<RunsExpectedFileDeleteResponses, RunsExpectedFileDeleteErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/expected/{filename}',
-    ...options
-});
-
-/**
- * Download expected artifact file
- */
-export const runsExpectedFileGet = <ThrowOnError extends boolean = false>(options: Options<RunsExpectedFileGetData, ThrowOnError>) => (options.client ?? client).get<RunsExpectedFileGetResponses, RunsExpectedFileGetErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/expected/{filename}',
-    ...options
-});
-
-/**
- * Rename expected artifact file
- */
-export const runsExpectedFileUpdate = <ThrowOnError extends boolean = false>(options: Options<RunsExpectedFileUpdateData, ThrowOnError>) => (options.client ?? client).patch<RunsExpectedFileUpdateResponses, RunsExpectedFileUpdateErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/expected/{filename}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Get run expected artifacts
- */
-export const runsExpectedGet = <ThrowOnError extends boolean = false>(options: Options<RunsExpectedGetData, ThrowOnError>) => (options.client ?? client).get<RunsExpectedGetResponses, RunsExpectedGetErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/expected',
-    ...options
-});
-
-/**
- * Create or update expected artifacts
- */
-export const runsExpectedCreate = <ThrowOnError extends boolean = false>(options: Options<RunsExpectedCreateData, ThrowOnError>) => (options.client ?? client).post<RunsExpectedCreateResponses, RunsExpectedCreateErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/expected',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
 });
 
 /**
@@ -373,7 +369,7 @@ export const runsFeedbackGet = <ThrowOnError extends boolean = false>(options: O
 /**
  * Update run feedback
  */
-export const runsFeedbackUpdate = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackUpdateData, ThrowOnError>) => (options.client ?? client).patch<RunsFeedbackUpdateResponses, RunsFeedbackUpdateErrors, ThrowOnError>({
+export const runsFeedbackUpdate = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackUpdateData, ThrowOnError>) => (options.client ?? client).put<RunsFeedbackUpdateResponses, RunsFeedbackUpdateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/runs/{id}/feedback',
     ...options,
@@ -384,48 +380,14 @@ export const runsFeedbackUpdate = <ThrowOnError extends boolean = false>(options
 });
 
 /**
- * Download run output files zip
- *
- * Download agent run output files as a zip.
+ * Promote a run to a dataset example
  */
-export const runsFilesZipGet = <ThrowOnError extends boolean = false>(options: Options<RunsFilesZipGetData, ThrowOnError>) => (options.client ?? client).get<RunsFilesZipGetResponses, RunsFilesZipGetErrors, ThrowOnError>({
+export const runsPromote = <ThrowOnError extends boolean = false>(options: Options<RunsPromoteData, ThrowOnError>) => (options.client ?? client).post<RunsPromoteResponses, RunsPromoteErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/files-zip',
-    ...options
-});
-
-/**
- * Delete run input file
- */
-export const runsFilesDelete = <ThrowOnError extends boolean = false>(options: Options<RunsFilesDeleteData, ThrowOnError>) => (options.client ?? client).delete<RunsFilesDeleteResponses, RunsFilesDeleteErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/files/{fileId}',
-    ...options
-});
-
-/**
- * List run files
- *
- * List workflow run input and output file rows.
- */
-export const runsFilesList = <ThrowOnError extends boolean = false>(options: Options<RunsFilesListData, ThrowOnError>) => (options.client ?? client).get<RunsFilesListResponses, RunsFilesListErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/files',
-    ...options
-});
-
-/**
- * Upload run input file
- *
- * Upload a workflow run input file before execution starts.
- */
-export const runsFilesUpload = <ThrowOnError extends boolean = false>(options: Options<RunsFilesUploadData, ThrowOnError>) => (options.client ?? client).post<RunsFilesUploadResponses, RunsFilesUploadErrors, ThrowOnError>({
-    ...formDataBodySerializer,
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/files',
+    url: '/api/v1/runs/{id}/promote',
     ...options,
     headers: {
-        'Content-Type': null,
+        'Content-Type': 'application/json',
         ...options.headers
     }
 });
@@ -453,6 +415,17 @@ export const runsGet = <ThrowOnError extends boolean = false>(options: Options<R
 });
 
 /**
+ * List run steps
+ *
+ * List workflow steps or an agent-compatible execution step summary for a run.
+ */
+export const runsStepsList = <ThrowOnError extends boolean = false>(options: Options<RunsStepsListData, ThrowOnError>) => (options.client ?? client).get<RunsStepsListResponses, RunsStepsListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/steps',
+    ...options
+});
+
+/**
  * Get run trace
  */
 export const runsTraceGet = <ThrowOnError extends boolean = false>(options: Options<RunsTraceGetData, ThrowOnError>) => (options.client ?? client).get<RunsTraceGetResponses, RunsTraceGetErrors, ThrowOnError>({
@@ -462,108 +435,12 @@ export const runsTraceGet = <ThrowOnError extends boolean = false>(options: Opti
 });
 
 /**
- * Preview a source lockfile
+ * Get run usage
  *
- * Resolves a package ref and returns the would-be eigenpal.lock without enqueueing or writing runtime artifacts.
+ * Get token, credit, duration, and execution usage for a run.
  */
-export const sourceLockfilePreview = <ThrowOnError extends boolean = false>(options: Options<SourceLockfilePreviewData, ThrowOnError>) => (options.client ?? client).get<SourceLockfilePreviewResponses, SourceLockfilePreviewErrors, ThrowOnError>({
+export const runsUsageGet = <ThrowOnError extends boolean = false>(options: Options<RunsUsageGetData, ThrowOnError>) => (options.client ?? client).get<RunsUsageGetResponses, RunsUsageGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/source/lockfile',
-    ...options
-});
-
-/**
- * Preview a raw Git source file
- *
- * Reads a raw file from the organization Git repository for metadata previews.
- */
-export const sourceRaw = <ThrowOnError extends boolean = false>(options: Options<SourceRawData, ThrowOnError>) => (options.client ?? client).get<SourceRawResponses, SourceRawErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/source/raw',
-    ...options
-});
-
-/**
- * List Git source package releases
- *
- * Lists package-scoped Git release tags, or returns one exact version when requested.
- */
-export const sourceReleases = <ThrowOnError extends boolean = false>(options: Options<SourceReleasesData, ThrowOnError>) => (options.client ?? client).get<SourceReleasesResponses, SourceReleasesErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/source/releases',
-    ...options
-});
-
-/**
- * Get organization Git source repository
- *
- * Returns the authenticated organization Git remote used by hidden source CLI commands.
- */
-export const sourceRepository = <ThrowOnError extends boolean = false>(options?: Options<SourceRepositoryData, ThrowOnError>) => (options?.client ?? client).get<SourceRepositoryResponses, SourceRepositoryErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/source/repository',
-    ...options
-});
-
-/**
- * Decrypt a Git-backed source secret
- *
- * Decrypts one or more encrypted source secret values for the authenticated tenant. Single-secret requests require an execution id and are checked against that execution lockfile graph; batch `secrets[]` requests are tenant-scoped for local CLI use.
- */
-export const sourceSecretsDecrypt = <ThrowOnError extends boolean = false>(options: Options<SourceSecretsDecryptData, ThrowOnError>) => (options.client ?? client).post<SourceSecretsDecryptResponses, SourceSecretsDecryptErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/source/secrets/decrypt',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Encrypt a Git-backed source secret
- *
- * Encrypts one or more plaintext secret values for the authenticated tenant using the organization active decrypt key. Organization decrypt keys never leave the server; callers send plaintext over TLS with normal app authentication.
- */
-export const sourceSecretsEncrypt = <ThrowOnError extends boolean = false>(options: Options<SourceSecretsEncryptData, ThrowOnError>) => (options.client ?? client).post<SourceSecretsEncryptResponses, SourceSecretsEncryptErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/source/secrets/encrypt',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Get a workflow by id
- *
- * Get a workflow by id, including current YAML.
- */
-export const workflowsGet = <ThrowOnError extends boolean = false>(options: Options<WorkflowsGetData, ThrowOnError>) => (options.client ?? client).get<WorkflowsGetResponses, WorkflowsGetErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/workflows/{id}',
-    ...options
-});
-
-/**
- * List tagged versions for a workflow
- *
- * List published workflow versions.
- */
-export const workflowsVersionsList = <ThrowOnError extends boolean = false>(options: Options<WorkflowsVersionsListData, ThrowOnError>) => (options.client ?? client).get<WorkflowsVersionsListResponses, WorkflowsVersionsListErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/workflows/{id}/versions',
-    ...options
-});
-
-/**
- * List workflows
- *
- * List workflows with pagination.
- */
-export const workflowsList = <ThrowOnError extends boolean = false>(options?: Options<WorkflowsListData, ThrowOnError>) => (options?.client ?? client).get<WorkflowsListResponses, WorkflowsListErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/workflows',
+    url: '/api/v1/runs/{id}/usage',
     ...options
 });

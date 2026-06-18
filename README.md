@@ -1,11 +1,10 @@
 # @eigenpal/sdk
 
-Trigger EigenPal workflows from TypeScript.
+Trigger and inspect Eigenpal automations from TypeScript.
 
 [![npm](https://img.shields.io/npm/v/@eigenpal/sdk?color=3B5BDB&labelColor=555&label=npm)](https://www.npmjs.com/package/@eigenpal/sdk)
 [![downloads](https://img.shields.io/npm/dm/@eigenpal/sdk?color=3B5BDB&labelColor=555&label=downloads)](https://www.npmjs.com/package/@eigenpal/sdk)
 [![license](https://img.shields.io/badge/license-Apache--2.0-3B5BDB?labelColor=555)](https://github.com/eigenpal/sdk-typescript/blob/main/LICENSE)
-[![docs](https://img.shields.io/badge/docs-eigenpal%2Fsdk-3B5BDB?labelColor=555)](https://github.com/eigenpal/sdk-typescript)
 
 ## Install
 
@@ -13,202 +12,107 @@ Trigger EigenPal workflows from TypeScript.
 npm i @eigenpal/sdk
 ```
 
-Requires a TypeScript-aware runtime: Bun, Deno, Node 22+ (native TS), `tsx`, Next.js, Vite, or any modern bundler. Plain `node script.js` won't work — see [Configuration](./docs/configuration.md#typescript-runtime).
+Requires a TypeScript-aware runtime: Bun, Deno, Node 22+ (native TS), `tsx`, Next.js, Vite, or any modern bundler. Plain `node script.js` will not work; see [Configuration](./docs/configuration.md#typescript-runtime).
 
-Get an API key at **studio.eigenpal.com → Settings → API Keys**.
+Get an API key at **studio.eigenpal.com -> Settings -> API Keys**.
 
-## Quick start
+## Quick Start
 
 ```ts
-import { EigenpalClient, EigenpalValidationError } from '@eigenpal/sdk';
+import { EigenpalClient } from '@eigenpal/sdk';
 
 const client = new EigenpalClient({ apiKey: process.env.EIGENPAL_API_KEY });
 
-// Pass a File / Blob / { content, filename, mimeType }. The SDK uploads
-// the request as multipart/form-data, no base64 needed.
-const result = await client.workflows.executions.runAndWait('extract-invoice', {
-  contract_document: file,
-});
-console.log(result.finished, result.output);
-```
-
-## Authentication
-
-Generate an API key from the dashboard under **Settings → API Keys**, then pass it explicitly:
-
-```ts
-const client = new EigenpalClient({ apiKey: process.env.EIGENPAL_API_KEY });
-```
-
-The `apiKey` constructor option always wins. If you omit it, the SDK falls back to `process.env.EIGENPAL_API_KEY` for convenience, handy in scripts where you'd be writing exactly the line above.
-
-## Self-hosted
-
-Point the SDK at your own deployment via `baseUrl`:
-
-```ts
-const client = new EigenpalClient({
-  apiKey: process.env.EIGENPAL_API_KEY,
-  baseUrl: process.env.EIGENPAL_BASE_URL ?? 'https://eigenpal.acme.internal',
-});
-```
-
-`baseUrl` likewise wins over the `EIGENPAL_BASE_URL` env fallback. Defaults to `https://studio.eigenpal.com` (the hosted cloud).
-
-## Starting runs
-
-`client.run(target, input?, options?)` starts a workflow or agent run. Targets can be strings such as `workflows.extract-invoice` / `agents.invoice-agent` or structured objects like `{ type: 'workflow', slug: 'extract-invoice' }`.
-
-```ts
-// Async: returns immediately with { id }.
-const { id: runId } = await client.run('workflows.extract-invoice', {
-  contract_document: file,
-});
-
-// Sync: server holds the connection up to 60 seconds.
 const result = await client.run(
-  { type: 'workflow', slug: 'extract-invoice', version: 'latest' },
+  'workflows.extract-invoice',
   { contract_document: file },
   { waitForCompletion: 60 }
 );
-console.log(result.finished, result.output);
 
-// Long-running: client-side polling, default 5min cap.
-const final = await client.workflows.executions.runAndWait('extract-invoice', {
-  contract_document: file,
-});
+if (result.finished) {
+  console.log(result.output);
+}
 ```
 
-The second argument is the input map keyed by input name. Pass `undefined` for inputs-less runs. `options` carries `waitForCompletion` and workflow `overrides`; put the workflow version or agent source ref in the target.
+`target` is always typed: `workflows.<slug>` or `agents.<slug>`. That keeps workflow and agent slugs unambiguous.
 
-## File inputs
+## Automations
 
-When a workflow input is a file, pass a `File`, `Blob`, or explicit `{ content, filename, mimeType }` descriptor. The SDK auto-detects them and uploads the request as `multipart/form-data` (the same shape as `curl -F`, no base64 round-trip):
+Workflows and agents are exposed as automations.
 
 ```ts
-// Browser: File from <input type="file">
-await client.run('workflows.extract-invoice', { contract_document: file });
-
-// Node: Buffer from fs
-import { readFile } from 'node:fs/promises';
-const buffer = await readFile('contract.pdf');
-await client.run('workflows.extract-invoice', {
-  contract_document: {
-    content: buffer,
-    filename: 'contract.pdf',
-    mimeType: 'application/pdf',
-  },
-});
+const { data } = await client.automations.list({ search: 'invoice' });
+const automation = await client.automations.get('workflows.extract-invoice');
+const versions = await client.automations.versions('workflows.extract-invoice');
+const triggers = await client.automations.triggers('workflows.extract-invoice');
 ```
 
-> **Don't** base64-encode files yourself. The SDK is multipart-first; base64 doubles the payload size and skips the optimised upload path.
-
-## Execution polling
+## Runs
 
 ```ts
-const runs = await client.runs.list({
+const { id } = await client.run('agents.invoice-agent', { invoice: file });
+
+const run = await client.runs.get(id, { expand: ['usage', 'execution'] });
+const usage = await client.runs.usage(id);
+const steps = await client.runs.steps(id);
+const events = await client.runs.events(id);
+const trace = await client.runs.trace.get(id);
+
+await client.runs.cancel(id);
+await client.rerun(id, { waitForCompletion: 60 });
+```
+
+List calls use the same run API for workflows, agents, manual runs, and eval runs:
+
+```ts
+const recentFailures = await client.runs.list({
   type: 'workflow',
-  source: 'extract-invoice',
   status: 'failed,cancelled',
-});
-
-const run = await client.runs.get(runId);
-//   { id, type, finished, output, files, error, timing, ... }
-
-// Add heavier optional sections with `expand`.
-const withUsage = await client.runs.get(runId, { expand: ['usage', 'execution'] });
-console.log(
-  withUsage.output,
-  withUsage.files,
-  withUsage.error,
-  withUsage.usage,
-  withUsage.execution
-);
-
-const list = await client.runs.list({
-  type: 'workflow',
-  source: 'extract-invoice',
-  status: ['failed', 'cancelled'],
-  from: 'now()-7d',
   limit: 50,
 });
-
-await client.runs.cancel(runId);
 ```
 
-`/api/v1/runs` is the shared run API for workflow, agent, and eval runs. Use `type=workflow|agent`
-and `source=<workflowId-or-agentId>` to scope list calls.
+## Files And Artifacts
 
-## Workflows
-
-```ts
-await client.workflows.list({ search: 'invoice', limit: 20 });
-await client.workflows.get('extract-invoice');
-await client.workflows.versions('extract-invoice');
-```
-
-## Agents
+Use `client.files` for reusable upload-first blobs. When referenced by a run input, Eigenpal snapshots the file into run-scoped artifacts.
 
 ```ts
-await client.agents.list({ search: 'invoice' });
-await client.agents.get('invoice-agent');
+const uploaded = await client.files.upload(file);
 
-const { id: agentRunId } = await client.run('agents.invoice-agent', {
-  invoice: file,
+const started = await client.run('workflows.extract-invoice', {
+  contract_document: { fileId: uploaded.id },
 });
 
-await client.runs.get(agentRunId);
-await client.runs.cancel(agentRunId);
+const artifacts = await client.runs.artifacts.list(started.id);
+const pdf = await client.runs.artifacts.download(started.id, artifacts.artifacts[0].path);
 ```
 
-Agent run listing uses the same shared runs API with `type: 'agent'` and the agent id or slug as
-`source`.
+You can also pass a `File`, `Blob`, or `{ content, filename, mimeType }` directly to `client.run`; the SDK sends multipart form data automatically.
 
 ## Errors
 
 Every non-2xx response throws a typed subclass of `EigenpalError`:
 
-| HTTP            | Class                     | Notes                                                |
-| --------------- | ------------------------- | ---------------------------------------------------- |
-| 400             | `EigenpalValidationError` | `.issues` carries the per-field problems             |
-| 401             | `EigenpalAuthError`       | Bad / missing API key                                |
-| 403             | `EigenpalForbiddenError`  | API trigger disabled, scope mismatch                 |
-| 404             | `EigenpalNotFoundError`   | Workflow / execution doesn't exist                   |
-| 429             | `EigenpalRateLimitError`  | `.retryAfter` is the server-suggested wait (seconds) |
-| 5xx             | `EigenpalServerError`     | Auto-retried up to `maxRetries`                      |
-| timeout / abort | `EigenpalTimeoutError`    |                                                      |
-
-```ts
-import { EigenpalClient, EigenpalValidationError } from '@eigenpal/sdk';
-
-const client = new EigenpalClient({ apiKey: process.env.EIGENPAL_API_KEY });
-
-try {
-  // First arg accepts the workflow slug ('extract-invoice') or id ('wf_abc123').
-  const result = await client.workflows.executions.runAndWait('extract-invoice', {
-    language: 'en',
-  });
-  console.log(result.finished, result.output);
-} catch (err) {
-  if (err instanceof EigenpalValidationError) {
-    for (const issue of err.issues) console.error(`${issue.field}: ${issue.message}`);
-  }
-  throw err;
-}
-```
-
-For file inputs, see [docs/files.md](./docs/files.md).
+| HTTP            | Class                     |
+| --------------- | ------------------------- |
+| 400             | `EigenpalValidationError` |
+| 401             | `EigenpalAuthError`       |
+| 403             | `EigenpalForbiddenError`  |
+| 404             | `EigenpalNotFoundError`   |
+| 429             | `EigenpalRateLimitError`  |
+| 5xx             | `EigenpalServerError`     |
+| timeout / abort | `EigenpalTimeoutError`    |
 
 ## Reference
 
-| Topic                                     | What's in it                                       |
-| ----------------------------------------- | -------------------------------------------------- |
-| [Workflows](./docs/workflows.md)          | List, get, trigger runs, pin versions.             |
-| [Executions](./docs/executions.md)        | Status, polling, cancel, run-and-wait.             |
-| [File inputs](./docs/files.md)            | Multipart upload from File, Blob, Buffer, or path. |
-| [Errors](./docs/errors.md)                | Typed exceptions, retries, request ids.            |
-| [Configuration](./docs/configuration.md)  | API key, baseUrl, timeouts, headers.               |
-| [Full API reference](./docs/reference.md) | Every method, generated from the OpenAPI spec.     |
+| Topic                                     | What is in it                                                       |
+| ----------------------------------------- | ------------------------------------------------------------------- |
+| [Automations](./docs/workflows.md)        | List, inspect, versions, triggers.                                  |
+| [Runs](./docs/executions.md)              | Start, poll, cancel, rerun, usage, steps, events, traces, feedback. |
+| [File inputs](./docs/files.md)            | Multipart upload from File, Blob, Buffer, or path.                  |
+| [Errors](./docs/errors.md)                | Typed exceptions, retries, request ids.                             |
+| [Configuration](./docs/configuration.md)  | API key, baseUrl, timeouts, headers.                                |
+| [Full API reference](./docs/reference.md) | Every method, generated from OpenAPI.                               |
 
 ## License
 

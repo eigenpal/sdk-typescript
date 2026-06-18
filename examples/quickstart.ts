@@ -1,8 +1,8 @@
 /**
  * Run with: `EIGENPAL_API_KEY=eig_live_… bun examples/quickstart.ts`
  *
- * Lists workflows, picks the first one, triggers a run, and polls until the
- * execution reaches a terminal state.
+ * Lists automations, picks the first one, triggers a run, and waits until the
+ * run reaches a terminal state.
  */
 import { EigenpalClient, EigenpalError } from '../src';
 
@@ -14,22 +14,28 @@ async function main() {
     baseUrl: process.env.EIGENPAL_BASE_URL, // for self-hosted; defaults to cloud
   });
 
-  const { data: workflows } = await client.workflows.list({ limit: 1 });
-  if (workflows.length === 0) {
-    console.log('No workflows yet. Create one in the dashboard, then re-run.');
+  const { data: automations } = await client.automations.list({ limit: 1 });
+  if (automations.length === 0) {
+    console.log('No automations yet. Create one in the dashboard, then re-run.');
     return;
   }
-  const workflow = workflows[0];
-  console.log(`Triggering ${workflow.id} @ version ${workflow.version ?? '<unreleased>'}`);
+  const automation = automations[0];
+  console.log(`Triggering ${automation.type} ${automation.slug} (${automation.id})`);
 
-  const result = await client.workflows.executions.runAndWait(
-    workflow.id,
-    /* inputs: */ {},
-    { timeoutMs: 5 * 60_000 }
+  const result = await client.run(
+    { type: automation.type, slug: automation.slug },
+    /* input: */ {},
+    { waitForCompletion: 300 }
   );
 
   console.log('finished:', result.finished);
-  console.log('output:', JSON.stringify(result.output, null, 2));
+  if (result.finished) {
+    console.log('output:', JSON.stringify(result.output, null, 2));
+  } else {
+    console.log(
+      `Run ${result.id} still in flight; fetch it later with client.runs.get('${result.id}').`
+    );
+  }
 }
 
 main().catch((err) => {

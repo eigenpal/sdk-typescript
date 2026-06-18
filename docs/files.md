@@ -49,9 +49,9 @@ await client.run('workflows.compare-versions', {
 
 Each file becomes a `files.<fieldName>` multipart part. Mix files and scalar inputs freely; scalars ride in the `input` JSON part automatically.
 
-## Nested files aren't extracted
+## Nested files are not extracted
 
-Only top-level file values become multipart fields. Files inside arrays or nested objects stay in the `input` JSON part and the server won't see them as uploads:
+Only top-level file values become multipart fields. Files inside arrays or nested objects stay in the `input` JSON part and the server will not see them as uploads:
 
 ```ts
 // DON'T — `documents` becomes a JSON array of `{}` objects, no upload.
@@ -61,7 +61,7 @@ await client.run('workflows.compare', { documents: [file1, file2] });
 await client.run('workflows.compare', { document_0: file1, document_1: file2 });
 ```
 
-## Don't base64 yourself
+## Do not base64 yourself
 
 ```ts
 // Don't do this. Doubles the payload size and skips the optimised path.

@@ -7,7 +7,7 @@ Every non-2xx response throws a typed subclass of `EigenpalError`.
 | 400             | `EigenpalValidationError` | `.issues` carries per-field problems                                 |
 | 401             | `EigenpalAuthError`       | Bad / missing API key                                                |
 | 403             | `EigenpalForbiddenError`  | `api_trigger_disabled`, `manual_trigger_disabled`, or scope mismatch |
-| 404             | `EigenpalNotFoundError`   | Workflow / execution doesn't exist                                   |
+| 404             | `EigenpalNotFoundError`   | Automation / run does not exist                                      |
 | 429             | `EigenpalRateLimitError`  | `.retryAfter` is the server-suggested wait (seconds)                 |
 | 5xx             | `EigenpalServerError`     | Auto-retried up to `maxRetries`                                      |
 | timeout / abort | `EigenpalTimeoutError`    |                                                                      |

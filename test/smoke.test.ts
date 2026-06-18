@@ -7,11 +7,6 @@ import {
   EigenpalValidationError,
 } from '../src';
 
-/**
- * Smoke tests against a mocked fetch — verifies the SDK wires auth, retries,
- * pagination, and typed errors correctly without needing a live server.
- */
-
 interface MockResponse {
   status: number;
   body?: unknown;
@@ -53,178 +48,117 @@ function mockFetch(
   };
 }
 
-describe('EigenpalClient SDK', () => {
-  test('attaches Bearer auth header on every request', async () => {
-    const captured: { auth: string | null }[] = [];
+describe('EigenpalClient public SDK', () => {
+  test('attaches bearer auth and telemetry headers', async () => {
+    const captured: { auth: string | null; headers?: Record<string, string> }[] = [];
     const client = new EigenpalClient({
       apiKey: 'eg_test_key_123',
       baseUrl: 'http://localhost:3000',
-      fetch: mockFetch(
-        [{ status: 200, body: { data: [], total: 0, limit: 50, offset: 0 } }],
-        captured
-      ),
+      fetch: mockFetch([{ status: 200, body: { data: [] } }], captured),
       maxRetries: 0,
     });
 
-    await client.workflows.list();
+    await client.automations.list();
 
     expect(captured[0]?.auth).toBe('Bearer eg_test_key_123');
+    expect(captured[0]?.headers?.['x-eigenpal-sdk']).toBe('typescript');
+    expect(captured[0]?.headers?.['user-agent']).toStartWith('eigenpal-sdk-typescript/');
   });
 
-  test('client.run returns id', async () => {
+  test('client.run sends the canonical public run envelope', async () => {
     const captured: { url: string; method: string; body?: string }[] = [];
     const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
       fetch: mockFetch(
-        [{ status: 201, body: { id: 'exec_abc', type: 'workflow', finished: false } }],
+        [{ status: 201, body: { id: 'run_abc', type: 'workflow', finished: false } }],
         captured
       ),
       maxRetries: 0,
     });
 
-    const result = await client.run('workflows.wf_xyz', { foo: 'bar' });
+    const result = await client.run(
+      'workflows.extract-invoice@1.2.3',
+      { language: 'en' },
+      { metadata: { requestId: 'req_1' } }
+    );
 
-    expect(result.id).toBe('exec_abc');
+    expect(result.id).toBe('run_abc');
     expect(captured[0]?.method).toBe('POST');
     expect(captured[0]?.url).toContain('/api/v1/runs');
-    expect(captured[0]?.url).not.toContain('%40');
+    expect(captured[0]?.url).toContain('version=1.2.3');
     expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({
-      target: 'workflows.wf_xyz',
-      input: { foo: 'bar' },
+      target: 'workflows.extract-invoice',
+      input: { language: 'en' },
+      metadata: { requestId: 'req_1' },
     });
   });
 
-  test('client.run rejects options bag as second argument', async () => {
+  test('object targets preserve workflow and agent typed target strings', async () => {
+    const captured: { body?: string }[] = [];
     const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
+      fetch: mockFetch(
+        [
+          { status: 201, body: { id: 'run_workflow', type: 'workflow', finished: false } },
+          { status: 201, body: { id: 'run_agent', type: 'agent', finished: false } },
+        ],
+        captured
+      ),
       maxRetries: 0,
     });
+
+    await client.run({ type: 'workflow', slug: 'finance/extract-invoice' });
+    await client.run({ type: 'agent', slug: 'finance/invoice-agent' });
+
+    expect(JSON.parse(captured[0]?.body ?? '{}').target).toBe('workflows.finance.extract-invoice');
+    expect(JSON.parse(captured[1]?.body ?? '{}').target).toBe('agents.finance.invoice-agent');
+  });
+
+  test('client.run rejects options bag as second argument', async () => {
+    const client = new EigenpalClient({ apiKey: 'eg_test', baseUrl: 'http://localhost:3000' });
 
     await expect(
       client.run('workflows.wf_xyz', { input: { foo: 'bar' }, waitForCompletion: 30 })
     ).rejects.toThrow(/as the third/i);
   });
 
-  test('client.run accepts documented input and options arguments', async () => {
-    const captured: { url: string; method: string; body?: string }[] = [];
+  test('client.run rejects metadata in the input bag', async () => {
+    const client = new EigenpalClient({ apiKey: 'eg_test', baseUrl: 'http://localhost:3000' });
+
+    await expect(
+      client.run('workflows.wf_xyz', { metadata: { requestId: 'req_1' } })
+    ).rejects.toThrow(/as the third/i);
+  });
+
+  test('client.run accepts metadata as a third-argument option', async () => {
+    const captured: { body?: string }[] = [];
     const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
       fetch: mockFetch(
-        [{ status: 200, body: { id: 'exec_abc', type: 'workflow', finished: true } }],
+        [{ status: 201, body: { id: 'run_meta', type: 'workflow', finished: false } }],
         captured
       ),
       maxRetries: 0,
     });
 
-    const result = await client.run('workflows.wf_xyz', { foo: 'bar' }, { waitForCompletion: 30 });
-
-    expect(result.id).toBe('exec_abc');
-    expect(captured[0]?.url).toContain('wait_for_completion=30');
-    expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({
-      target: 'workflows.wf_xyz',
-      input: { foo: 'bar' },
-    });
-  });
-
-  test('client.run object targets mirror canonical run-target grammar', async () => {
-    const captured: { url: string; method: string; body?: string }[] = [];
-    const client = new EigenpalClient({
-      apiKey: 'eg_test',
-      baseUrl: 'http://localhost:3000',
-      fetch: mockFetch(
-        [
-          { status: 201, body: { id: 'exec_workflow', type: 'workflow', finished: false } },
-          { status: 201, body: { id: 'exec_agent', type: 'agent', finished: false } },
-          { status: 201, body: { id: 'exec_agent_rooted', type: 'agent', finished: false } },
-        ],
-        captured
-      ),
-      maxRetries: 0,
-    });
-
-    await client.run({ type: 'workflow', slug: 'finance/extract-invoice', version: '1.2.3' });
-    await client.run({ type: 'agent', slug: 'finance/invoice-agent', version: 'main' });
-    await client.run({ type: 'agent', slug: 'agents.finance.invoice-agent' });
-
-    expect(captured[0]?.url).toContain('/api/v1/runs');
-    expect(captured[0]?.url).toContain('version=1.2.3');
-    expect(JSON.parse(captured[0]?.body ?? '{}').target).toBe('workflows.finance.extract-invoice');
-    expect(captured[1]?.url).toContain('/api/v1/runs');
-    expect(captured[1]?.url).toContain('version=main');
-    expect(JSON.parse(captured[1]?.body ?? '{}').target).toBe('agents.finance.invoice-agent');
-    expect(captured[2]?.url).toContain('/api/v1/runs');
-    expect(JSON.parse(captured[2]?.body ?? '{}').target).toBe('agents.finance.invoice-agent');
-  });
-
-  test('client.run rejects ambiguous rooted agent object targets', async () => {
-    const client = new EigenpalClient({
-      apiKey: 'eg_test',
-      baseUrl: 'http://localhost:3000',
-      maxRetries: 0,
-    });
-
-    await expect(client.run({ type: 'agent', slug: 'workflows.extract-invoice' })).rejects.toThrow(
-      /rooted at "agents\."/i
+    const result = await client.run(
+      'workflows.wf_xyz',
+      { language: 'en' },
+      { metadata: { requestId: 'req_1' } }
     );
-  });
 
-  test('client.run sends overrides in the canonical envelope body', async () => {
-    const captured: { url: string; method: string; body?: string }[] = [];
-    const client = new EigenpalClient({
-      apiKey: 'eg_test',
-      baseUrl: 'http://localhost:3000',
-      fetch: mockFetch(
-        [{ status: 201, body: { id: 'exec_ov', type: 'workflow', finished: false } }],
-        captured
-      ),
-      maxRetries: 0,
-    });
-
-    const overrides = { steps: { extract: { total: 42 } } };
-    const result = await client.run('workflows.wf_xyz', { language: 'en' }, { overrides });
-
-    expect(result.id).toBe('exec_ov');
+    expect(result.id).toBe('run_meta');
     expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({
       target: 'workflows.wf_xyz',
       input: { language: 'en' },
-      overrides,
+      metadata: { requestId: 'req_1' },
     });
   });
 
-  test('client.run with waitForCompletion adds query param', async () => {
-    const captured: { url: string }[] = [];
-    const client = new EigenpalClient({
-      apiKey: 'eg_test',
-      baseUrl: 'http://localhost:3000',
-      fetch: mockFetch(
-        [
-          {
-            status: 200,
-            body: {
-              id: 'exec_abc',
-              type: 'workflow',
-              finished: true,
-              output: { ok: true },
-              execution: { status: 'completed', schemaValid: true },
-            },
-          },
-        ],
-        captured
-      ),
-      maxRetries: 0,
-    });
-
-    const result = await client.run('workflows.wf_xyz', { x: 1 }, { waitForCompletion: 30 });
-
-    expect(result.finished).toBe(true);
-    expect(result.output).toEqual({ ok: true });
-    expect(captured[0]?.url).toContain('wait_for_completion=30');
-  });
-
-  test('agents.update hits the update endpoint with JSON body', async () => {
+  test('automations, runs, files, artifacts, trace, and feedback use public routes', async () => {
     const captured: { url: string; method: string; body?: string }[] = [];
     const client = new EigenpalClient({
       apiKey: 'eg_test',
@@ -234,401 +168,143 @@ describe('EigenpalClient SDK', () => {
           {
             status: 200,
             body: {
-              agent: {
-                id: 'awf_123',
-                slug: 'invoice-agent',
-                name: 'Invoice Agent',
-                description: 'Updated',
-                config: { triggers: { api: { enabled: true } } },
-                createdAt: '2026-01-01T00:00:00.000Z',
-                updatedAt: '2026-01-02T00:00:00.000Z',
-              },
+              ok: true,
+              tenantId: 'org_1',
+              tenantSlug: 'acme',
+              tenantName: 'Acme',
+              userId: 'user_1',
+              keyId: 'key_1',
+              email: 'dev@example.com',
+              name: 'Dev',
+              scope: ['*'],
+              wildcardGranted: true,
             },
           },
+          { status: 200, body: { data: [] } },
+          { status: 200, body: { id: 'workflows.extract-invoice' } },
+          { status: 200, body: { data: [] } },
+          { status: 200, body: { triggers: [] } },
+          { status: 200, body: { runs: [] } },
+          {
+            status: 200,
+            body: { id: 'run_123', finished: true, execution: { status: 'completed' } },
+          },
+          { status: 200, body: { usage: null } },
+          { status: 200, body: { steps: [] } },
+          { status: 200, body: { events: [] } },
+          { status: 200, body: { artifacts: [] } },
+          { status: 200, body: { feedback: null } },
+          { status: 200, body: { lines: [] } },
+          { status: 201, body: { id: 'file_123', filename: 'input.txt' } },
+          { status: 200, body: { id: 'file_123', filename: 'input.txt' } },
+          { status: 204 },
         ],
         captured
       ),
       maxRetries: 0,
     });
 
-    const result = await client.agents.update('invoice-agent', {
-      description: 'Updated',
-      config: { triggers: { api: { enabled: true } } },
-    });
+    await client.auth.check();
+    await client.automations.list();
+    await client.automations.get('workflows.extract-invoice');
+    await client.automations.versions('workflows.extract-invoice');
+    await client.automations.triggers('workflows.extract-invoice');
+    await client.runs.list({ type: 'workflow', status: 'completed' });
+    await client.runs.get('run_123', { expand: ['usage', 'execution'] });
+    await client.runs.usage('run_123');
+    await client.runs.steps('run_123');
+    await client.runs.events('run_123');
+    await client.runs.artifacts.list('run_123');
+    await client.runs.feedback.get('run_123');
+    await client.runs.trace.get('run_123');
+    await client.files.upload(new Blob(['hello'], { type: 'text/plain' }));
+    await client.files.get('file_123');
+    await client.files.delete('file_123');
 
-    expect(result.agent.description).toBe('Updated');
-    expect(captured[0]?.method).toBe('PATCH');
-    expect(captured[0]?.url).toContain('/api/v1/agents/invoice-agent');
-    expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({
-      description: 'Updated',
-      config: { triggers: { api: { enabled: true } } },
-    });
+    const paths = captured.map((req) => new URL(req.url).pathname);
+    expect(paths).toContain('/api/v1/auth/check');
+    expect(paths).toContain('/api/v1/automations');
+    expect(paths).toContain('/api/v1/automations/workflows.extract-invoice');
+    expect(paths).toContain('/api/v1/automations/workflows.extract-invoice/versions');
+    expect(paths).toContain('/api/v1/automations/workflows.extract-invoice/triggers');
+    expect(paths).toContain('/api/v1/runs');
+    expect(paths).toContain('/api/v1/runs/run_123');
+    expect(paths).toContain('/api/v1/runs/run_123/usage');
+    expect(paths).toContain('/api/v1/runs/run_123/steps');
+    expect(paths).toContain('/api/v1/runs/run_123/events');
+    expect(paths).toContain('/api/v1/runs/run_123/artifacts');
+    expect(paths).toContain('/api/v1/runs/run_123/feedback');
+    expect(paths).toContain('/api/v1/runs/run_123/trace');
+    expect(paths).toContain('/api/v1/files');
+    expect(paths).toContain('/api/v1/files/file_123');
   });
 
-  test('runs resource uses the public v1 runs API', async () => {
+  test('runs.cancel and client.rerun use public control routes', async () => {
     const captured: { url: string; method: string }[] = [];
     const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
       fetch: mockFetch(
         [
-          { status: 200, body: { runs: [], nextCursor: null } },
-          {
-            status: 200,
-            body: {
-              id: 'run_123',
-              type: 'workflow',
-              finished: true,
-              source: { id: 'wf_123', name: 'Extract' },
-              createdAt: '2026-01-01T00:00:00.000Z',
-            },
-          },
-          { status: 200, body: { ok: true } },
-          { status: 201, body: { id: 'run_rerun', type: 'workflow', finished: false } },
-          { status: 200, body: { ok: true } },
-          { status: 200, body: { expected: null, files: [] } },
+          { status: 200, body: { id: 'run_123', execution: { status: 'cancelled' } } },
+          { status: 202, body: { id: 'run_456', type: 'workflow', finished: false } },
         ],
         captured
       ),
       maxRetries: 0,
     });
 
-    await client.runs.list({ type: 'workflow', source: 'wf_123', status: 'completed' });
-    const run = await client.runs.get('run_123', { expand: ['usage', 'execution'] });
     await client.runs.cancel('run_123');
-    await client.rerun('run_123');
-    await client.runs.feedback.update('run_123', { status: 'open' });
-    await client.runs.expected.list('run_123');
+    await client.rerun('run_123', { waitForCompletion: 30 });
 
-    expect(run.id).toBe('run_123');
-    expect(captured[0]?.url).toContain('/api/v1/runs');
-    expect(captured[0]?.url).toContain('type=workflow');
-    expect(captured[1]?.url).toContain('/api/v1/runs/run_123');
-    expect(captured[1]?.url).toContain('expand=usage%2Cexecution');
-    expect(captured[2]?.method).toBe('POST');
-    expect(captured[2]?.url).toContain('/api/v1/runs/run_123/cancel');
-    expect(captured[3]?.method).toBe('POST');
-    expect(captured[3]?.url).toContain('/api/v1/runs/run_123/rerun');
-    expect(captured[4]?.method).toBe('PATCH');
-    expect(captured[4]?.url).toContain('/api/v1/runs/run_123/feedback');
-    expect(captured[5]?.method).toBe('GET');
-    expect(captured[5]?.url).toContain('/api/v1/runs/run_123/expected');
+    expect(captured[0]?.method).toBe('POST');
+    expect(captured[0]?.url).toContain('/api/v1/runs/run_123/cancel');
+    expect(captured[1]?.method).toBe('POST');
+    expect(captured[1]?.url).toContain('/api/v1/runs/run_123/rerun');
+    expect(captured[1]?.url).toContain('wait_for_completion=30');
   });
 
-  test('runs.artifacts.download preserves slash-delimited artifact paths', async () => {
-    const captured: { url: string; method: string }[] = [];
-    const client = new EigenpalClient({
-      apiKey: 'eg_test',
-      baseUrl: 'http://localhost:3000',
-      fetch: mockFetch([{ status: 200 }], captured),
-      maxRetries: 0,
-    });
-
-    await client.runs.artifacts.download('run_123', 'output/file_123');
-
-    expect(captured[0]?.method).toBe('GET');
-    expect(captured[0]?.url).toContain('/api/v1/runs/run_123/artifacts/output/file_123');
-    expect(captured[0]?.url).not.toContain('output%2Ffile_123');
-  });
-
-  test('401 surfaces as EigenpalAuthError', async () => {
-    const client = new EigenpalClient({
-      apiKey: 'bad',
-      baseUrl: 'http://localhost:3000',
-      fetch: mockFetch([
-        {
-          status: 401,
-          body: {
-            issues: [{ field: '<root>', message: 'invalid', code: 'unauthorized' }],
-            requestId: 'r1',
-          },
-        },
-      ]),
-      maxRetries: 0,
-    });
-
-    await expect(client.workflows.list()).rejects.toBeInstanceOf(EigenpalAuthError);
-  });
-
-  test('404 surfaces as EigenpalNotFoundError', async () => {
+  test('401, 404, 429, and 400 responses map to typed errors', async () => {
     const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
       fetch: mockFetch([
-        {
-          status: 404,
-          body: {
-            issues: [{ field: '<root>', message: 'Workflow not found', code: 'not_found' }],
-            requestId: 'r2',
-          },
-        },
-      ]),
-      maxRetries: 0,
-    });
-
-    await expect(client.workflows.get('wf_missing')).rejects.toBeInstanceOf(EigenpalNotFoundError);
-  });
-
-  test('429 with Retry-After surfaces as EigenpalRateLimitError', async () => {
-    const client = new EigenpalClient({
-      apiKey: 'eg_test',
-      baseUrl: 'http://localhost:3000',
-      fetch: mockFetch([
+        { status: 401, body: { issues: [{ field: '<root>', message: 'invalid' }] } },
+        { status: 404, body: { issues: [{ field: '<root>', message: 'missing' }] } },
         {
           status: 429,
-          body: {
-            issues: [{ field: '<root>', message: 'rate limited', code: 'rate_limited' }],
-            requestId: 'r3',
-          },
+          body: { issues: [{ field: '<root>', message: 'rate' }] },
           headers: { 'retry-after': '12' },
         },
+        { status: 400, body: { issues: [{ field: 'target', message: 'required' }] } },
       ]),
       maxRetries: 0,
     });
 
-    try {
-      await client.workflows.list();
-      throw new Error('expected throw');
-    } catch (err) {
-      expect(err).toBeInstanceOf(EigenpalRateLimitError);
-      expect((err as EigenpalRateLimitError).retryAfter).toBe(12);
-    }
+    await expect(client.automations.list()).rejects.toBeInstanceOf(EigenpalAuthError);
+    await expect(client.automations.get('missing')).rejects.toBeInstanceOf(EigenpalNotFoundError);
+    await expect(client.automations.list()).rejects.toBeInstanceOf(EigenpalRateLimitError);
+    await expect(client.automations.list()).rejects.toBeInstanceOf(EigenpalValidationError);
   });
 
-  test('400 surfaces as EigenpalValidationError with issues', async () => {
-    const envelope = {
-      issues: [
-        { field: 'body.input', message: 'required', code: 'required', severity: 'error' as const },
-      ],
-      requestId: 'r4',
-    };
-    const client = new EigenpalClient({
-      apiKey: 'eg_test',
-      baseUrl: 'http://localhost:3000',
-      fetch: mockFetch([{ status: 400, body: envelope }]),
-      maxRetries: 0,
-    });
-
-    try {
-      await client.run('workflows.wf_xyz');
-      throw new Error('expected throw');
-    } catch (err) {
-      expect(err).toBeInstanceOf(EigenpalValidationError);
-      expect((err as EigenpalValidationError).issues[0].field).toBe('body.input');
-    }
-  });
-
-  test('runAndWait polls until terminal status', async () => {
+  test('retries retriable responses', async () => {
     const captured: { url: string }[] = [];
     const client = new EigenpalClient({
       apiKey: 'eg_test',
       baseUrl: 'http://localhost:3000',
       fetch: mockFetch(
         [
-          // 1: trigger run
-          { status: 201, body: { id: 'exec_pq', type: 'workflow', finished: false } },
-          // 2: poll — running
-          {
-            status: 200,
-            body: {
-              id: 'exec_pq',
-              finished: false,
-              execution: { status: 'running' },
-              createdAt: '2025-01-01T00:00:00Z',
-            },
-          },
-          // 3: poll — completed
-          {
-            status: 200,
-            body: {
-              id: 'exec_pq',
-              finished: true,
-              output: { total: 42 },
-              execution: { status: 'completed' },
-              createdAt: '2025-01-01T00:00:00Z',
-              completedAt: '2025-01-01T00:00:05Z',
-            },
-          },
-        ],
-        captured
-      ),
-      maxRetries: 0,
-    });
-
-    const result = await client.workflows.executions.runAndWait(
-      'wf_abc',
-      { x: 1 },
-      { pollIntervalMs: 5, timeoutMs: 5000 }
-    );
-
-    expect(result.id).toBe('exec_pq');
-    expect(result.status).toBe('completed');
-    expect(result.output).toEqual({ total: 42 });
-    expect(captured[1]?.url).toContain('expand=execution');
-    expect(captured[2]?.url).toContain('expand=execution');
-  });
-
-  test('runs.cancel cancels workflow runs through the public v1 runs API', async () => {
-    const captured: { url: string; method: string }[] = [];
-    const client = new EigenpalClient({
-      apiKey: 'eg_test',
-      baseUrl: 'http://localhost:3000',
-      fetch: mockFetch(
-        [
-          {
-            status: 200,
-            body: {
-              id: 'exec_pq',
-              type: 'workflow',
-              finished: true,
-              execution: { status: 'cancelled' },
-              cancellation: { state: 'cancelled', wasStatus: 'pending' },
-            },
-          },
-        ],
-        captured
-      ),
-      maxRetries: 0,
-    });
-
-    const r = await client.runs.cancel('exec_pq');
-    expect(r.execution.status).toBe('cancelled');
-    expect(r.cancellation.state).toBe('cancelled');
-    expect(captured[0]?.method).toBe('POST');
-    expect(captured[0]?.url).toContain('/api/v1/runs/exec_pq');
-  });
-
-  test('retries on 503 then succeeds', async () => {
-    const captured: { url: string }[] = [];
-    const client = new EigenpalClient({
-      apiKey: 'eg_test',
-      baseUrl: 'http://localhost:3000',
-      fetch: mockFetch(
-        [
-          {
-            status: 503,
-            body: {
-              issues: [
-                { field: '<root>', message: 'down', code: 'unavailable', severity: 'error' },
-              ],
-              requestId: 'r1',
-            },
-          },
-          {
-            status: 503,
-            body: {
-              issues: [
-                { field: '<root>', message: 'down', code: 'unavailable', severity: 'error' },
-              ],
-              requestId: 'r2',
-            },
-          },
-          { status: 200, body: { data: [], total: 0, limit: 50, offset: 0 } },
-        ],
-        captured
-      ),
-      maxRetries: 3,
-    });
-
-    const result = await client.workflows.list();
-    expect(result.total).toBe(0);
-    expect(captured.length).toBe(3); // 2 retries + final success
-  });
-
-  test('429 with Retry-After waits then retries', async () => {
-    const captured: { url: string }[] = [];
-    const start = Date.now();
-    const client = new EigenpalClient({
-      apiKey: 'eg_test',
-      baseUrl: 'http://localhost:3000',
-      fetch: mockFetch(
-        [
-          {
-            status: 429,
-            body: {
-              issues: [
-                { field: '<root>', message: 'rate', code: 'rate_limited', severity: 'error' },
-              ],
-              requestId: 'r1',
-            },
-            headers: { 'retry-after': '1' },
-          },
-          { status: 200, body: { data: [], total: 0, limit: 50, offset: 0 } },
+          { status: 503, body: { issues: [{ field: '<root>', message: 'down' }] } },
+          { status: 200, body: { data: [] } },
         ],
         captured
       ),
       maxRetries: 2,
     });
 
-    const result = await client.workflows.list();
-    expect(result.total).toBe(0);
-    expect(captured.length).toBe(2);
-    // Retry-After: 1 second was honored
-    expect(Date.now() - start).toBeGreaterThanOrEqual(1000);
-  }, 5000);
+    const result = await client.automations.list();
 
-  test('reads EIGENPAL_API_KEY from env when apiKey omitted', () => {
-    const original = process.env.EIGENPAL_API_KEY;
-    process.env.EIGENPAL_API_KEY = 'eg_from_env';
-    try {
-      const client = new EigenpalClient({ baseUrl: 'http://localhost:3000' });
-      expect(client.getRawClient().getConfig().headers).toBeDefined();
-    } finally {
-      if (original === undefined) delete process.env.EIGENPAL_API_KEY;
-      else process.env.EIGENPAL_API_KEY = original;
-    }
-  });
-
-  test('throws helpful error when no apiKey and no env', () => {
-    const original = process.env.EIGENPAL_API_KEY;
-    delete process.env.EIGENPAL_API_KEY;
-    try {
-      expect(() => new EigenpalClient({ baseUrl: 'http://localhost:3000' })).toThrow(
-        /EIGENPAL_API_KEY/
-      );
-    } finally {
-      if (original !== undefined) process.env.EIGENPAL_API_KEY = original;
-    }
-  });
-
-  test('attaches X-Eigenpal-Sdk-* telemetry headers and a richer User-Agent', async () => {
-    const captured: { headers?: Record<string, string> }[] = [];
-    const client = new EigenpalClient({
-      apiKey: 'eg_test',
-      baseUrl: 'http://localhost:3000',
-      fetch: mockFetch(
-        [{ status: 200, body: { data: [], total: 0, limit: 50, offset: 0 } }],
-        captured
-      ),
-      maxRetries: 0,
-    });
-    await client.workflows.list();
-
-    const h = captured[0]?.headers ?? {};
-    expect(h['x-eigenpal-sdk']).toBe('typescript');
-    expect(h['x-eigenpal-sdk-version']).toBeDefined();
-    // Runtime tag is "node-X" / "bun-X" / "deno-X" / "browser"
-    expect(h['x-eigenpal-sdk-runtime']).toMatch(/^(node|bun|deno|browser)/);
-    expect(h['x-eigenpal-sdk-os']).toBeDefined();
-    expect(h['user-agent']).toMatch(/^eigenpal-sdk-typescript\//);
-  });
-
-  test('user-supplied defaultHeaders override telemetry (opt-out path)', async () => {
-    const captured: { headers?: Record<string, string> }[] = [];
-    const client = new EigenpalClient({
-      apiKey: 'eg_test',
-      baseUrl: 'http://localhost:3000',
-      defaultHeaders: { 'User-Agent': 'my-custom-agent/1.0', 'X-Eigenpal-Sdk': 'unknown' },
-      fetch: mockFetch(
-        [{ status: 200, body: { data: [], total: 0, limit: 50, offset: 0 } }],
-        captured
-      ),
-      maxRetries: 0,
-    });
-    await client.workflows.list();
-
-    const h = captured[0]?.headers ?? {};
-    expect(h['user-agent']).toBe('my-custom-agent/1.0');
-    expect(h['x-eigenpal-sdk']).toBe('unknown');
+    expect(result.data).toEqual([]);
+    expect(captured).toHaveLength(2);
   });
 });

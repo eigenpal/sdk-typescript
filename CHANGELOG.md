@@ -1,5 +1,66 @@
 # @eigenpal/sdk
 
+## 0.8.0
+
+### Minor Changes
+
+- d620a00: Expose the clean public automation API around automations, runs, files/artifacts, datasets, evaluators, experiments, evaluation results, and run promotion. This intentionally breaks the pre-v1 SDK/CLI surface that exposed workflow- and agent-specific top-level resources outside the explicit legacy compatibility routes.
+
+  > [!WARNING]
+  > **Breaking change (pre-v1).** The workflow- and agent-specific top-level
+  > resources have been removed in favor of a single automation-centric surface.
+  > These packages are still 0.x, so this breaking redesign ships as a `minor`
+  > bump. Update your integration before upgrading.
+
+  #### Removed
+  - Top-level workflow resources, e.g. `client.workflows.*`, including
+    `client.workflows.executions.runAndWait(...)` and the rest of the
+    `client.workflows.executions.*` tree.
+  - Top-level agent resources, e.g. `client.agents.*` (runs, feedback, traces,
+    files, expected artifacts).
+  - Top-level source/git resources, e.g. `client.sources.*`.
+
+  #### New equivalents
+  - **Start a run:** use `client.run('workflows.<slug>', input, options)` (and
+    `client.run('agents.<slug>', ...)`). In the TypeScript SDK, `run-and-wait`
+    is `client.run(target, input, { waitForCompletion })`; in the Python SDK use
+    `client.run_and_wait(target, input=...)`.
+  - **Browse automations** (workflows + agents): `client.automations.list()`,
+    `client.automations.get(id)`, `client.automations.versions(id)`,
+    `client.automations.triggers(id)`, plus
+    `client.automations.dataset|examples|evaluators|experiments.*`.
+  - **Inspect & control runs:** `client.runs.list()`, `client.runs.get(id)`,
+    `client.runs.cancel(id)`, `client.runs.rerun(id)`, `client.runs.promote(id)`,
+    `client.runs.usage(id)`, `client.runs.steps(id)`, `client.runs.events(id)`,
+    and `client.runs.artifacts|eval_results|feedback|trace.*`.
+  - **Manage reusable files:** `client.files.upload(...)`, `client.files.get(id)`,
+    `client.files.download(id)`, `client.files.delete(id)`.
+
+  #### Migration
+  - `client.workflows.executions.runAndWait('<slug>', input)` →
+    `client.run('workflows.<slug>', input, { waitForCompletion })` (TS) /
+    `client.run_and_wait('workflows.<slug>', input=...)` (Python).
+  - `client.workflows.executions.create('<slug>', input)` →
+    `client.run('workflows.<slug>', input)`.
+  - `client.agents.runs.create('<slug>', input)` →
+    `client.run('agents.<slug>', input)`.
+  - `client.workflows.get('<slug>')` / `client.agents.get('<slug>')` →
+    `client.automations.get('workflows.<slug>')` /
+    `client.automations.get('agents.<slug>')`.
+  - Listing/inspecting executions previously under
+    `client.workflows.executions.*` / `client.agents.runs.*` →
+    `client.runs.*` (e.g. `client.runs.list()`, `client.runs.get(id)`).
+  - `eigenpal runs promote` now accepts only `--name` (optional). Use
+    `eigenpal runs feedback update` to set expected JSON before promoting.
+    Feedback and expected commands work for both workflow and agent runs.
+
+  #### DX fixes
+  - `client.runs.*` read methods are now typed against the generated OpenAPI
+    models; use `isRunFinished()` to narrow `run()` / `rerun()` responses before
+    accessing `output`.
+  - `eigenpal agents dataset push --file` accepts a `.zip` archive (matching
+    `pull` output) as well as a directory.
+
 ## 0.7.2
 
 ### Minor Changes
@@ -96,7 +157,7 @@
   string callers actually want, replacing the internal `currentHistoryId`.
 
   Heads-up: workflow `name` is no longer surfaced as a top-level field
-  (it was previously leaked via `currentVersion.definition.name`). It's
+  (it was previously leaked via `currentVersion.definition.name`). It is
   authoritative inside the YAML, so fetch it via
   `client.workflows.versions(id)[0].yamlContent` and parse, or treat the
   workflow `id` as the canonical identifier.
@@ -120,8 +181,8 @@
   v1 paths resolve, the trimmed public shape is enforced on the wire,
   and the HTML-host guard fires.
 
-  `defineRoute` rejects paths that don't start with `/api/` so the
-  mismatch can't reappear by accident.
+  `defineRoute` rejects paths that do not start with `/api/` so the
+  mismatch cannot reappear by accident.
 
 ## Unreleased
 

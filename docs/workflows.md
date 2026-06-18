@@ -1,30 +1,42 @@
-# Workflows
+# Automations
 
-`client.workflows` is the entry point for listing and fetching workflows. Start workflow runs with root `client.run()`.
+`client.automations` is the public entry point for both workflows and agents. Start runs with root `client.run()`.
 
 ## List
 
 ```ts
-const { data } = await client.workflows.list({ limit: 20, search: 'invoice' });
-for (const wf of data) console.log(wf.id, wf.version);
+const { data } = await client.automations.list({ limit: 20, search: 'invoice' });
+for (const automation of data) {
+  console.log(automation.id, automation.type, automation.name);
+}
 ```
-
-Query options: `limit`, `offset`, `search` (substring), `name` (exact slug), `kind` (`'workflow' | 'block'`).
 
 ## Get
 
 ```ts
-const wf = await client.workflows.get('extract-invoice');
-//   { id, version, createdAt, updatedAt }
+const automation = await client.automations.get('workflows.extract-invoice');
+// { id, type, name, inputSchema, outputSchema, triggers, ... }
 ```
 
-`version` is the current published release tag (e.g. `"1.2.4"`), or `null` if no version is published yet.
+Use typed ids or aliases (`workflows.<slug>` / `agents.<slug>`) when a slug could exist in both systems.
 
-## Trigger a run
+## Versions
 
-Three ways to run, depending on how long you want to wait.
+```ts
+const { data } = await client.automations.versions('workflows.extract-invoice');
+for (const version of data) console.log(version.id, version.version, version.isCurrent);
+```
 
-### Async (returns immediately)
+## Triggers
+
+```ts
+const { triggers } = await client.automations.triggers('agents.invoice-agent');
+for (const trigger of triggers) console.log(trigger.type, trigger.enabled);
+```
+
+Trigger mutation and source management are intentionally not part of the public SDK surface.
+
+## Start A Run
 
 ```ts
 const { id } = await client.run('workflows.extract-invoice', {
@@ -32,58 +44,13 @@ const { id } = await client.run('workflows.extract-invoice', {
 });
 ```
 
-For webhooks and fire-and-forget jobs. Poll status via [`client.runs.get`](./executions.md).
-
-### Sync (server holds up to 60s)
-
-```ts
-const result = await client.run(
-  'workflows.extract-invoice',
-  { contract_document: file },
-  { waitForCompletion: 60 }
-);
-console.log(result.finished, result.output);
-```
-
-If the run completes within `waitForCompletion` seconds, `finished` is true and `output` is populated. Either way the response carries the run `id`.
-
-### Long-running (client polls)
-
-```ts
-const final = await client.workflows.executions.runAndWait('extract-invoice', {
-  contract_document: file,
-});
-```
-
-Default 5 min cap; tune with `pollIntervalMs` and `timeoutMs`. See [Executions](./executions.md#run-and-wait).
-
-## Pin a version
+Pin a version or agent source ref by suffixing the target:
 
 ```ts
 await client.run('workflows.extract-invoice@1.2.3', input);
+await client.run('agents.invoice-agent@main', input);
 ```
 
-If omitted, the run picks up the workflow's current published version at trigger time.
+## File Inputs
 
-## Override step output
-
-```ts
-await client.run('workflows.extract-invoice', input, {
-  overrides: { steps: { 'parse-contract': { text: 'pre-extracted...' } } },
-});
-```
-
-Replaces a step's output for this one run. The step doesn't execute. Useful for testing downstream steps without re-running expensive parsing.
-
-## List versions
-
-```ts
-const { data } = await client.workflows.versions('extract-invoice', { limit: 10 });
-for (const v of data) console.log(v.id, v.version, v.isCurrent);
-```
-
-Returns published versions in reverse-chronological order.
-
-## File inputs
-
-See [File inputs](./files.md). In short: pass a `File`, `Blob`, or `{ content, filename, mimeType }` and the SDK uploads via `multipart/form-data` automatically.
+See [File inputs](./files.md). Pass a `File`, `Blob`, or `{ content, filename, mimeType }` and the SDK uploads via `multipart/form-data` automatically.

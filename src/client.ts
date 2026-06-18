@@ -3,13 +3,13 @@ import { createClient, createConfig, type Client, type Config } from './generate
 import type {
   ApiErrorEnvelope,
   RunStartResponse as GeneratedRunStartResponse,
+  Run,
 } from './generated/types.gen';
 import { buildRunJsonBody, buildRunMultipart, hasFileInput } from './lib/files';
-import { AgentsResource } from './resources/agents';
+import { AuthResource } from './resources/auth';
 import { AutomationsResource } from './resources/automations';
+import { FilesResource } from './resources/files';
 import { RunsResource } from './resources/runs';
-import { SourceResource } from './resources/source';
-import { WorkflowsResource } from './resources/workflows';
 import { buildTelemetryHeaders } from './telemetry';
 
 export interface EigenpalOptions {
@@ -70,6 +70,7 @@ export type RunInput = Record<string, unknown>;
 export interface RunCallOptions {
   waitForCompletion?: number;
   overrides?: { steps?: Record<string, Record<string, unknown>> };
+  metadata?: Record<string, unknown>;
   signal?: AbortSignal;
 }
 
@@ -87,6 +88,11 @@ export interface RerunOptions {
  * can never diverge.
  */
 export type RunStartResponse = GeneratedRunStartResponse;
+
+/** Narrow `RunStartResponse` to a terminal run with `output` and related fields. */
+export function isRunFinished(run: RunStartResponse): run is Run {
+  return run.finished === true;
+}
 
 /**
  * The EigenPal SDK client.
@@ -107,21 +113,19 @@ export type RunStartResponse = GeneratedRunStartResponse;
  *   { waitForCompletion: 60 }
  * );
  *
- * // Client-side polling for long-running executions (default 5min cap).
- * const final = await client.workflows.executions.runAndWait('wf_abc', { language: 'en' });
+ * // Inspect the final run later.
+ * const final = await client.runs.get(id);
  * ```
  */
 export class EigenpalClient {
-  /** Workflow definition operations: `list`, `get`, `versions`. Start runs with `client.run(...)`. */
-  public readonly workflows: WorkflowsResource;
-  /** Agent operations: `list`, `get`, `create`, `executions`. Start runs with `client.run(...)`. */
-  public readonly agents: AgentsResource;
-  /** Source repository operations: repository metadata, raw files, releases, lockfiles, and secret decrypt. */
-  public readonly source: SourceResource;
-  /** Automation operations: sync public automation metadata from source. */
+  /** API key identity and current tenant context. */
+  public readonly auth: AuthResource;
+  /** Automation metadata across workflows and agents. Start runs with `client.run(...)`. */
   public readonly automations: AutomationsResource;
   /** Tenant-wide run operations across workflow, agent, manual, and eval runs. */
   public readonly runs: RunsResource;
+  /** Reusable uploaded files that can be referenced by later runs. */
+  public readonly files: FilesResource;
 
   /** Underlying hey-api client. Use `getRawClient()` for advanced cases. */
   private readonly client: Client;
@@ -162,11 +166,10 @@ export class EigenpalClient {
     }
     this.installTimeoutInterceptor();
 
-    this.workflows = new WorkflowsResource(this.client, this._request.bind(this));
-    this.agents = new AgentsResource(this.client, this._request.bind(this));
-    this.source = new SourceResource(this.client, this._request.bind(this));
+    this.auth = new AuthResource(this.client, this._request.bind(this));
     this.automations = new AutomationsResource(this.client, this._request.bind(this));
     this.runs = new RunsResource(this.client, this._request.bind(this));
+    this.files = new FilesResource(this.client, this._request.bind(this));
   }
 
   /** Expose the underlying hey-api client for advanced use (custom interceptors, etc.). */
@@ -193,6 +196,7 @@ export class EigenpalClient {
         target: pathTarget,
         input,
         overrides: options.overrides,
+        metadata: options.metadata,
       });
       return this._request<RunStartResponse>(
         () =>
@@ -207,7 +211,7 @@ export class EigenpalClient {
       );
     }
 
-    const body = buildRunJsonBody(pathTarget, input, options.overrides);
+    const body = buildRunJsonBody(pathTarget, input, options.overrides, options.metadata);
     return this._request<RunStartResponse>(
       () =>
         this.client.post({
@@ -363,7 +367,13 @@ function assertJsonResponse(response: Response): void {
   const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
   // Match `application/json`, `application/problem+json`, etc. Empty
   // Content-Type is tolerated since some proxies strip it on small bodies.
-  if (contentType === '' || contentType.includes('json')) return;
+  if (
+    contentType === '' ||
+    contentType.includes('json') ||
+    contentType.includes('octet-stream') ||
+    contentType.includes('zip')
+  )
+    return;
   throw new EigenpalError(
     `Expected a JSON response from the API but got Content-Type "${contentType}". ` +
       `This usually means \`baseUrl\` points at a non-API host (e.g. the marketing site or ` +
@@ -385,9 +395,14 @@ function assertRunTarget(target: RunTarget): void {
 
 function assertInputNotOptionsBag(input: RunInput | undefined): void {
   if (!input || typeof input !== 'object') return;
-  if ('waitForCompletion' in input || 'overrides' in input || 'signal' in input) {
+  if (
+    'waitForCompletion' in input ||
+    'overrides' in input ||
+    'metadata' in input ||
+    'signal' in input
+  ) {
     throw new EigenpalError(
-      'Pass workflow/agent input as the second argument and { waitForCompletion, overrides, signal } as the third.',
+      'Pass workflow/agent input as the second argument and { waitForCompletion, overrides, metadata, signal } as the third.',
       { status: 0 }
     );
   }

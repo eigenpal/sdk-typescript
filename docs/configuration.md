@@ -33,7 +33,7 @@ new EigenpalClient({
 
 `timeoutMs` applies per-request. The per-call `signal` (an `AbortSignal`) wins if you pass one.
 
-For workflow runs longer than `timeoutMs`, prefer `workflows.executions.runAndWait` (client-side polling) over `client.run(..., { waitForCompletion })` (server-side hold).
+For runs longer than `timeoutMs`, start asynchronously with `client.run(...)` and poll `client.runs.get(id)`. Use `client.run(..., { waitForCompletion })` only when you want the server to hold the request briefly.
 
 ## Custom headers
 
@@ -59,4 +59,4 @@ new EigenpalClient({ fetch: undiciFetch });
 
 ## TypeScript runtime
 
-The package ships TypeScript source (`./src/index.ts` is the entry point). You'll need a TypeScript-aware runtime: Bun, Deno, Node + `ts-node` / `tsx`, Next.js, Vite, Webpack with `ts-loader`, or any modern bundler. Plain `node ./script.js` won't load it. The package ships TS-first so the source stays debuggable end-to-end.
+The package ships TypeScript source (`./src/index.ts` is the entry point). You will need a TypeScript-aware runtime: Bun, Deno, Node + `ts-node` / `tsx`, Next.js, Vite, Webpack with `ts-loader`, or any modern bundler. Plain `node ./script.js` will not load it. The package ships TS-first so the source stays debuggable end-to-end.

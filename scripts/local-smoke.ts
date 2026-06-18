@@ -27,27 +27,6 @@ if (!apiKey) {
   process.exit(2);
 }
 
-const PUBLIC_WORKFLOW_FIELDS = new Set(['id', 'name', 'version', 'createdAt', 'updatedAt']);
-const PUBLIC_EXECUTION_FIELDS = new Set([
-  'id',
-  'type',
-  'status',
-  'timing',
-  'source',
-  'trigger',
-  'execution',
-  'result',
-  'eval',
-]);
-const PUBLIC_VERSION_FIELDS = new Set([
-  'id',
-  'workflowId',
-  'version',
-  'yamlContent',
-  'isCurrent',
-  'createdAt',
-]);
-
 const results: { name: string; ok: boolean; detail: string }[] = [];
 const pass = (name: string, ok: boolean, detail: string) => {
   results.push({ name, ok, detail });
@@ -80,38 +59,81 @@ async function expectThrows<E extends Error>(
 const client = new EigenpalClient({ baseUrl, apiKey });
 console.log(`→ Smoke-testing @eigenpal/sdk against ${baseUrl}\n`);
 
-// 1. workflows.list — public shape, pagination
-const list = await client.workflows.list({ limit: 2 });
+const PUBLIC_AUTOMATION_FIELDS = new Set([
+  'id',
+  'type',
+  'slug',
+  'name',
+  'description',
+  'status',
+  'version',
+  'triggers',
+  'createdAt',
+  'updatedAt',
+]);
+const PUBLIC_AUTOMATION_DETAIL_FIELDS = new Set([
+  ...PUBLIC_AUTOMATION_FIELDS,
+  'inputSchema',
+  'outputSchema',
+]);
+const PUBLIC_RUN_LIST_FIELDS = new Set([
+  'id',
+  'type',
+  'finished',
+  'timing',
+  'source',
+  'trigger',
+  'execution',
+  'error',
+  'eval',
+]);
+const PUBLIC_AUTOMATION_VERSION_FIELDS = new Set([
+  'id',
+  'automationId',
+  'version',
+  'sourceRef',
+  'isCurrent',
+  'createdAt',
+]);
+
+// 1. automations.list — public shape, pagination
+const list = await client.automations.list({ type: 'workflow', limit: 10 });
 pass(
-  'workflows.list returns paginated envelope',
-  typeof list.total === 'number' && list.limit === 2,
+  'automations.list returns paginated envelope',
+  typeof list.total === 'number' && list.limit === 10,
   `total=${list.total} limit=${list.limit} offset=${list.offset}`
 );
 if (list.data?.length)
-  assertPublicShape('workflows[0] public shape', list.data[0], PUBLIC_WORKFLOW_FIELDS);
+  assertPublicShape('automations[0] public shape', list.data[0], PUBLIC_AUTOMATION_FIELDS);
 
-// 2. workflows.get — public shape
-const wfId = list.data?.[0]?.id;
+// 2. automations.get — public shape
+const workflow =
+  list.data?.find((w) => (w as { slug?: string }).slug === 'observability-smoke') ?? list.data?.[0];
+const wfId = workflow?.id;
 if (wfId) {
-  const wf = await client.workflows.get(wfId);
-  assertPublicShape('workflows.get public shape', wf, PUBLIC_WORKFLOW_FIELDS);
+  const wf = await client.automations.get(wfId);
+  assertPublicShape('automations.get public shape', wf, PUBLIC_AUTOMATION_DETAIL_FIELDS);
   pass(
-    'workflows.get version is a string',
+    'automations.get version is a string',
     typeof wf.version === 'string' || wf.version === null,
     `version=${wf.version ?? '<null>'}`
   );
 }
 
-// 3. workflows.versions — public shape, isCurrent boolean, name mismatch fixed
+// 3. automations.versions — public shape, isCurrent boolean, name mismatch fixed
 if (wfId) {
-  const versions = await client.workflows.versions(wfId, { limit: 5 });
+  const versions = await client.automations.versions(wfId, { limit: 5 });
   pass(
-    'workflows.versions returns paginated envelope',
+    'automations.versions returns paginated envelope',
     Array.isArray(versions.data),
     `data.length=${versions.data?.length ?? 0}`
   );
   if (versions.data?.length) {
-    assertPublicShape('versions[0] public shape', versions.data[0], PUBLIC_VERSION_FIELDS);
+    assertPublicShape(
+      'versions[0] public shape',
+      versions.data[0],
+      PUBLIC_AUTOMATION_VERSION_FIELDS
+    );
     const hasCurrent = versions.data.some((v) => (v as { isCurrent?: boolean }).isCurrent === true);
     pass(
       'versions includes one with isCurrent=true',
@@ -131,7 +153,7 @@ pass(
   `runs=${execs.runs.length}`
 );
 if (execs.runs?.length)
-  assertPublicShape('runs[0] public shape', execs.runs[0], PUBLIC_EXECUTION_FIELDS);
+  assertPublicShape('runs[0] public shape', execs.runs[0], PUBLIC_RUN_LIST_FIELDS);
 
 // 5. runs.list is workflow-scoped
 if (wfId && execs.runs?.length) {
@@ -148,7 +170,7 @@ if (wfId && execs.runs?.length) {
 const failedRuns = wfId
   ? await client.runs.list({ type: 'workflow', source: wfId, status: 'failed', limit: 3 })
   : { runs: [] };
-const allFailed = failedRuns.runs.every((e) => e.status === 'failed');
+const allFailed = failedRuns.runs.every((e) => e.execution?.status === 'failed');
 pass(
   'runs.list filters by status=failed',
   allFailed,
@@ -173,7 +195,7 @@ if (completedExec) {
   const k = new Set(Object.keys((expanded as object) ?? {}));
   pass(
     'runs.get expand returns optional grouped sections',
-    k.has('id') && k.has('status') && k.has('usage') && k.has('execution'),
+    k.has('id') && k.has('usage') && k.has('execution'),
     `keys: ${[...k].slice(0, 8).join(', ')}…`
   );
 }
@@ -183,27 +205,37 @@ await expectThrows('bad apiKey throws EigenpalAuthError', EigenpalAuthError, () 
   new EigenpalClient({
     baseUrl,
     apiKey: 'eig_live_definitely_not_a_real_key_xxxxxxxxxxxxxxx',
-  }).workflows.list({ limit: 1 })
+    maxRetries: 0,
+  }).automations.list({ limit: 1 })
 );
-await expectThrows('unknown workflow id throws EigenpalNotFoundError', EigenpalNotFoundError, () =>
-  client.workflows.get('wf_definitely_does_not_exist_xxx')
+await expectThrows(
+  'unknown automation id throws EigenpalNotFoundError',
+  EigenpalNotFoundError,
+  () => client.automations.get('wf_definitely_does_not_exist_xxx')
 );
 await expectThrows('unknown execution id throws EigenpalNotFoundError', EigenpalNotFoundError, () =>
   client.runs.get('exec_definitely_does_not_exist_xxx')
 );
 await expectThrows('bad baseUrl throws EigenpalError', EigenpalError, () =>
-  new EigenpalClient({ baseUrl: 'https://example.com', apiKey }).workflows.list({ limit: 1 })
+  new EigenpalClient({ baseUrl: 'https://example.com', apiKey, maxRetries: 0 }).automations.list({
+    limit: 1,
+  })
 );
 
 // 13. Async trigger + immediate cancel (verifies multipart-less POST + cancel)
 //     Skip if no workflow has an `api` trigger we can hit.
-const apiWorkflow = list.data?.find((w) => (w as { id: string }).id);
+const apiWorkflow =
+  list.data?.find(
+    (w) =>
+      (w as { id: string; slug?: string; triggers?: { api?: boolean } }).slug ===
+      'observability-smoke'
+  ) ?? list.data?.find((w) => (w as { id: string; triggers?: { api?: boolean } }).triggers?.api);
 let triggeredId: string | null = null;
 if (apiWorkflow) {
   try {
     const triggered = await client.run(
       { type: 'workflow', id: apiWorkflow.id, version: 'latest' },
-      {}
+      { text: 'sdk smoke' }
     );
     triggeredId = triggered.id;
     pass(
@@ -247,7 +279,7 @@ try {
     apiKey,
     defaultHeaders: { 'X-Trace-Id': 'smoke-trace-001' },
   });
-  await traced.workflows.list({ limit: 1 });
+  await traced.automations.list({ limit: 1 });
   pass(
     'custom defaultHeaders pass through cleanly',
     true,

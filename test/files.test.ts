@@ -37,6 +37,52 @@ async function captureRequest(): Promise<{
 }
 
 describe('multipart file upload', () => {
+  test('client.files.upload sends raw multipart form data', async () => {
+    const { fetch, captured } = await captureRequest();
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch,
+      maxRetries: 0,
+    });
+
+    await client.files.upload(new File(['hello'], 'input.txt', { type: 'text/plain' }));
+
+    expect(captured[0]?.method).toBe('POST');
+    expect(captured[0]?.url).toContain('/api/v1/files');
+    expect(captured[0]?.contentType).toMatch(/^multipart\/form-data; boundary=/);
+    expect(captured[0]?.body).toContain('name="file"');
+    expect(captured[0]?.body).toContain('filename="input.txt"');
+    expect(captured[0]?.body).not.toContain('[object FormData]');
+  });
+
+  test('client.automations.dataset.import sends raw multipart form data', async () => {
+    const { fetch, captured } = await captureRequest();
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch,
+      maxRetries: 0,
+    });
+
+    await client.automations.dataset.import(
+      'workflows.extract-invoice',
+      new File(['zip'], 'dataset.zip', { type: 'application/zip' }),
+      { mode: 'replace' }
+    );
+
+    expect(captured[0]?.method).toBe('POST');
+    expect(captured[0]?.url).toContain(
+      '/api/v1/automations/workflows.extract-invoice/dataset/import'
+    );
+    expect(captured[0]?.contentType).toMatch(/^multipart\/form-data; boundary=/);
+    expect(captured[0]?.body).toContain('name="file"');
+    expect(captured[0]?.body).toContain('filename="dataset.zip"');
+    expect(captured[0]?.body).toContain('name="mode"');
+    expect(captured[0]?.body).toContain('replace');
+    expect(captured[0]?.body).not.toContain('[object FormData]');
+  });
+
   test('Blob input switches to multipart/form-data', async () => {
     const { fetch, captured } = await captureRequest();
     const client = new EigenpalClient({
@@ -47,7 +93,11 @@ describe('multipart file upload', () => {
     });
 
     const blob = new Blob([new Uint8Array([1, 2, 3, 4])], { type: 'application/pdf' });
-    await client.run('workflows.wf_xyz', { contract_document: blob, language: 'en' });
+    await client.run(
+      'workflows.wf_xyz',
+      { contract_document: blob, language: 'en' },
+      { metadata: { requestId: 'req_1' } }
+    );
 
     expect(captured[0]?.method).toBe('POST');
     expect(captured[0]?.contentType).toMatch(/^multipart\/form-data; boundary=/);
@@ -56,6 +106,8 @@ describe('multipart file upload', () => {
     expect(captured[0]?.body).toContain('name="input"');
     expect(captured[0]?.body).not.toContain('_json');
     expect(captured[0]?.body).toContain('"language":"en"');
+    expect(captured[0]?.body).toContain('name="metadata"');
+    expect(captured[0]?.body).toContain('"requestId":"req_1"');
     expect(captured[0]?.body).toContain('target');
     expect(captured[0]?.body).toContain('workflows.wf_xyz');
     expect(captured[0]?.url).toContain('/api/v1/runs');
