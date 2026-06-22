@@ -1,5 +1,15 @@
 # @eigenpal/sdk
 
+## 0.9.0
+
+### Minor Changes
+
+- c35d5d4: Clean up the public runs and evaluation API surface: move workflow eval operations onto automations, expose run scores/artifacts through the unified runs API, and update CLI/SDK helpers to use the canonical routes.
+
+  Breaking: `runs.evalResults` and `GET /api/v1/runs/{id}/eval-results` are replaced by `runs.scores` and `GET /api/v1/runs/{id}/scores`.
+
+- 1a7b2ab: Expose canonical automation dataset example file routes in the generated SDK.
+
 ## 0.8.0
 
 ### Minor Changes

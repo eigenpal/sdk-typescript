@@ -1,6 +1,6 @@
 {
   "name": "@eigenpal/sdk",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Official TypeScript SDK for the EigenPal API",
   "type": "module",
   "main": "./src/index.ts",
@@ -16,7 +16,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "codegen": "openapi-ts -f openapi-ts.config.ts",
+    "codegen": "openapi-ts -f openapi-ts.config.ts && bun run scripts/postprocess-generated.ts",
     "codegen:check": "bun run codegen && git diff --exit-code src/generated/",
     "build": "tsc",
     "lint": "eslint src/",

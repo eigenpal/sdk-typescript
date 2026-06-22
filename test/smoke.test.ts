@@ -184,6 +184,17 @@ describe('EigenpalClient public SDK', () => {
           { status: 200, body: { id: 'workflows.extract-invoice' } },
           { status: 200, body: { data: [] } },
           { status: 200, body: { triggers: [] } },
+          {
+            status: 200,
+            body: {
+              automation: { id: 'wf_1', type: 'workflow', slug: 'extract-invoice' },
+              release: { version: '1.0.0', tag: 'workflows.extract-invoice@1.0.0' },
+              warnings: [],
+            },
+          },
+          { status: 200, body: 'experiment_id,score\nexp_1,1\n' },
+          { status: 200, body: 'experiment_id,score\nexp_1,1\n' },
+          { status: 200, body: { event: 'completed' } },
           { status: 200, body: { runs: [] } },
           {
             status: 200,
@@ -209,6 +220,12 @@ describe('EigenpalClient public SDK', () => {
     await client.automations.get('workflows.extract-invoice');
     await client.automations.versions('workflows.extract-invoice');
     await client.automations.triggers('workflows.extract-invoice');
+    await client.automations.sync('workflows.extract-invoice');
+    await client.automations.experiments.export('workflows.extract-invoice', 'exp_1');
+    await client.automations.experiments.exportAll('workflows.extract-invoice');
+    await client.automations.experiments.createStream('workflows.extract-invoice', {
+      exampleIds: ['example_1'],
+    });
     await client.runs.list({ type: 'workflow', status: 'completed' });
     await client.runs.get('run_123', { expand: ['usage', 'execution'] });
     await client.runs.usage('run_123');
@@ -227,6 +244,12 @@ describe('EigenpalClient public SDK', () => {
     expect(paths).toContain('/api/v1/automations/workflows.extract-invoice');
     expect(paths).toContain('/api/v1/automations/workflows.extract-invoice/versions');
     expect(paths).toContain('/api/v1/automations/workflows.extract-invoice/triggers');
+    expect(paths).toContain('/api/v1/automations/workflows.extract-invoice/sync');
+    expect(paths).toContain(
+      '/api/v1/automations/workflows.extract-invoice/experiments/exp_1/export'
+    );
+    expect(paths).toContain('/api/v1/automations/workflows.extract-invoice/experiments/export');
+    expect(paths).toContain('/api/v1/automations/workflows.extract-invoice/experiments/stream');
     expect(paths).toContain('/api/v1/runs');
     expect(paths).toContain('/api/v1/runs/run_123');
     expect(paths).toContain('/api/v1/runs/run_123/usage');

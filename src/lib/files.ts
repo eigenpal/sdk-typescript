@@ -237,3 +237,12 @@ export async function buildRunMultipart(args: {
   }
   return { formData: fd, fileCount };
 }
+
+/** Build multipart for endpoints that accept one file field plus optional name. */
+export async function buildSingleFileMultipart(file: FileInput, name?: string): Promise<FormData> {
+  const fd = new FormData();
+  const { blob, filename } = await resolveFileBlob(file);
+  fd.append('file', blob, filename);
+  if (name) fd.append('name', name);
+  return fd;
+}

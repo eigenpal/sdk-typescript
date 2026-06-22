@@ -4,15 +4,20 @@ import {
   runsArtifactsGet,
   runsArtifactsList,
   runsCancel,
-  runsEvalResultsList,
   runsEventsList,
   runsFeedbackClear,
+  runsFeedbackExpectedCreate,
+  runsFeedbackExpectedFileDelete,
+  runsFeedbackExpectedFileGet,
+  runsFeedbackExpectedFileUpdate,
+  runsFeedbackExpectedGet,
   runsFeedbackGet,
   runsFeedbackUpdate,
   runsGet,
   runsList,
   runsPromote,
   runsRerun,
+  runsScoresList,
   runsStepsList,
   runsTraceGet,
   runsUsageGet,
@@ -20,9 +25,12 @@ import {
 import type {
   RunsArtifactsListResponse,
   RunsCancelResponse,
-  RunsEvalResultsListResponse,
   RunsEventsListResponse,
   RunsFeedbackClearResponse,
+  RunsFeedbackExpectedCreateResponse,
+  RunsFeedbackExpectedFileDeleteResponse,
+  RunsFeedbackExpectedFileUpdateResponse,
+  RunsFeedbackExpectedGetResponse,
   RunsFeedbackGetResponse,
   RunsFeedbackUpdateResponse,
   RunsGetResponse,
@@ -30,10 +38,12 @@ import type {
   RunsListResponse,
   RunsPromoteResponse,
   RunsRerunResponse,
+  RunsScoresListResponse,
   RunsStepsListResponse,
   RunsTraceGetResponse,
   RunsUsageGetResponse,
 } from '../generated/types.gen';
+import { buildSingleFileMultipart, type FileInput } from '../lib/files';
 
 type Dispatch = <T>(call: () => Promise<OperationResult<T>>) => Promise<T>;
 type SignalOptions = { signal?: AbortSignal };
@@ -51,7 +61,7 @@ function formatExpand(expand: RunExpand | undefined): string | undefined {
 
 export class RunsResource {
   public readonly artifacts: RunsArtifactsResource;
-  public readonly evalResults: RunsEvalResultsResource;
+  public readonly scores: RunsScoresResource;
   public readonly feedback: RunsFeedbackResource;
   public readonly trace: RunsTraceResource;
 
@@ -60,7 +70,7 @@ export class RunsResource {
     private readonly dispatch: Dispatch
   ) {
     this.artifacts = new RunsArtifactsResource(client, dispatch);
-    this.evalResults = new RunsEvalResultsResource(client, dispatch);
+    this.scores = new RunsScoresResource(client, dispatch);
     this.feedback = new RunsFeedbackResource(client, dispatch);
     this.trace = new RunsTraceResource(client, dispatch);
   }
@@ -203,17 +213,108 @@ export class RunsFeedbackResource {
       runsFeedbackClear({ client: this.client, path: { id: runId }, signal: options.signal })
     );
   }
+
+  async listExpected(
+    runId: string,
+    options: SignalOptions = {}
+  ): Promise<RunsFeedbackExpectedGetResponse> {
+    return this.dispatch(() =>
+      runsFeedbackExpectedGet({ client: this.client, path: { id: runId }, signal: options.signal })
+    );
+  }
+
+  async copyOutputToExpected(
+    runId: string,
+    outputFileName: string,
+    options: { expectedName?: string; signal?: AbortSignal } = {}
+  ): Promise<RunsFeedbackExpectedCreateResponse> {
+    return this.dispatch(() =>
+      runsFeedbackExpectedCreate({
+        client: this.client,
+        path: { id: runId },
+        body: {
+          outputFileName,
+          ...(options.expectedName ? { expectedName: options.expectedName } : {}),
+        },
+        signal: options.signal,
+      })
+    );
+  }
+
+  async uploadExpected(
+    runId: string,
+    file: FileInput,
+    options: { name?: string; signal?: AbortSignal } = {}
+  ): Promise<RunsFeedbackExpectedCreateResponse> {
+    const formData = await buildSingleFileMultipart(file, options.name);
+    return this.dispatch(
+      () =>
+        this.client.post({
+          url: '/api/v1/runs/{id}/feedback/expected',
+          path: { id: runId },
+          body: formData,
+          bodySerializer: null,
+          headers: { 'Content-Type': null },
+          signal: options.signal,
+        }) as Promise<OperationResult<RunsFeedbackExpectedCreateResponse>>
+    );
+  }
+
+  async downloadExpected(
+    runId: string,
+    filename: string,
+    options: SignalOptions = {}
+  ): Promise<Blob> {
+    return this.dispatch(async () => {
+      const response = await runsFeedbackExpectedFileGet({
+        client: this.client,
+        path: { id: runId, filename },
+        signal: options.signal,
+      });
+      return response as OperationResult<Blob>;
+    });
+  }
+
+  async renameExpected(
+    runId: string,
+    filename: string,
+    newFilename: string,
+    options: SignalOptions = {}
+  ): Promise<RunsFeedbackExpectedFileUpdateResponse> {
+    return this.dispatch(() =>
+      runsFeedbackExpectedFileUpdate({
+        client: this.client,
+        path: { id: runId, filename },
+        body: { name: newFilename },
+        signal: options.signal,
+      })
+    );
+  }
+
+  async deleteExpected(
+    runId: string,
+    filename: string,
+    options: SignalOptions = {}
+  ): Promise<RunsFeedbackExpectedFileDeleteResponse> {
+    return this.dispatch(() =>
+      runsFeedbackExpectedFileDelete({
+        client: this.client,
+        path: { id: runId, filename },
+        signal: options.signal,
+      })
+    );
+  }
 }
 
-export class RunsEvalResultsResource {
+export class RunsScoresResource {
   constructor(
     private readonly client: Client,
     private readonly dispatch: Dispatch
   ) {}
 
-  async list(runId: string, options: SignalOptions = {}): Promise<RunsEvalResultsListResponse> {
+  async list(runId: string, options: SignalOptions = {}): Promise<RunsScoresListResponse> {
     return this.dispatch(() =>
-      runsEvalResultsList({ client: this.client, path: { id: runId }, signal: options.signal })
+      runsScoresList({ client: this.client, path: { id: runId }, signal: options.signal })
     );
   }
 }

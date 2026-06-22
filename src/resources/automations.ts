@@ -13,10 +13,14 @@ import {
   automationsExamplesUpdate,
   automationsExperimentsCancel,
   automationsExperimentsCreate,
+  automationsExperimentsCreateStream,
+  automationsExperimentsExport,
+  automationsExperimentsExportAll,
   automationsExperimentsGet,
   automationsExperimentsList,
   automationsGet,
   automationsList,
+  automationsSync,
   automationsTriggersGet,
   automationsVersionsList,
 } from '../generated/sdk.gen';
@@ -69,6 +73,12 @@ export class AutomationsResource {
   async triggers(id: string, options: SignalOptions = {}): Promise<AnyResponse> {
     return this.dispatch(() =>
       automationsTriggersGet({ client: this.client, path: { id }, signal: options.signal })
+    );
+  }
+
+  async sync(id: string, options: SignalOptions = {}): Promise<AnyResponse> {
+    return this.dispatch(() =>
+      automationsSync({ client: this.client, path: { id }, signal: options.signal })
     );
   }
 }
@@ -294,6 +304,54 @@ export class AutomationExperimentsResource {
         path: { id: automationId, experimentId },
         signal: options.signal,
       })
+    );
+  }
+
+  async export(
+    automationId: string,
+    experimentId: string,
+    options: { format?: 'csv' | 'json'; signal?: AbortSignal } = {}
+  ): Promise<string> {
+    return this.dispatch(() =>
+      automationsExperimentsExport({
+        client: this.client,
+        path: { id: automationId, experimentId },
+        query: { format: options.format ?? 'csv' },
+        parseAs: 'text',
+        signal: options.signal,
+      })
+    );
+  }
+
+  async exportAll(
+    automationId: string,
+    options: { format?: 'csv' | 'json'; signal?: AbortSignal } = {}
+  ): Promise<string> {
+    return this.dispatch(() =>
+      automationsExperimentsExportAll({
+        client: this.client,
+        path: { id: automationId },
+        query: { format: options.format ?? 'csv' },
+        parseAs: 'text',
+        signal: options.signal,
+      })
+    );
+  }
+
+  async createStream(
+    automationId: string,
+    body: Record<string, unknown> = {},
+    options: SignalOptions = {}
+  ): Promise<ReadableStream<Uint8Array> | null> {
+    return this.dispatch(
+      () =>
+        automationsExperimentsCreateStream({
+          client: this.client,
+          path: { id: automationId },
+          body: body as never,
+          parseAs: 'stream',
+          signal: options.signal,
+        }) as Promise<OperationResult<ReadableStream<Uint8Array> | null>>
     );
   }
 }

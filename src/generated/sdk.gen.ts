@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthCheckData, AuthCheckErrors, AuthCheckResponses, AutomationsDatasetExportData, AutomationsDatasetExportErrors, AutomationsDatasetExportResponses, AutomationsDatasetImportData, AutomationsDatasetImportErrors, AutomationsDatasetImportResponses, AutomationsEvaluatorsGetData, AutomationsEvaluatorsGetErrors, AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsUpdateData, AutomationsEvaluatorsUpdateErrors, AutomationsEvaluatorsUpdateResponses, AutomationsExamplesCreateData, AutomationsExamplesCreateErrors, AutomationsExamplesCreateResponses, AutomationsExamplesDeleteData, AutomationsExamplesDeleteErrors, AutomationsExamplesDeleteResponses, AutomationsExamplesGetData, AutomationsExamplesGetErrors, AutomationsExamplesGetResponses, AutomationsExamplesListData, AutomationsExamplesListErrors, AutomationsExamplesListResponses, AutomationsExamplesRunData, AutomationsExamplesRunErrors, AutomationsExamplesRunResponses, AutomationsExamplesUpdateData, AutomationsExamplesUpdateErrors, AutomationsExamplesUpdateResponses, AutomationsExperimentsCancelData, AutomationsExperimentsCancelErrors, AutomationsExperimentsCancelResponses, AutomationsExperimentsCreateData, AutomationsExperimentsCreateErrors, AutomationsExperimentsCreateResponses, AutomationsExperimentsGetData, AutomationsExperimentsGetErrors, AutomationsExperimentsGetResponses, AutomationsExperimentsListData, AutomationsExperimentsListErrors, AutomationsExperimentsListResponses, AutomationsGetData, AutomationsGetErrors, AutomationsGetResponses, AutomationsListData, AutomationsListErrors, AutomationsListResponses, AutomationsTriggersGetData, AutomationsTriggersGetErrors, AutomationsTriggersGetResponses, AutomationsVersionsListData, AutomationsVersionsListErrors, AutomationsVersionsListResponses, FilesContentGetData, FilesContentGetErrors, FilesContentGetResponses, FilesCreateData, FilesCreateErrors, FilesCreateResponses, FilesDeleteData, FilesDeleteErrors, FilesDeleteResponses, FilesGetData, FilesGetErrors, FilesGetResponses, RunsArtifactsGetData, RunsArtifactsGetErrors, RunsArtifactsGetResponses, RunsArtifactsListData, RunsArtifactsListErrors, RunsArtifactsListResponses, RunsCancelData, RunsCancelErrors, RunsCancelResponses, RunsEvalResultsListData, RunsEvalResultsListErrors, RunsEvalResultsListResponses, RunsEventsListData, RunsEventsListErrors, RunsEventsListResponses, RunsFeedbackClearData, RunsFeedbackClearErrors, RunsFeedbackClearResponses, RunsFeedbackGetData, RunsFeedbackGetErrors, RunsFeedbackGetResponses, RunsFeedbackUpdateData, RunsFeedbackUpdateErrors, RunsFeedbackUpdateResponses, RunsGetData, RunsGetErrors, RunsGetResponses, RunsListData, RunsListErrors, RunsListResponses, RunsPromoteData, RunsPromoteErrors, RunsPromoteResponses, RunsRerunData, RunsRerunErrors, RunsRerunResponses, RunsStartData, RunsStartErrors, RunsStartResponses, RunsStepsListData, RunsStepsListErrors, RunsStepsListResponses, RunsTraceGetData, RunsTraceGetErrors, RunsTraceGetResponses, RunsUsageGetData, RunsUsageGetErrors, RunsUsageGetResponses } from './types.gen';
+import type { AuthCheckData, AuthCheckErrors, AuthCheckResponses, AutomationsDatasetExportData, AutomationsDatasetExportErrors, AutomationsDatasetExportResponses, AutomationsDatasetImportData, AutomationsDatasetImportErrors, AutomationsDatasetImportResponses, AutomationsEvaluatorsGetData, AutomationsEvaluatorsGetErrors, AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsUpdateData, AutomationsEvaluatorsUpdateErrors, AutomationsEvaluatorsUpdateResponses, AutomationsExamplesCreateData, AutomationsExamplesCreateErrors, AutomationsExamplesCreateResponses, AutomationsExamplesDeleteData, AutomationsExamplesDeleteErrors, AutomationsExamplesDeleteResponses, AutomationsExamplesExpectedFileDeleteData, AutomationsExamplesExpectedFileDeleteErrors, AutomationsExamplesExpectedFileDeleteResponses, AutomationsExamplesExpectedFileGetData, AutomationsExamplesExpectedFileGetErrors, AutomationsExamplesExpectedFileGetResponses, AutomationsExamplesExpectedFilesCreateData, AutomationsExamplesExpectedFilesCreateErrors, AutomationsExamplesExpectedFilesCreateResponses, AutomationsExamplesExpectedFilesListData, AutomationsExamplesExpectedFilesListErrors, AutomationsExamplesExpectedFilesListResponses, AutomationsExamplesExpectedFileUpdateData, AutomationsExamplesExpectedFileUpdateErrors, AutomationsExamplesExpectedFileUpdateResponses, AutomationsExamplesGetData, AutomationsExamplesGetErrors, AutomationsExamplesGetResponses, AutomationsExamplesInputFileDeleteData, AutomationsExamplesInputFileDeleteErrors, AutomationsExamplesInputFileDeleteResponses, AutomationsExamplesInputFileGetData, AutomationsExamplesInputFileGetErrors, AutomationsExamplesInputFileGetResponses, AutomationsExamplesInputFilesCreateData, AutomationsExamplesInputFilesCreateErrors, AutomationsExamplesInputFilesCreateResponses, AutomationsExamplesInputFilesListData, AutomationsExamplesInputFilesListErrors, AutomationsExamplesInputFilesListResponses, AutomationsExamplesInputFileUpdateData, AutomationsExamplesInputFileUpdateErrors, AutomationsExamplesInputFileUpdateResponses, AutomationsExamplesListData, AutomationsExamplesListErrors, AutomationsExamplesListResponses, AutomationsExamplesRunData, AutomationsExamplesRunErrors, AutomationsExamplesRunResponses, AutomationsExamplesUpdateData, AutomationsExamplesUpdateErrors, AutomationsExamplesUpdateResponses, AutomationsExperimentsCancelData, AutomationsExperimentsCancelErrors, AutomationsExperimentsCancelResponses, AutomationsExperimentsCreateData, AutomationsExperimentsCreateErrors, AutomationsExperimentsCreateResponses, AutomationsExperimentsCreateStreamData, AutomationsExperimentsCreateStreamErrors, AutomationsExperimentsCreateStreamResponses, AutomationsExperimentsExportAllData, AutomationsExperimentsExportAllErrors, AutomationsExperimentsExportAllResponses, AutomationsExperimentsExportData, AutomationsExperimentsExportErrors, AutomationsExperimentsExportResponses, AutomationsExperimentsGetData, AutomationsExperimentsGetErrors, AutomationsExperimentsGetResponses, AutomationsExperimentsListData, AutomationsExperimentsListErrors, AutomationsExperimentsListResponses, AutomationsGetData, AutomationsGetErrors, AutomationsGetResponses, AutomationsListData, AutomationsListErrors, AutomationsListResponses, AutomationsSyncData, AutomationsSyncErrors, AutomationsSyncResponses, AutomationsTriggersGetData, AutomationsTriggersGetErrors, AutomationsTriggersGetResponses, AutomationsVersionsListData, AutomationsVersionsListErrors, AutomationsVersionsListResponses, ExperimentsResolveData, ExperimentsResolveErrors, ExperimentsResolveResponses, FilesContentGetData, FilesContentGetErrors, FilesContentGetResponses, FilesCreateData, FilesCreateErrors, FilesCreateResponses, FilesDeleteData, FilesDeleteErrors, FilesDeleteResponses, FilesGetData, FilesGetErrors, FilesGetResponses, RunsArtifactsGetData, RunsArtifactsGetErrors, RunsArtifactsGetResponses, RunsArtifactsListData, RunsArtifactsListErrors, RunsArtifactsListResponses, RunsCancelData, RunsCancelErrors, RunsCancelResponses, RunsEventsListData, RunsEventsListErrors, RunsEventsListResponses, RunsFeedbackClearData, RunsFeedbackClearErrors, RunsFeedbackClearResponses, RunsFeedbackExpectedCreateData, RunsFeedbackExpectedCreateErrors, RunsFeedbackExpectedCreateResponses, RunsFeedbackExpectedFileDeleteData, RunsFeedbackExpectedFileDeleteErrors, RunsFeedbackExpectedFileDeleteResponses, RunsFeedbackExpectedFileGetData, RunsFeedbackExpectedFileGetErrors, RunsFeedbackExpectedFileGetResponses, RunsFeedbackExpectedFileUpdateData, RunsFeedbackExpectedFileUpdateErrors, RunsFeedbackExpectedFileUpdateResponses, RunsFeedbackExpectedGetData, RunsFeedbackExpectedGetErrors, RunsFeedbackExpectedGetResponses, RunsFeedbackGetData, RunsFeedbackGetErrors, RunsFeedbackGetResponses, RunsFeedbackUpdateData, RunsFeedbackUpdateErrors, RunsFeedbackUpdateResponses, RunsGetData, RunsGetErrors, RunsGetResponses, RunsListData, RunsListErrors, RunsListResponses, RunsPromoteData, RunsPromoteErrors, RunsPromoteResponses, RunsRerunData, RunsRerunErrors, RunsRerunResponses, RunsScoresListData, RunsScoresListErrors, RunsScoresListResponses, RunsStartData, RunsStartErrors, RunsStartResponses, RunsStepsListData, RunsStepsListErrors, RunsStepsListResponses, RunsTraceGetData, RunsTraceGetErrors, RunsTraceGetResponses, RunsUsageGetData, RunsUsageGetErrors, RunsUsageGetResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -30,7 +30,31 @@ export const authCheck = <ThrowOnError extends boolean = false>(options?: Option
 });
 
 /**
+ * List automations
+ *
+ * Returns workflows and agents through one runnable automation collection. Use `type` to narrow to workflows or agents, and `search` to find automations by slug, name, or description.
+ */
+export const automationsList = <ThrowOnError extends boolean = false>(options?: Options<AutomationsListData, ThrowOnError>) => (options?.client ?? client).get<AutomationsListResponses, AutomationsListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations',
+    ...options
+});
+
+/**
+ * Get automation
+ *
+ * Get one runnable workflow or agent automation by id or typed alias.
+ */
+export const automationsGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsGetResponses, AutomationsGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}',
+    ...options
+});
+
+/**
  * Export automation dataset
+ *
+ * Download the automation dataset as a ZIP archive. The archive uses the examples/<name>/input and examples/<name>/expected folder convention, so it can be re-imported into another automation or environment.
  */
 export const automationsDatasetExport = <ThrowOnError extends boolean = false>(options: Options<AutomationsDatasetExportData, ThrowOnError>) => (options.client ?? client).get<AutomationsDatasetExportResponses, AutomationsDatasetExportErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -40,6 +64,8 @@ export const automationsDatasetExport = <ThrowOnError extends boolean = false>(o
 
 /**
  * Import automation dataset
+ *
+ * Import a dataset ZIP archive using the examples/<name>/input and examples/<name>/expected folder convention. Use `mode=append` for additive imports or `mode=replace` to replace the dataset.
  */
 export const automationsDatasetImport = <ThrowOnError extends boolean = false>(options: Options<AutomationsDatasetImportData, ThrowOnError>) => (options.client ?? client).post<AutomationsDatasetImportResponses, AutomationsDatasetImportErrors, ThrowOnError>({
     ...formDataBodySerializer,
@@ -53,7 +79,9 @@ export const automationsDatasetImport = <ThrowOnError extends boolean = false>(o
 });
 
 /**
- * Get automation evaluators
+ * Get evaluators
+ *
+ * Fetch the evaluator configuration for an automation. Evaluators produce automated `score` results, which are separate from human feedback `rating` values.
  */
 export const automationsEvaluatorsGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsEvaluatorsGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -62,7 +90,9 @@ export const automationsEvaluatorsGet = <ThrowOnError extends boolean = false>(o
 });
 
 /**
- * Replace automation evaluators
+ * Replace evaluators
+ *
+ * Replace the evaluator YAML for an automation. The submitted YAML is validated before it becomes the source for future experiment scores.
  */
 export const automationsEvaluatorsUpdate = <ThrowOnError extends boolean = false>(options: Options<AutomationsEvaluatorsUpdateData, ThrowOnError>) => (options.client ?? client).put<AutomationsEvaluatorsUpdateResponses, AutomationsEvaluatorsUpdateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -75,47 +105,9 @@ export const automationsEvaluatorsUpdate = <ThrowOnError extends boolean = false
 });
 
 /**
- * Delete automation example
- */
-export const automationsExamplesDelete = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesDeleteData, ThrowOnError>) => (options.client ?? client).delete<AutomationsExamplesDeleteResponses, AutomationsExamplesDeleteErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}',
-    ...options
-});
-
-/**
- * Get automation example
- */
-export const automationsExamplesGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesGetResponses, AutomationsExamplesGetErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}',
-    ...options
-});
-
-/**
- * Update automation example
- */
-export const automationsExamplesUpdate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesUpdateData, ThrowOnError>) => (options.client ?? client).patch<AutomationsExamplesUpdateResponses, AutomationsExamplesUpdateErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Run automation example
- */
-export const automationsExamplesRun = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesRunData, ThrowOnError>) => (options.client ?? client).post<AutomationsExamplesRunResponses, AutomationsExamplesRunErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}/run',
-    ...options
-});
-
-/**
- * List automation examples
+ * List dataset examples
+ *
+ * List dataset examples for one automation. Examples contain input, expected output, expected files, metadata, and optional overrides used by evaluation runs.
  */
 export const automationsExamplesList = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesListData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesListResponses, AutomationsExamplesListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -124,7 +116,9 @@ export const automationsExamplesList = <ThrowOnError extends boolean = false>(op
 });
 
 /**
- * Create automation example
+ * Create dataset example
+ *
+ * Create one dataset example from JSON fields. Use dataset import for archive-based uploads and file-bearing examples.
  */
 export const automationsExamplesCreate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesCreateData, ThrowOnError>) => (options.client ?? client).post<AutomationsExamplesCreateResponses, AutomationsExamplesCreateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -137,7 +131,185 @@ export const automationsExamplesCreate = <ThrowOnError extends boolean = false>(
 });
 
 /**
- * List automation experiments
+ * Delete dataset example
+ *
+ * Delete one dataset example from the automation dataset. This removes the example from future experiments.
+ */
+export const automationsExamplesDelete = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesDeleteData, ThrowOnError>) => (options.client ?? client).delete<AutomationsExamplesDeleteResponses, AutomationsExamplesDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}',
+    ...options
+});
+
+/**
+ * Get dataset example
+ *
+ * Fetch one dataset example, including input, expected output, expected files, metadata, and overrides.
+ */
+export const automationsExamplesGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesGetResponses, AutomationsExamplesGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}',
+    ...options
+});
+
+/**
+ * Update dataset example
+ *
+ * Partially update a dataset example. Omitted fields are preserved; pass null for nullable fields to clear them.
+ */
+export const automationsExamplesUpdate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesUpdateData, ThrowOnError>) => (options.client ?? client).patch<AutomationsExamplesUpdateResponses, AutomationsExamplesUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List expected files
+ *
+ * List files stored under the expected folder for one automation dataset example.
+ */
+export const automationsExamplesExpectedFilesList = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesExpectedFilesListData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesExpectedFilesListResponses, AutomationsExamplesExpectedFilesListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}/expected',
+    ...options
+});
+
+/**
+ * Upload expected files
+ *
+ * Upload one or more files into the expected folder for an automation dataset example. Use `$file` references such as `expected/result.pdf` from expected JSON to compare file outputs.
+ */
+export const automationsExamplesExpectedFilesCreate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesExpectedFilesCreateData, ThrowOnError>) => (options.client ?? client).post<AutomationsExamplesExpectedFilesCreateResponses, AutomationsExamplesExpectedFilesCreateErrors, ThrowOnError>({
+    ...formDataBodySerializer,
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}/expected',
+    ...options,
+    headers: {
+        'Content-Type': null,
+        ...options.headers
+    }
+});
+
+/**
+ * Delete expected file
+ *
+ * Delete one file from an automation dataset example expected folder.
+ */
+export const automationsExamplesExpectedFileDelete = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesExpectedFileDeleteData, ThrowOnError>) => (options.client ?? client).delete<AutomationsExamplesExpectedFileDeleteResponses, AutomationsExamplesExpectedFileDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}/expected/{path}',
+    ...options
+});
+
+/**
+ * Download expected dataset file
+ *
+ * Download one expected file attached to an automation dataset example.
+ */
+export const automationsExamplesExpectedFileGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesExpectedFileGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesExpectedFileGetResponses, AutomationsExamplesExpectedFileGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}/expected/{path}',
+    ...options
+});
+
+/**
+ * Rename expected file
+ *
+ * Rename one expected file attached to an automation dataset example. The parent folder is preserved.
+ */
+export const automationsExamplesExpectedFileUpdate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesExpectedFileUpdateData, ThrowOnError>) => (options.client ?? client).patch<AutomationsExamplesExpectedFileUpdateResponses, AutomationsExamplesExpectedFileUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}/expected/{path}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List input files
+ *
+ * List files stored under the input folder for one automation dataset example.
+ */
+export const automationsExamplesInputFilesList = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesInputFilesListData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesInputFilesListResponses, AutomationsExamplesInputFilesListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}/input',
+    ...options
+});
+
+/**
+ * Upload input files
+ *
+ * Upload one or more files into the input folder for an automation dataset example. Use `$file` references such as `input/invoice.pdf` from the example input JSON to consume them.
+ */
+export const automationsExamplesInputFilesCreate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesInputFilesCreateData, ThrowOnError>) => (options.client ?? client).post<AutomationsExamplesInputFilesCreateResponses, AutomationsExamplesInputFilesCreateErrors, ThrowOnError>({
+    ...formDataBodySerializer,
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}/input',
+    ...options,
+    headers: {
+        'Content-Type': null,
+        ...options.headers
+    }
+});
+
+/**
+ * Delete input file
+ *
+ * Delete one file from an automation dataset example input folder.
+ */
+export const automationsExamplesInputFileDelete = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesInputFileDeleteData, ThrowOnError>) => (options.client ?? client).delete<AutomationsExamplesInputFileDeleteResponses, AutomationsExamplesInputFileDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}/input/{path}',
+    ...options
+});
+
+/**
+ * Download input file
+ *
+ * Download one file from an automation dataset example input folder.
+ */
+export const automationsExamplesInputFileGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesInputFileGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesInputFileGetResponses, AutomationsExamplesInputFileGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}/input/{path}',
+    ...options
+});
+
+/**
+ * Rename input file
+ *
+ * Rename one input file attached to an automation dataset example. The parent folder is preserved.
+ */
+export const automationsExamplesInputFileUpdate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesInputFileUpdateData, ThrowOnError>) => (options.client ?? client).patch<AutomationsExamplesInputFileUpdateResponses, AutomationsExamplesInputFileUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}/input/{path}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Run dataset example
+ *
+ * Start an asynchronous run using the input from one dataset example. Poll `GET /api/v1/runs/{id}` for completion and use run scores or feedback endpoints to review the result.
+ */
+export const automationsExamplesRun = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesRunData, ThrowOnError>) => (options.client ?? client).post<AutomationsExamplesRunResponses, AutomationsExamplesRunErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/examples/{exampleId}/run',
+    ...options
+});
+
+/**
+ * List experiments
+ *
+ * List experiment batches for one automation. Each experiment runs selected dataset examples and records automated evaluator scores.
  */
 export const automationsExperimentsList = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsListData, ThrowOnError>) => (options.client ?? client).get<AutomationsExperimentsListResponses, AutomationsExperimentsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -146,7 +318,9 @@ export const automationsExperimentsList = <ThrowOnError extends boolean = false>
 });
 
 /**
- * Create automation experiment
+ * Create experiment
+ *
+ * Start an asynchronous experiment batch for one automation. Omit `examples` to run the full dataset, or pass specific example ids to run a subset.
  */
 export const automationsExperimentsCreate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsCreateData, ThrowOnError>) => (options.client ?? client).post<AutomationsExperimentsCreateResponses, AutomationsExperimentsCreateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -159,16 +333,9 @@ export const automationsExperimentsCreate = <ThrowOnError extends boolean = fals
 });
 
 /**
- * Cancel automation experiment
- */
-export const automationsExperimentsCancel = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsCancelData, ThrowOnError>) => (options.client ?? client).post<AutomationsExperimentsCancelResponses, AutomationsExperimentsCancelErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/experiments/{experimentId}/cancel',
-    ...options
-});
-
-/**
- * Get automation experiment
+ * Get experiment
+ *
+ * Fetch one experiment batch with its run summaries and evaluator results grouped by run id.
  */
 export const automationsExperimentsGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsExperimentsGetResponses, AutomationsExperimentsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -177,13 +344,61 @@ export const automationsExperimentsGet = <ThrowOnError extends boolean = false>(
 });
 
 /**
- * Get automation
+ * Cancel experiment
  *
- * Get one runnable workflow or agent automation by id or typed alias.
+ * Request cancellation for an experiment batch. Already-completed runs remain recorded; queued or running work is cancelled when possible.
  */
-export const automationsGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsGetResponses, AutomationsGetErrors, ThrowOnError>({
+export const automationsExperimentsCancel = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsCancelData, ThrowOnError>) => (options.client ?? client).post<AutomationsExperimentsCancelResponses, AutomationsExperimentsCancelErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}',
+    url: '/api/v1/automations/{id}/experiments/{experimentId}/cancel',
+    ...options
+});
+
+/**
+ * Export experiment eval results
+ *
+ * Download eval result rows for a single experiment batch as CSV or JSON.
+ */
+export const automationsExperimentsExport = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsExportData, ThrowOnError>) => (options.client ?? client).get<AutomationsExperimentsExportResponses, AutomationsExperimentsExportErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/experiments/{experimentId}/export',
+    ...options
+});
+
+/**
+ * Export all experiment eval results
+ *
+ * Download every eval result row for an automation as CSV or JSON.
+ */
+export const automationsExperimentsExportAll = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsExportAllData, ThrowOnError>) => (options.client ?? client).get<AutomationsExperimentsExportAllResponses, AutomationsExperimentsExportAllErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/experiments/export',
+    ...options
+});
+
+/**
+ * Create automation experiment with NDJSON progress
+ *
+ * Starts a batch eval experiment for workflow or agent automations and streams per-run completion events as NDJSON.
+ */
+export const automationsExperimentsCreateStream = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsCreateStreamData, ThrowOnError>) => (options.client ?? client).post<AutomationsExperimentsCreateStreamResponses, AutomationsExperimentsCreateStreamErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/experiments/stream',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Sync automation from latest Git release
+ *
+ * Reconciles automation registry metadata and trigger projections from the latest Git source release. This operation is idempotent for unchanged source state: repeated calls against the same latest release leave the same automation registry state and may repeat the same warnings. Requires a Bearer API token for the organization and a user-backed API key. It does not publish source; it reads the already-published latest release manifest. Versioned targets are rejected with 400, missing organization/source/release/manifest state returns 404, invalid manifests return 400, and provider or persistence failures return 5xx.
+ */
+export const automationsSync = <ThrowOnError extends boolean = false>(options: Options<AutomationsSyncData, ThrowOnError>) => (options.client ?? client).post<AutomationsSyncResponses, AutomationsSyncErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/sync',
     ...options
 });
 
@@ -210,25 +425,30 @@ export const automationsVersionsList = <ThrowOnError extends boolean = false>(op
 });
 
 /**
- * List automations
+ * Resolve experiment by id
  *
- * List runnable workflow and agent automations in one collection.
+ * Returns the owning automation for an experiment batch id. Used when callers only know the experiment id.
  */
-export const automationsList = <ThrowOnError extends boolean = false>(options?: Options<AutomationsListData, ThrowOnError>) => (options?.client ?? client).get<AutomationsListResponses, AutomationsListErrors, ThrowOnError>({
+export const experimentsResolve = <ThrowOnError extends boolean = false>(options: Options<ExperimentsResolveData, ThrowOnError>) => (options.client ?? client).get<ExperimentsResolveResponses, ExperimentsResolveErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations',
+    url: '/api/v1/experiments/{experimentId}',
     ...options
 });
 
 /**
- * Download file content
+ * Upload file
  *
- * Download bytes for a reusable uploaded file.
+ * Upload a reusable file that can later be referenced by run inputs or dataset examples.
  */
-export const filesContentGet = <ThrowOnError extends boolean = false>(options: Options<FilesContentGetData, ThrowOnError>) => (options.client ?? client).get<FilesContentGetResponses, FilesContentGetErrors, ThrowOnError>({
+export const filesCreate = <ThrowOnError extends boolean = false>(options: Options<FilesCreateData, ThrowOnError>) => (options.client ?? client).post<FilesCreateResponses, FilesCreateErrors, ThrowOnError>({
+    ...formDataBodySerializer,
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/files/{id}/content',
-    ...options
+    url: '/api/v1/files',
+    ...options,
+    headers: {
+        'Content-Type': null,
+        ...options.headers
+    }
 });
 
 /**
@@ -254,19 +474,14 @@ export const filesGet = <ThrowOnError extends boolean = false>(options: Options<
 });
 
 /**
- * Upload file
+ * Download file content
  *
- * Upload a reusable file that can later be referenced by run inputs or dataset examples.
+ * Download bytes for a reusable uploaded file.
  */
-export const filesCreate = <ThrowOnError extends boolean = false>(options: Options<FilesCreateData, ThrowOnError>) => (options.client ?? client).post<FilesCreateResponses, FilesCreateErrors, ThrowOnError>({
-    ...formDataBodySerializer,
+export const filesContentGet = <ThrowOnError extends boolean = false>(options: Options<FilesContentGetData, ThrowOnError>) => (options.client ?? client).get<FilesContentGetResponses, FilesContentGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/files',
-    ...options,
-    headers: {
-        'Content-Type': null,
-        ...options.headers
-    }
+    url: '/api/v1/files/{id}/content',
+    ...options
 });
 
 /**
@@ -296,6 +511,28 @@ export const runsStart = <ThrowOnError extends boolean = false>(options: Options
 });
 
 /**
+ * Get a run
+ *
+ * Fetch one run by id. By default this returns core metadata plus terminal output/error fields. Pass `?expand=input,usage,execution,debug` to include detailed sub-objects; `expand=execution` is also where embedded feedback and expected artifacts appear.
+ */
+export const runsGet = <ThrowOnError extends boolean = false>(options: Options<RunsGetData, ThrowOnError>) => (options.client ?? client).get<RunsGetResponses, RunsGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}',
+    ...options
+});
+
+/**
+ * List run artifacts
+ *
+ * Returns a JSON list of downloadable artifact paths for a run. Pass `zip=1` to switch the response to a ZIP download containing output files.
+ */
+export const runsArtifactsList = <ThrowOnError extends boolean = false>(options: Options<RunsArtifactsListData, ThrowOnError>) => (options.client ?? client).get<RunsArtifactsListResponses, RunsArtifactsListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/artifacts',
+    ...options
+});
+
+/**
  * Download run artifact
  *
  * Download one artifact by path.
@@ -307,17 +544,6 @@ export const runsArtifactsGet = <ThrowOnError extends boolean = false>(options: 
 });
 
 /**
- * List run artifacts
- *
- * List downloadable artifact paths for a run.
- */
-export const runsArtifactsList = <ThrowOnError extends boolean = false>(options: Options<RunsArtifactsListData, ThrowOnError>) => (options.client ?? client).get<RunsArtifactsListResponses, RunsArtifactsListErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/artifacts',
-    ...options
-});
-
-/**
  * Cancel run
  *
  * Cancel a queued run or request cancellation of an in-flight run.
@@ -325,15 +551,6 @@ export const runsArtifactsList = <ThrowOnError extends boolean = false>(options:
 export const runsCancel = <ThrowOnError extends boolean = false>(options: Options<RunsCancelData, ThrowOnError>) => (options.client ?? client).post<RunsCancelResponses, RunsCancelErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/runs/{id}/cancel',
-    ...options
-});
-
-/**
- * List run eval results
- */
-export const runsEvalResultsList = <ThrowOnError extends boolean = false>(options: Options<RunsEvalResultsListData, ThrowOnError>) => (options.client ?? client).get<RunsEvalResultsListResponses, RunsEvalResultsListErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/eval-results',
     ...options
 });
 
@@ -350,6 +567,8 @@ export const runsEventsList = <ThrowOnError extends boolean = false>(options: Op
 
 /**
  * Clear run feedback
+ *
+ * Deletes all feedback state for the run: human feedback, expected JSON output, and every expected artifact file.
  */
 export const runsFeedbackClear = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackClearData, ThrowOnError>) => (options.client ?? client).delete<RunsFeedbackClearResponses, RunsFeedbackClearErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -359,6 +578,8 @@ export const runsFeedbackClear = <ThrowOnError extends boolean = false>(options:
 
 /**
  * Get run feedback
+ *
+ * Returns the complete feedback state for one run, including the human feedback object, expected JSON output, and expected files. Use `GET /api/v1/runs/{id}` with `expand=execution` when you only need feedback embedded in a run response.
  */
 export const runsFeedbackGet = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackGetData, ThrowOnError>) => (options.client ?? client).get<RunsFeedbackGetResponses, RunsFeedbackGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -368,6 +589,8 @@ export const runsFeedbackGet = <ThrowOnError extends boolean = false>(options: O
 
 /**
  * Update run feedback
+ *
+ * Partially update human feedback and expected JSON output for a run. Omitted fields are left unchanged. Pass null to clear a field.
  */
 export const runsFeedbackUpdate = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackUpdateData, ThrowOnError>) => (options.client ?? client).put<RunsFeedbackUpdateResponses, RunsFeedbackUpdateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -380,7 +603,73 @@ export const runsFeedbackUpdate = <ThrowOnError extends boolean = false>(options
 });
 
 /**
- * Promote a run to a dataset example
+ * Get expected output
+ *
+ * Returns the expected JSON output and expected files currently attached to the run feedback record.
+ */
+export const runsFeedbackExpectedGet = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackExpectedGetData, ThrowOnError>) => (options.client ?? client).get<RunsFeedbackExpectedGetResponses, RunsFeedbackExpectedGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/feedback/expected',
+    ...options
+});
+
+/**
+ * Add expected file
+ *
+ * Attach one expected file to run feedback. Send multipart/form-data with `file` and optional `name` to upload a local file, or JSON with `outputFileName` and optional `expectedName` to copy an existing run output file.
+ */
+export const runsFeedbackExpectedCreate = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackExpectedCreateData, ThrowOnError>) => (options.client ?? client).post<RunsFeedbackExpectedCreateResponses, RunsFeedbackExpectedCreateErrors, ThrowOnError>({
+    ...((options.body && typeof options.body === 'object' && 'file' in options.body) ? formDataBodySerializer : {}),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/feedback/expected',
+    ...options,
+    headers: {
+        'Content-Type': (options.body && typeof options.body === 'object' && 'file' in options.body) ? null : 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete expected artifact file
+ *
+ * Deletes one expected artifact file attached to the run feedback record. The feedback text and expected JSON output are left unchanged.
+ */
+export const runsFeedbackExpectedFileDelete = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackExpectedFileDeleteData, ThrowOnError>) => (options.client ?? client).delete<RunsFeedbackExpectedFileDeleteResponses, RunsFeedbackExpectedFileDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/feedback/expected/{filename}',
+    ...options
+});
+
+/**
+ * Download expected artifact file
+ *
+ * Downloads one expected artifact file attached to the run feedback record. Use the `filename` returned by the expected-output collection endpoint.
+ */
+export const runsFeedbackExpectedFileGet = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackExpectedFileGetData, ThrowOnError>) => (options.client ?? client).get<RunsFeedbackExpectedFileGetResponses, RunsFeedbackExpectedFileGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/feedback/expected/{filename}',
+    ...options
+});
+
+/**
+ * Rename expected artifact file
+ *
+ * Renames one expected artifact file attached to the run feedback record.
+ */
+export const runsFeedbackExpectedFileUpdate = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackExpectedFileUpdateData, ThrowOnError>) => (options.client ?? client).patch<RunsFeedbackExpectedFileUpdateResponses, RunsFeedbackExpectedFileUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/feedback/expected/{filename}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Promote run to example
+ *
+ * Turn a reviewed run into a dataset example. The new example uses the run input, the run output, and any expected output/files stored through the feedback endpoints. Use this after adding feedback or expected artifacts to capture a regression test.
  */
 export const runsPromote = <ThrowOnError extends boolean = false>(options: Options<RunsPromoteData, ThrowOnError>) => (options.client ?? client).post<RunsPromoteResponses, RunsPromoteErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -393,9 +682,9 @@ export const runsPromote = <ThrowOnError extends boolean = false>(options: Optio
 });
 
 /**
- * Rerun run
+ * Retry run
  *
- * Start a new run from an existing run id.
+ * Start a new run using the source run input. By default the retry uses the latest automation version; pass `version=original` to pin the same source version as the original run.
  */
 export const runsRerun = <ThrowOnError extends boolean = false>(options: Options<RunsRerunData, ThrowOnError>) => (options.client ?? client).post<RunsRerunResponses, RunsRerunErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -404,13 +693,13 @@ export const runsRerun = <ThrowOnError extends boolean = false>(options: Options
 });
 
 /**
- * Get run
+ * List run evaluator scores
  *
- * Fetch one run by id. Use `expand` for input, usage, execution, and debug detail.
+ * List automated evaluator results for one run. Use `score` for evaluator output and `rating` on run feedback for human verdicts.
  */
-export const runsGet = <ThrowOnError extends boolean = false>(options: Options<RunsGetData, ThrowOnError>) => (options.client ?? client).get<RunsGetResponses, RunsGetErrors, ThrowOnError>({
+export const runsScoresList = <ThrowOnError extends boolean = false>(options: Options<RunsScoresListData, ThrowOnError>) => (options.client ?? client).get<RunsScoresListResponses, RunsScoresListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}',
+    url: '/api/v1/runs/{id}/scores',
     ...options
 });
 
@@ -427,6 +716,8 @@ export const runsStepsList = <ThrowOnError extends boolean = false>(options: Opt
 
 /**
  * Get run trace
+ *
+ * Return low-level execution trace events for debugging one run. Workflow runs expose observability phases or step records; agent runs expose parsed trace.jsonl events. The shape is intentionally extensible, but common fields are documented.
  */
 export const runsTraceGet = <ThrowOnError extends boolean = false>(options: Options<RunsTraceGetData, ThrowOnError>) => (options.client ?? client).get<RunsTraceGetResponses, RunsTraceGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
