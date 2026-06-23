@@ -227,70 +227,84 @@ export type RunStartMultipartRequest = {
 };
 
 /**
- * Partial update for run feedback. Omitted fields are preserved; pass null to clear a field.
- */
-export type RunFeedbackRequest = {
-    /**
-     * Human feedback text. Pass null to clear the text.
-     */
-    body?: string | null;
-    /**
-     * Human verdict for this run: `pass`, `fail`, or `partial`. Pass null to clear it.
-     */
-    rating?: 'pass' | 'fail' | 'partial' | null;
-    /**
-     * Review lifecycle status: `open`, `resolved`, or `ignored`. Pass null to clear it.
-     */
-    status?: 'open' | 'resolved' | 'ignored' | null;
-    /**
-     * Expected JSON output for this run. Pass null to clear it.
-     */
-    expected?: unknown | null;
-};
-
-/**
- * JSON request body for copying one run output file into the expected artifact set.
- */
-export type RunExpectedFileCopyRequest = {
-    /**
-     * Name of an existing run output file to copy into expected artifacts.
-     */
-    outputFileName: string;
-    /**
-     * Optional name for the copied expected file. Defaults to the original output file name.
-     */
-    expectedName?: string;
-};
-
-export type RunExpectedFileUploadRequest = {
-    /**
-     * Expected artifact file to upload.
-     */
-    file: Blob | File;
-    /**
-     * Optional stored expected file name. Defaults to the uploaded filename.
-     */
-    name?: string;
-};
-
-/**
- * Rename one expected file.
- */
-export type RunExpectedFileUpdateRequest = {
-    /**
-     * New expected file name.
-     */
-    name: string;
-};
-
-/**
- * Create or update a dataset example from the run input, actual output, and feedback expected artifacts.
+ * Create or update a dataset example from the run input, actual output, and review corrections.
  */
 export type PromoteRunRequest = {
     /**
      * Dataset example name to create or update. Defaults to a generated name when omitted.
      */
     name?: string;
+};
+
+/**
+ * Create or replace review metadata for a run. Attribution fields (`reviewedBy`, `closedBy`, and their emails) are read-only and populated from the authenticated user or API key creator.
+ */
+export type RunReviewRequest = {
+    /**
+     * Reviewer verdict. Omit or send null for feedback without a ranking (nit). Defaults are applied client-side only; any verdict/status combination is accepted.
+     */
+    verdict?: 'correct' | 'incorrect' | null;
+    /**
+     * Review lifecycle. Defaults from verdict (`correct` → `closed`, otherwise `open`). Use `closed` or `wont_fix` to close an open review.
+     */
+    status?: 'open' | 'closed' | 'wont_fix';
+    /**
+     * Reviewer note.
+     */
+    note?: string | null;
+    /**
+     * Corrected JSON output for this run. Send `null` to clear a previously stored correction.
+     */
+    correctedOutput?: unknown | null;
+    /**
+     * Field and file corrections. When present, replaces the entire correction set for this review. Omit to leave existing corrections unchanged.
+     */
+    corrections?: Array<{
+        id?: string;
+        kind: 'field' | 'file';
+        path: string;
+        label?: string | null;
+        originalValue?: unknown;
+        correctedValue?: unknown;
+        note?: string | null;
+        fileVerdict?: 'correct' | 'wrong' | 'replaced' | null;
+        correctedArtifactPath?: string | null;
+    }>;
+};
+
+/**
+ * JSON request body for copying one run output file into the corrected artifact set.
+ */
+export type RunReviewExpectedFileCopyRequest = {
+    /**
+     * Name of an existing run output file to copy into corrected artifacts.
+     */
+    outputFileName: string;
+    /**
+     * Optional name for the copied corrected file. Defaults to the original output file name.
+     */
+    expectedName?: string;
+};
+
+export type RunReviewExpectedFileUploadRequest = {
+    /**
+     * Corrected artifact file to upload.
+     */
+    file: Blob | File;
+    /**
+     * Optional stored corrected file name. Defaults to the uploaded filename.
+     */
+    name?: string;
+};
+
+/**
+ * Rename one corrected file.
+ */
+export type RunReviewExpectedFileUpdateRequest = {
+    /**
+     * New corrected file name.
+     */
+    name: string;
 };
 
 export type AuthCheckResponse = {
@@ -747,7 +761,7 @@ export type EvalResult = {
      */
     evaluatorType: string;
     /**
-     * Automated evaluator score. Do not confuse this with human feedback `rating`.
+     * Automated evaluator score. Do not confuse this with a human review verdict.
      */
     score: number | null;
     /**
@@ -779,6 +793,85 @@ export type EvalResult = {
      */
     error: string | null;
     createdAt: string;
+};
+
+export type RunReviewHealthResponse = {
+    timeRange: {
+        from: string;
+        to: string;
+    };
+    granularity: {
+        bucket: 'day' | 'week' | 'month';
+        rollingWindow: number;
+        minRollingReviews: number;
+    };
+    summary: RunReviewHealthSummary;
+    buckets: Array<RunReviewHealthBucket>;
+    rolling: Array<RunReviewHealthRollingPoint>;
+};
+
+export type RunReviewHealthSummary = {
+    totalRuns: number;
+    /**
+     * Runs with a ranked verdict (`correct` or `incorrect`). Null verdict (nit) is excluded.
+     */
+    reviewedRuns: number;
+    reviewCoverage: number | null;
+    correctReviews: number;
+    incorrectReviews: number;
+    /**
+     * Runs with a review row and null verdict (nit). Excluded from review coverage and accuracy.
+     */
+    nitReviews: number;
+    reviewedCorrectness: number | null;
+    confidence: RunReviewHealthConfidence;
+};
+
+/**
+ * Wilson score confidence interval for reviewed correctness. Null bounds mean there are no reviewed runs in the sample.
+ */
+export type RunReviewHealthConfidence = {
+    lower: number | null;
+    upper: number | null;
+    method: 'wilson';
+};
+
+export type RunReviewHealthBucket = {
+    start: string;
+    end: string;
+    totalRuns: number;
+    /**
+     * Runs with a ranked verdict (`correct` or `incorrect`). Null verdict (nit) is excluded.
+     */
+    reviewedRuns: number;
+    reviewCoverage: number | null;
+    correctReviews: number;
+    incorrectReviews: number;
+    /**
+     * Runs with a review row and null verdict (nit). Excluded from review coverage and accuracy.
+     */
+    nitReviews: number;
+    reviewedCorrectness: number | null;
+};
+
+export type RunReviewHealthRollingPoint = {
+    at: string;
+    /**
+     * Runs with a ranked verdict (`correct` or `incorrect`). Null verdict (nit) is excluded.
+     */
+    reviewedRuns: number;
+    correctReviews: number;
+    reviewedCorrectness: number;
+    confidenceLower: number;
+    confidenceUpper: number;
+    /**
+     * Total production runs in the rolling window ending at this point.
+     */
+    totalRunsInWindow: number;
+    /**
+     * Share of runs in the rolling window that were reviewed (0-1). Uses the same window size as rolling accuracy, applied to all runs.
+     */
+    reviewCoverage: number;
 };
 
 export type AutomationTriggersResponse = {
@@ -833,6 +926,10 @@ export type RunListItem = {
      * True when the run has reached a terminal status.
      */
     finished: boolean;
+    /**
+     * Deterministic pseudo-random rank in [0, 1) for this run within the tenant. Use with a sample rate threshold to review a stable subset.
+     */
+    sampleRank: number;
     timing: RunTiming;
     source: RunSource;
     trigger: RunTrigger;
@@ -944,6 +1041,10 @@ export type RunExecutionMeta = {
      */
     batchId: string | null;
     retry: RunExecutionRetry;
+    /**
+     * Lightweight review state for run list rows.
+     */
+    review?: RunReviewSummary | null;
 };
 
 export type ExecutionStatus = 'created' | 'pending' | 'running' | 'waiting' | 'finalizing' | 'completed' | 'failed' | 'cancelled' | 'rejected';
@@ -966,6 +1067,19 @@ export type RunExecutionRetry = {
     } | null;
 };
 
+export type RunReviewSummary = {
+    verdict: 'correct' | 'incorrect' | null;
+    status: 'open' | 'closed' | 'wont_fix';
+    /**
+     * True when review notes were left.
+     */
+    hasNote: boolean;
+    /**
+     * Number of field/file corrections.
+     */
+    correctionCount: number;
+};
+
 export type RunStartResponse = RunAccepted | Run;
 
 export type RunAccepted = {
@@ -982,6 +1096,10 @@ export type Run = {
      * True when the run has reached a terminal status.
      */
     finished: boolean;
+    /**
+     * Deterministic pseudo-random rank in [0, 1) for this run within the tenant. Use with a sample rate threshold to review a stable subset.
+     */
+    sampleRank: number;
     timing: RunTiming;
     source: RunSource;
     trigger: RunTrigger;
@@ -1054,13 +1172,7 @@ export type RunInput = {
     metadata?: unknown;
 };
 
-/**
- * A file attached to a run input, output, or expected artifact set.
- */
 export type RunFile = {
-    /**
-     * File name or slash-delimited artifact path.
-     */
     name: string;
 };
 
@@ -1100,6 +1212,7 @@ export type WorkflowRunExecution = {
      */
     batchId: string | null;
     retry: RunExecutionRetry;
+    review?: RunReview | null;
     /**
      * Per-step executions of the workflow run.
      */
@@ -1108,7 +1221,6 @@ export type WorkflowRunExecution = {
      * Workflow definition snapshot captured when the run was created.
      */
     definitionSnapshot?: unknown | null;
-    feedback?: RunFeedback | null;
     /**
      * Ground-truth expected output and files.
      */
@@ -1118,58 +1230,51 @@ export type WorkflowRunExecution = {
     };
 };
 
-/**
- * Canonical human feedback object for a run. Use feedback endpoints to read, update, clear, or promote it to a dataset example.
- */
-export type RunFeedback = {
+export type RunReview = {
+    id: string;
+    verdict: 'correct' | 'incorrect' | null;
+    status: 'open' | 'closed' | 'wont_fix';
+    note: string;
+    correctedOutput?: unknown | null;
     /**
-     * Human verdict for the run: `pass`, `fail`, or `partial`. This is separate from evaluator `score` values.
+     * User id of the last reviewer. Read-only; set from the authenticated user or API key creator.
      */
-    rating: string | null;
+    reviewedBy: string | null;
     /**
-     * Review lifecycle status: `open` needs attention, `resolved` was addressed, and `ignored` was acknowledged but intentionally not acted on.
+     * Email of the last reviewer. Read-only; set from the authenticated user or API key creator.
      */
-    status: string | null;
+    reviewedByEmail: string | null;
+    reviewedAt: string;
     /**
-     * Human feedback text written for this run.
+     * User id recorded when the review was closed. Read-only; set when status becomes closed or wont_fix.
      */
-    body: string;
+    closedBy: string | null;
     /**
-     * When feedback was first created.
+     * Email recorded when the review was closed. Read-only; set when status becomes closed or wont_fix.
      */
-    createdAt: string | null;
+    closedByEmail: string | null;
+    closedAt: string | null;
+    closedNote: string | null;
+    createdAt: string;
+    updatedAt: string;
+    corrections: Array<RunReviewCorrection>;
+};
+
+export type RunReviewCorrection = {
+    id: string;
+    kind: 'field' | 'file';
     /**
-     * User id that created the feedback.
+     * JSON Pointer for field corrections, or canonical artifact path for file reviews.
      */
-    createdBy: string | null;
-    /**
-     * Email of the user that created the feedback.
-     */
-    createdByEmail: string | null;
-    /**
-     * When feedback was last changed.
-     */
-    updatedAt: string | null;
-    /**
-     * When feedback was marked resolved or ignored.
-     */
-    resolvedAt: string | null;
-    /**
-     * User id that resolved or ignored the feedback.
-     */
-    resolvedBy: string | null;
-    /**
-     * Email of the user that resolved or ignored the feedback.
-     */
-    resolvedByEmail: string | null;
-    /**
-     * Agent session id that resolved the feedback, when applicable.
-     */
-    resolvedBySessionId: string | null;
-    /**
-     * Dataset example name created from this feedback, if promoted.
-     */
-    promotedExampleName: string | null;
+    path: string;
+    label: string | null;
+    originalValue?: unknown | null;
+    correctedValue?: unknown | null;
+    note: string;
+    fileVerdict?: 'correct' | 'wrong' | 'replaced' | null;
+    correctedArtifactPath?: string | null;
+    createdAt: string;
+    updatedAt: string;
 };
 
 export type AgentRunExecution = {
@@ -1183,13 +1288,13 @@ export type AgentRunExecution = {
      */
     batchId: string | null;
     retry: RunExecutionRetry;
+    review?: RunReview | null;
     files: {
         /**
          * Output artifacts the agent produced.
          */
         output: Array<RunFile>;
     };
-    feedback?: RunFeedback | null;
     /**
      * Ground-truth expected output and files.
      */
@@ -1254,48 +1359,6 @@ export type RunEvent = {
     };
 };
 
-/**
- * Complete feedback state for a run: human feedback, expected JSON output, and expected files.
- */
-export type RunFeedbackDetail = {
-    /**
-     * Human feedback object for the run, or null when no feedback exists.
-     */
-    feedback: RunFeedback | null;
-    /**
-     * Expected JSON output for the run, or null when none is set.
-     */
-    expected: unknown | null;
-    /**
-     * Expected output files attached to this run feedback record.
-     */
-    expectedFiles: Array<RunFile>;
-};
-
-/**
- * Expected JSON output and expected files attached to run feedback.
- */
-export type RunExpectedArtifacts = {
-    /**
-     * Expected JSON output for the run, or null when none is set.
-     */
-    expected: unknown | null;
-    /**
-     * Expected output files attached to this run feedback record.
-     */
-    files: Array<RunFile>;
-};
-
-/**
- * Expected file created or renamed by the request.
- */
-export type RunExpectedFileMutationResponse = RunFile;
-
-/**
- * Expected file after the rename.
- */
-export type RunExpectedFileUpdateResponse = RunFile;
-
 export type PromoteRunResponse = {
     /**
      * Automation that owns the promoted example.
@@ -1317,12 +1380,36 @@ export type PromoteRunResponse = {
 
 export type RunRerunResponse = RunStartResponse;
 
+export type RunReviewDetail = {
+    /**
+     * Review metadata and corrections. Corrected files are listed separately at GET /runs/{id}/reviews/expected.
+     */
+    review: RunReview | null;
+};
+
+export type RunReviewExpectedArtifacts = {
+    /**
+     * Corrected artifact files attached to the run review. Corrected JSON output lives on the review object at GET /runs/{id}/reviews.
+     */
+    files: Array<RunFile>;
+};
+
+/**
+ * Corrected file created or renamed by the request.
+ */
+export type RunReviewExpectedFileMutationResponse = RunFile;
+
+/**
+ * Corrected file after the rename.
+ */
+export type RunReviewExpectedFileUpdateResponse = RunFile;
+
 /**
  * Automated evaluator results attached to a run.
  */
 export type RunScoresResponse = {
     /**
-     * Automated evaluator scores for the run. These are separate from human feedback `rating` values.
+     * Automated evaluator scores for the run. These are separate from human review verdicts.
      */
     scores: Array<EvalResult>;
 };
@@ -3120,6 +3207,107 @@ export type AutomationsExperimentsCreateStreamResponses = {
 
 export type AutomationsExperimentsCreateStreamResponse = AutomationsExperimentsCreateStreamResponses[keyof AutomationsExperimentsCreateStreamResponses];
 
+export type AutomationsReviewsHealthData = {
+    body?: never;
+    path: {
+        /**
+         * Workflow id, agent id, or typed alias like workflows.slug / agents.slug.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * Comma-separated: workflow,agent.
+         */
+        type?: string;
+        /**
+         * Comma-separated execution statuses.
+         */
+        status?: string;
+        /**
+         * Comma-separated trigger types.
+         */
+        trigger?: string;
+        /**
+         * Comma-separated user ids, or __system__ for system-triggered runs.
+         */
+        triggeredBy?: string;
+        sourceRef?: string;
+        batchId?: string;
+        exampleId?: string;
+        exampleIdContains?: string;
+        /**
+         * Start of the run-created time range. Defaults to now-30d.
+         */
+        from?: string;
+        /**
+         * End of the run-created time range.
+         */
+        to?: string;
+        completedAfter?: string;
+        completedBefore?: string;
+        /**
+         * Set to false to exclude experiment batch runs.
+         */
+        experiments?: string;
+        /**
+         * Calendar bucket size for the bar chart series. Defaults to day.
+         */
+        bucket?: 'day' | 'week' | 'month';
+        /**
+         * Number of reviewed runs per rolling correctness point. Defaults to 100.
+         */
+        rollingWindow?: number;
+        /**
+         * Minimum reviewed runs required before emitting rolling points. Defaults to 1.
+         */
+        minRollingReviews?: number;
+    };
+    url: '/api/v1/automations/{id}/reviews/health';
+};
+
+export type AutomationsReviewsHealthErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type AutomationsReviewsHealthError = AutomationsReviewsHealthErrors[keyof AutomationsReviewsHealthErrors];
+
+export type AutomationsReviewsHealthResponses = {
+    /**
+     * Automation review health metrics.
+     */
+    200: RunReviewHealthResponse;
+};
+
+export type AutomationsReviewsHealthResponse = AutomationsReviewsHealthResponses[keyof AutomationsReviewsHealthResponses];
+
 export type AutomationsSyncData = {
     body?: never;
     path: {
@@ -3606,6 +3794,26 @@ export type RunsListData = {
         offset?: number;
         limit?: number;
         ids?: string;
+        experiments?: string;
+        sort?: string;
+        order?: string;
+        reviewStatus?: string;
+        reviewVerdict?: string;
+        hasReview?: string;
+        noReview?: string;
+        hasCorrections?: string;
+        reviewNoteContains?: string;
+        reviewCreatedAfter?: string;
+        reviewCreatedBefore?: string;
+        reviewUpdatedAfter?: string;
+        reviewUpdatedBefore?: string;
+        reviewClosedAfter?: string;
+        reviewClosedBefore?: string;
+        sinceLastClosed?: string;
+        /**
+         * Keep runs whose `sampleRank` is below this threshold (0–1). Pages may return fewer than `limit` rows when filtered.
+         */
+        sampleRate?: string;
     };
     url: '/api/v1/runs';
 };
@@ -3790,6 +3998,10 @@ export type RunsArtifactsListData = {
          * When `1`, download output files as a ZIP instead of listing paths. Does not include trace, scores, or input — use `GET /runs/{id}/scores` and `GET /runs/{id}/trace` for those.
          */
         zip?: '1';
+        /**
+         * With `zip=1`, use `review` to download a ZIP with `output/` and `expected/` folders (corrected review artifacts).
+         */
+        bundle?: 'review';
         /**
          * Signed email download token (zip only; no Bearer required).
          */
@@ -3995,450 +4207,6 @@ export type RunsEventsListResponses = {
 
 export type RunsEventsListResponse = RunsEventsListResponses[keyof RunsEventsListResponses];
 
-export type RunsFeedbackClearData = {
-    body?: never;
-    path: {
-        /**
-         * Run id.
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/runs/{id}/feedback';
-};
-
-export type RunsFeedbackClearErrors = {
-    /**
-     * Validation error. Request shape did not match the spec.
-     */
-    400: ApiErrorEnvelope;
-    /**
-     * Missing or invalid API key
-     */
-    401: ApiErrorEnvelope;
-    /**
-     * API key lacks required scope
-     */
-    403: ApiErrorEnvelope;
-    /**
-     * Resource not found
-     */
-    404: ApiErrorEnvelope;
-    /**
-     * Payload too large. Upload exceeded the per-request size cap.
-     */
-    413: ApiErrorEnvelope;
-    /**
-     * Rate limit exceeded
-     */
-    429: ApiErrorEnvelope;
-    /**
-     * Internal server error
-     */
-    500: ApiErrorEnvelope;
-};
-
-export type RunsFeedbackClearError = RunsFeedbackClearErrors[keyof RunsFeedbackClearErrors];
-
-export type RunsFeedbackClearResponses = {
-    /**
-     * Empty complete run feedback state.
-     */
-    200: RunFeedbackDetail;
-};
-
-export type RunsFeedbackClearResponse = RunsFeedbackClearResponses[keyof RunsFeedbackClearResponses];
-
-export type RunsFeedbackGetData = {
-    body?: never;
-    path: {
-        /**
-         * Run id.
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/runs/{id}/feedback';
-};
-
-export type RunsFeedbackGetErrors = {
-    /**
-     * Validation error. Request shape did not match the spec.
-     */
-    400: ApiErrorEnvelope;
-    /**
-     * Missing or invalid API key
-     */
-    401: ApiErrorEnvelope;
-    /**
-     * API key lacks required scope
-     */
-    403: ApiErrorEnvelope;
-    /**
-     * Resource not found
-     */
-    404: ApiErrorEnvelope;
-    /**
-     * Payload too large. Upload exceeded the per-request size cap.
-     */
-    413: ApiErrorEnvelope;
-    /**
-     * Rate limit exceeded
-     */
-    429: ApiErrorEnvelope;
-    /**
-     * Internal server error
-     */
-    500: ApiErrorEnvelope;
-};
-
-export type RunsFeedbackGetError = RunsFeedbackGetErrors[keyof RunsFeedbackGetErrors];
-
-export type RunsFeedbackGetResponses = {
-    /**
-     * Complete run feedback state.
-     */
-    200: RunFeedbackDetail;
-};
-
-export type RunsFeedbackGetResponse = RunsFeedbackGetResponses[keyof RunsFeedbackGetResponses];
-
-export type RunsFeedbackUpdateData = {
-    body: RunFeedbackRequest;
-    path: {
-        /**
-         * Run id.
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/runs/{id}/feedback';
-};
-
-export type RunsFeedbackUpdateErrors = {
-    /**
-     * Validation error. Request shape did not match the spec.
-     */
-    400: ApiErrorEnvelope;
-    /**
-     * Missing or invalid API key
-     */
-    401: ApiErrorEnvelope;
-    /**
-     * API key lacks required scope
-     */
-    403: ApiErrorEnvelope;
-    /**
-     * Resource not found
-     */
-    404: ApiErrorEnvelope;
-    /**
-     * Payload too large. Upload exceeded the per-request size cap.
-     */
-    413: ApiErrorEnvelope;
-    /**
-     * Rate limit exceeded
-     */
-    429: ApiErrorEnvelope;
-    /**
-     * Internal server error
-     */
-    500: ApiErrorEnvelope;
-};
-
-export type RunsFeedbackUpdateError = RunsFeedbackUpdateErrors[keyof RunsFeedbackUpdateErrors];
-
-export type RunsFeedbackUpdateResponses = {
-    /**
-     * Updated complete run feedback state.
-     */
-    200: RunFeedbackDetail;
-};
-
-export type RunsFeedbackUpdateResponse = RunsFeedbackUpdateResponses[keyof RunsFeedbackUpdateResponses];
-
-export type RunsFeedbackExpectedGetData = {
-    body?: never;
-    path: {
-        /**
-         * Run id.
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/runs/{id}/feedback/expected';
-};
-
-export type RunsFeedbackExpectedGetErrors = {
-    /**
-     * Validation error. Request shape did not match the spec.
-     */
-    400: ApiErrorEnvelope;
-    /**
-     * Missing or invalid API key
-     */
-    401: ApiErrorEnvelope;
-    /**
-     * API key lacks required scope
-     */
-    403: ApiErrorEnvelope;
-    /**
-     * Resource not found
-     */
-    404: ApiErrorEnvelope;
-    /**
-     * Payload too large. Upload exceeded the per-request size cap.
-     */
-    413: ApiErrorEnvelope;
-    /**
-     * Rate limit exceeded
-     */
-    429: ApiErrorEnvelope;
-    /**
-     * Internal server error
-     */
-    500: ApiErrorEnvelope;
-};
-
-export type RunsFeedbackExpectedGetError = RunsFeedbackExpectedGetErrors[keyof RunsFeedbackExpectedGetErrors];
-
-export type RunsFeedbackExpectedGetResponses = {
-    /**
-     * Expected JSON output and files.
-     */
-    200: RunExpectedArtifacts;
-};
-
-export type RunsFeedbackExpectedGetResponse = RunsFeedbackExpectedGetResponses[keyof RunsFeedbackExpectedGetResponses];
-
-export type RunsFeedbackExpectedCreateData = {
-    body: RunExpectedFileCopyRequest | RunExpectedFileUploadRequest;
-    path: {
-        /**
-         * Run id.
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/api/v1/runs/{id}/feedback/expected';
-};
-
-export type RunsFeedbackExpectedCreateErrors = {
-    /**
-     * Validation error. Request shape did not match the spec.
-     */
-    400: ApiErrorEnvelope;
-    /**
-     * Missing or invalid API key
-     */
-    401: ApiErrorEnvelope;
-    /**
-     * API key lacks required scope
-     */
-    403: ApiErrorEnvelope;
-    /**
-     * Resource not found
-     */
-    404: ApiErrorEnvelope;
-    /**
-     * Payload too large. Upload exceeded the per-request size cap.
-     */
-    413: ApiErrorEnvelope;
-    /**
-     * Rate limit exceeded
-     */
-    429: ApiErrorEnvelope;
-    /**
-     * Internal server error
-     */
-    500: ApiErrorEnvelope;
-};
-
-export type RunsFeedbackExpectedCreateError = RunsFeedbackExpectedCreateErrors[keyof RunsFeedbackExpectedCreateErrors];
-
-export type RunsFeedbackExpectedCreateResponses = {
-    /**
-     * Expected file created.
-     */
-    201: RunExpectedFileMutationResponse;
-};
-
-export type RunsFeedbackExpectedCreateResponse = RunsFeedbackExpectedCreateResponses[keyof RunsFeedbackExpectedCreateResponses];
-
-export type RunsFeedbackExpectedFileDeleteData = {
-    body?: never;
-    path: {
-        /**
-         * Run id.
-         */
-        id: string;
-        /**
-         * Expected artifact file name or slash-delimited path, as returned by `GET /runs/{id}/feedback/expected`.
-         */
-        filename: string;
-    };
-    query?: never;
-    url: '/api/v1/runs/{id}/feedback/expected/{filename}';
-};
-
-export type RunsFeedbackExpectedFileDeleteErrors = {
-    /**
-     * Validation error. Request shape did not match the spec.
-     */
-    400: ApiErrorEnvelope;
-    /**
-     * Missing or invalid API key
-     */
-    401: ApiErrorEnvelope;
-    /**
-     * API key lacks required scope
-     */
-    403: ApiErrorEnvelope;
-    /**
-     * Resource not found
-     */
-    404: ApiErrorEnvelope;
-    /**
-     * Payload too large. Upload exceeded the per-request size cap.
-     */
-    413: ApiErrorEnvelope;
-    /**
-     * Rate limit exceeded
-     */
-    429: ApiErrorEnvelope;
-    /**
-     * Internal server error
-     */
-    500: ApiErrorEnvelope;
-};
-
-export type RunsFeedbackExpectedFileDeleteError = RunsFeedbackExpectedFileDeleteErrors[keyof RunsFeedbackExpectedFileDeleteErrors];
-
-export type RunsFeedbackExpectedFileDeleteResponses = {
-    /**
-     * Expected file deleted; no response body.
-     */
-    204: void;
-};
-
-export type RunsFeedbackExpectedFileDeleteResponse = RunsFeedbackExpectedFileDeleteResponses[keyof RunsFeedbackExpectedFileDeleteResponses];
-
-export type RunsFeedbackExpectedFileGetData = {
-    body?: never;
-    path: {
-        /**
-         * Run id.
-         */
-        id: string;
-        /**
-         * Expected artifact file name or slash-delimited path, as returned by `GET /runs/{id}/feedback/expected`.
-         */
-        filename: string;
-    };
-    query?: never;
-    url: '/api/v1/runs/{id}/feedback/expected/{filename}';
-};
-
-export type RunsFeedbackExpectedFileGetErrors = {
-    /**
-     * Validation error. Request shape did not match the spec.
-     */
-    400: ApiErrorEnvelope;
-    /**
-     * Missing or invalid API key
-     */
-    401: ApiErrorEnvelope;
-    /**
-     * API key lacks required scope
-     */
-    403: ApiErrorEnvelope;
-    /**
-     * Resource not found
-     */
-    404: ApiErrorEnvelope;
-    /**
-     * Payload too large. Upload exceeded the per-request size cap.
-     */
-    413: ApiErrorEnvelope;
-    /**
-     * Rate limit exceeded
-     */
-    429: ApiErrorEnvelope;
-    /**
-     * Internal server error
-     */
-    500: ApiErrorEnvelope;
-};
-
-export type RunsFeedbackExpectedFileGetError = RunsFeedbackExpectedFileGetErrors[keyof RunsFeedbackExpectedFileGetErrors];
-
-export type RunsFeedbackExpectedFileGetResponses = {
-    /**
-     * Expected file bytes.
-     */
-    200: Blob | File;
-};
-
-export type RunsFeedbackExpectedFileGetResponse = RunsFeedbackExpectedFileGetResponses[keyof RunsFeedbackExpectedFileGetResponses];
-
-export type RunsFeedbackExpectedFileUpdateData = {
-    body: RunExpectedFileUpdateRequest;
-    path: {
-        /**
-         * Run id.
-         */
-        id: string;
-        /**
-         * Expected artifact file name or slash-delimited path, as returned by `GET /runs/{id}/feedback/expected`.
-         */
-        filename: string;
-    };
-    query?: never;
-    url: '/api/v1/runs/{id}/feedback/expected/{filename}';
-};
-
-export type RunsFeedbackExpectedFileUpdateErrors = {
-    /**
-     * Validation error. Request shape did not match the spec.
-     */
-    400: ApiErrorEnvelope;
-    /**
-     * Missing or invalid API key
-     */
-    401: ApiErrorEnvelope;
-    /**
-     * API key lacks required scope
-     */
-    403: ApiErrorEnvelope;
-    /**
-     * Resource not found
-     */
-    404: ApiErrorEnvelope;
-    /**
-     * Payload too large. Upload exceeded the per-request size cap.
-     */
-    413: ApiErrorEnvelope;
-    /**
-     * Rate limit exceeded
-     */
-    429: ApiErrorEnvelope;
-    /**
-     * Internal server error
-     */
-    500: ApiErrorEnvelope;
-};
-
-export type RunsFeedbackExpectedFileUpdateError = RunsFeedbackExpectedFileUpdateErrors[keyof RunsFeedbackExpectedFileUpdateErrors];
-
-export type RunsFeedbackExpectedFileUpdateResponses = {
-    /**
-     * Renamed expected file.
-     */
-    200: RunExpectedFileUpdateResponse;
-};
-
-export type RunsFeedbackExpectedFileUpdateResponse = RunsFeedbackExpectedFileUpdateResponses[keyof RunsFeedbackExpectedFileUpdateResponses];
-
 export type RunsPromoteData = {
     body: PromoteRunRequest;
     path: {
@@ -4563,6 +4331,450 @@ export type RunsRerunResponses = {
 };
 
 export type RunsRerunResponse = RunsRerunResponses[keyof RunsRerunResponses];
+
+export type RunsReviewsClearData = {
+    body?: never;
+    path: {
+        /**
+         * Run id.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/runs/{id}/reviews';
+};
+
+export type RunsReviewsClearErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type RunsReviewsClearError = RunsReviewsClearErrors[keyof RunsReviewsClearErrors];
+
+export type RunsReviewsClearResponses = {
+    /**
+     * Empty run review state.
+     */
+    200: RunReviewDetail;
+};
+
+export type RunsReviewsClearResponse = RunsReviewsClearResponses[keyof RunsReviewsClearResponses];
+
+export type RunsReviewsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Run id.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/runs/{id}/reviews';
+};
+
+export type RunsReviewsGetErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type RunsReviewsGetError = RunsReviewsGetErrors[keyof RunsReviewsGetErrors];
+
+export type RunsReviewsGetResponses = {
+    /**
+     * Run review metadata.
+     */
+    200: RunReviewDetail;
+};
+
+export type RunsReviewsGetResponse = RunsReviewsGetResponses[keyof RunsReviewsGetResponses];
+
+export type RunsReviewsUpdateData = {
+    body: RunReviewRequest;
+    path: {
+        /**
+         * Run id.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/runs/{id}/reviews';
+};
+
+export type RunsReviewsUpdateErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type RunsReviewsUpdateError = RunsReviewsUpdateErrors[keyof RunsReviewsUpdateErrors];
+
+export type RunsReviewsUpdateResponses = {
+    /**
+     * Updated run review metadata.
+     */
+    200: RunReviewDetail;
+};
+
+export type RunsReviewsUpdateResponse = RunsReviewsUpdateResponses[keyof RunsReviewsUpdateResponses];
+
+export type RunsReviewsExpectedGetData = {
+    body?: never;
+    path: {
+        /**
+         * Run id.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/runs/{id}/reviews/expected';
+};
+
+export type RunsReviewsExpectedGetErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type RunsReviewsExpectedGetError = RunsReviewsExpectedGetErrors[keyof RunsReviewsExpectedGetErrors];
+
+export type RunsReviewsExpectedGetResponses = {
+    /**
+     * Corrected artifact files.
+     */
+    200: RunReviewExpectedArtifacts;
+};
+
+export type RunsReviewsExpectedGetResponse = RunsReviewsExpectedGetResponses[keyof RunsReviewsExpectedGetResponses];
+
+export type RunsReviewsExpectedCreateData = {
+    body: RunReviewExpectedFileCopyRequest | RunReviewExpectedFileUploadRequest;
+    path: {
+        /**
+         * Run id.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/runs/{id}/reviews/expected';
+};
+
+export type RunsReviewsExpectedCreateErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type RunsReviewsExpectedCreateError = RunsReviewsExpectedCreateErrors[keyof RunsReviewsExpectedCreateErrors];
+
+export type RunsReviewsExpectedCreateResponses = {
+    /**
+     * Corrected file created.
+     */
+    201: RunReviewExpectedFileMutationResponse;
+};
+
+export type RunsReviewsExpectedCreateResponse = RunsReviewsExpectedCreateResponses[keyof RunsReviewsExpectedCreateResponses];
+
+export type RunsReviewsExpectedFileDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Run id.
+         */
+        id: string;
+        /**
+         * Corrected artifact file name or slash-delimited path, as returned by `GET /runs/{id}/reviews/expected`.
+         */
+        filename: string;
+    };
+    query?: never;
+    url: '/api/v1/runs/{id}/reviews/expected/{filename}';
+};
+
+export type RunsReviewsExpectedFileDeleteErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type RunsReviewsExpectedFileDeleteError = RunsReviewsExpectedFileDeleteErrors[keyof RunsReviewsExpectedFileDeleteErrors];
+
+export type RunsReviewsExpectedFileDeleteResponses = {
+    /**
+     * Corrected file deleted; no response body.
+     */
+    204: void;
+};
+
+export type RunsReviewsExpectedFileDeleteResponse = RunsReviewsExpectedFileDeleteResponses[keyof RunsReviewsExpectedFileDeleteResponses];
+
+export type RunsReviewsExpectedFileGetData = {
+    body?: never;
+    path: {
+        /**
+         * Run id.
+         */
+        id: string;
+        /**
+         * Corrected artifact file name or slash-delimited path, as returned by `GET /runs/{id}/reviews/expected`.
+         */
+        filename: string;
+    };
+    query?: never;
+    url: '/api/v1/runs/{id}/reviews/expected/{filename}';
+};
+
+export type RunsReviewsExpectedFileGetErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type RunsReviewsExpectedFileGetError = RunsReviewsExpectedFileGetErrors[keyof RunsReviewsExpectedFileGetErrors];
+
+export type RunsReviewsExpectedFileGetResponses = {
+    /**
+     * Corrected file bytes.
+     */
+    200: Blob | File;
+};
+
+export type RunsReviewsExpectedFileGetResponse = RunsReviewsExpectedFileGetResponses[keyof RunsReviewsExpectedFileGetResponses];
+
+export type RunsReviewsExpectedFileUpdateData = {
+    body: RunReviewExpectedFileUpdateRequest;
+    path: {
+        /**
+         * Run id.
+         */
+        id: string;
+        /**
+         * Corrected artifact file name or slash-delimited path, as returned by `GET /runs/{id}/reviews/expected`.
+         */
+        filename: string;
+    };
+    query?: never;
+    url: '/api/v1/runs/{id}/reviews/expected/{filename}';
+};
+
+export type RunsReviewsExpectedFileUpdateErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type RunsReviewsExpectedFileUpdateError = RunsReviewsExpectedFileUpdateErrors[keyof RunsReviewsExpectedFileUpdateErrors];
+
+export type RunsReviewsExpectedFileUpdateResponses = {
+    /**
+     * Renamed corrected file.
+     */
+    200: RunReviewExpectedFileUpdateResponse;
+};
+
+export type RunsReviewsExpectedFileUpdateResponse = RunsReviewsExpectedFileUpdateResponses[keyof RunsReviewsExpectedFileUpdateResponses];
 
 export type RunsScoresListData = {
     body?: never;

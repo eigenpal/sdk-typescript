@@ -105,14 +105,14 @@ Every non-2xx response throws a typed subclass of `EigenpalError`:
 
 ## Reference
 
-| Topic                                     | What is in it                                                       |
-| ----------------------------------------- | ------------------------------------------------------------------- |
-| [Automations](./docs/workflows.md)        | List, inspect, versions, triggers.                                  |
-| [Runs](./docs/executions.md)              | Start, poll, cancel, rerun, usage, steps, events, traces, feedback. |
-| [File inputs](./docs/files.md)            | Multipart upload from File, Blob, Buffer, or path.                  |
-| [Errors](./docs/errors.md)                | Typed exceptions, retries, request ids.                             |
-| [Configuration](./docs/configuration.md)  | API key, baseUrl, timeouts, headers.                                |
-| [Full API reference](./docs/reference.md) | Every method, generated from OpenAPI.                               |
+| Topic                                     | What is in it                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------ |
+| [Automations](./docs/workflows.md)        | List, inspect, versions, triggers.                                 |
+| [Runs](./docs/executions.md)              | Start, poll, cancel, rerun, usage, steps, events, traces, reviews. |
+| [File inputs](./docs/files.md)            | Multipart upload from File, Blob, Buffer, or path.                 |
+| [Errors](./docs/errors.md)                | Typed exceptions, retries, request ids.                            |
+| [Configuration](./docs/configuration.md)  | API key, baseUrl, timeouts, headers.                               |
+| [Full API reference](./docs/reference.md) | Every method, generated from OpenAPI.                              |
 
 ## License
 

@@ -63,6 +63,8 @@ client
 │   │   ├── createStream
 │   │   ├── export
 │   │   └── exportAll
+│   ├── reviews
+│   │   └── health
 │   └── triggers
 ├── runs
 │   ├── list
@@ -72,7 +74,8 @@ client
 │   │   └── download
 │   ├── cancel
 │   ├── events
-│   ├── feedback
+│   ├── promote
+│   ├── reviews
 │   │   ├── get
 │   │   ├── listExpected
 │   │   ├── copyOutputToExpected / uploadExpected
@@ -81,7 +84,6 @@ client
 │   │   ├── deleteExpected
 │   │   ├── clear
 │   │   └── update
-│   ├── promote
 │   ├── scores
 │   │   └── list
 │   ├── steps
@@ -101,7 +103,7 @@ client
 
 Start runs with `client.run(...)` and create a new run from a previous snapshot with `client.rerun(...)`.
 
-Run inspection, artifacts, traces, usage, events, and feedback live under `client.runs.*`, which maps to `/api/v1/runs`.
+Run inspection, artifacts, traces, usage, events, and reviews live under `client.runs.*`, which maps to `/api/v1/runs`.
 
 Reusable upload-first files live under `client.files.*`; once a file is referenced by a run, Eigenpal snapshots it into run-scoped artifacts.
 
@@ -303,7 +305,7 @@ Import a dataset ZIP archive using the examples/<name>/input and examples/<name>
 
 Get evaluators
 
-Fetch the evaluator configuration for an automation. Evaluators produce automated `score` results, which are separate from human feedback `rating` values.
+Fetch the evaluator configuration for an automation. Evaluators produce automated `score` results, which are separate from human review verdicts.
 
 **Path parameters**
 
@@ -687,7 +689,7 @@ Delete one file from an automation dataset example input folder.
 
 Run dataset example
 
-Start an asynchronous run using the input from one dataset example. Poll `GET /api/v1/runs/:id` for completion and use run scores or feedback endpoints to review the result.
+Start an asynchronous run using the input from one dataset example. Poll `GET /api/v1/runs/:id` for completion and use run scores or review endpoints to review the result.
 
 **Path parameters**
 
@@ -904,7 +906,7 @@ Returns the owning automation for an experiment batch id. Used when callers only
 
 List run evaluator scores
 
-List automated evaluator results for one run. Use `score` for evaluator output and `rating` on run feedback for human verdicts.
+List automated evaluator results for one run. Use `score` for evaluator output and run reviews for human verdicts.
 
 **Path parameters**
 
@@ -917,6 +919,250 @@ List automated evaluator results for one run. Use `score` for evaluator output a
 ```ts
 // RunScoresResponse
 ```
+
+## Reviews
+
+### `client.automations.reviews.health`
+
+**`GET /api/v1/automations/:id/reviews/health`**
+
+Get automation review health
+
+Aggregates reviewed correctness, review coverage, bucketed counts, and rolling-window confidence for one automation. Prefer this endpoint for single-automation monitoring dashboards.
+
+**Path parameters**
+
+| Name | Type     | Description                                                              |
+| ---- | -------- | ------------------------------------------------------------------------ |
+| `id` | `string` | Workflow id, agent id, or typed alias like workflows.slug / agents.slug. |
+
+**Query parameters**
+
+| Name                | Type                         | Description                                                                             |
+| ------------------- | ---------------------------- | --------------------------------------------------------------------------------------- |
+| `type`              | `string`                     | (optional)Comma-separated: workflow,agent.                                              |
+| `status`            | `string`                     | (optional)Comma-separated execution statuses.                                           |
+| `trigger`           | `string`                     | (optional)Comma-separated trigger types.                                                |
+| `triggeredBy`       | `string`                     | (optional)Comma-separated user ids, or **system** for system-triggered runs.            |
+| `sourceRef`         | `string`                     | (optional)                                                                              |
+| `batchId`           | `string`                     | (optional)                                                                              |
+| `exampleId`         | `string`                     | (optional)                                                                              |
+| `exampleIdContains` | `string`                     | (optional)                                                                              |
+| `from`              | `string`                     | (optional)Start of the run-created time range. Defaults to now-30d.                     |
+| `to`                | `string`                     | (optional)End of the run-created time range.                                            |
+| `completedAfter`    | `string`                     | (optional)                                                                              |
+| `completedBefore`   | `string`                     | (optional)                                                                              |
+| `experiments`       | `string`                     | (optional)Set to false to exclude experiment batch runs.                                |
+| `bucket`            | `"day" \| "week" \| "month"` | (optional)Calendar bucket size for the bar chart series. Defaults to day.               |
+| `rollingWindow`     | `number`                     | (optional)Number of reviewed runs per rolling correctness point. Defaults to 100.       |
+| `minRollingReviews` | `number`                     | (optional)Minimum reviewed runs required before emitting rolling points. Defaults to 1. |
+
+**Response**
+
+```ts
+// RunReviewHealthResponse
+```
+
+### `client.runs.promote`
+
+**`POST /api/v1/runs/:id/promote`**
+
+Promote run to example
+
+Turn a reviewed run into a dataset example. The new example uses the run input and any corrected output/files stored through the review endpoints.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` | Run id.     |
+
+**Request body**
+
+```ts
+// PromoteRunRequest
+```
+
+**Response**
+
+```ts
+// PromoteRunResponse
+```
+
+### `client.runs.reviews.get`
+
+**`GET /api/v1/runs/:id/reviews`**
+
+Get run review
+
+Returns review metadata and corrections for a run. Corrected files are listed at GET /runs/{id}/reviews/expected; embed review + expected artifacts with GET /runs/{id}?expand=execution.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` | Run id.     |
+
+**Response**
+
+```ts
+// RunReviewDetail
+```
+
+### `client.runs.reviews.update`
+
+**`PUT /api/v1/runs/:id/reviews`**
+
+Update run review
+
+Create or replace review metadata for a run.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` | Run id.     |
+
+**Request body**
+
+```ts
+// RunReviewRequest
+```
+
+**Response**
+
+```ts
+// RunReviewDetail
+```
+
+### `client.runs.reviews.clear`
+
+**`DELETE /api/v1/runs/:id/reviews`**
+
+Clear run review
+
+Deletes review metadata, corrections, and corrected files for the run.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` | Run id.     |
+
+**Response**
+
+```ts
+// RunReviewDetail
+```
+
+### `client.runs.reviews.listExpected`
+
+**`GET /api/v1/runs/:id/reviews/expected`**
+
+List corrected files
+
+Returns corrected artifact files attached to the run review. Review metadata and corrected JSON output live at GET /runs/{id}/reviews.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` | Run id.     |
+
+**Response**
+
+```ts
+// RunReviewExpectedArtifacts
+```
+
+### `client.runs.reviews.copyOutputToExpected / uploadExpected`
+
+**`POST /api/v1/runs/:id/reviews/expected`**
+
+Add corrected file
+
+Attach one corrected file to a run review. Send multipart/form-data with `file` and optional `name` to upload a local file, or JSON with `outputFileName` and optional `expectedName` to copy an existing run output file.
+
+**Path parameters**
+
+| Name | Type     | Description |
+| ---- | -------- | ----------- |
+| `id` | `string` | Run id.     |
+
+**Request body**
+
+```ts
+// RunReviewExpectedFileCopyRequest
+```
+
+**Response**
+
+```ts
+// RunReviewExpectedFileMutationResponse
+```
+
+### `client.runs.reviews.downloadExpected`
+
+**`GET /api/v1/runs/:id/reviews/expected/:filename`**
+
+Download corrected artifact file
+
+Downloads one corrected artifact file attached to the run review. Use the `filename` returned by the corrected-output collection endpoint.
+
+**Path parameters**
+
+| Name       | Type     | Description                                                                                             |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `id`       | `string` | Run id.                                                                                                 |
+| `filename` | `string` | Corrected artifact file name or slash-delimited path, as returned by `GET /runs/{id}/reviews/expected`. |
+
+**Response**
+
+```ts
+// Blob
+```
+
+### `client.runs.reviews.renameExpected`
+
+**`PATCH /api/v1/runs/:id/reviews/expected/:filename`**
+
+Rename corrected artifact file
+
+Renames one corrected artifact file attached to the run review.
+
+**Path parameters**
+
+| Name       | Type     | Description                                                                                             |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `id`       | `string` | Run id.                                                                                                 |
+| `filename` | `string` | Corrected artifact file name or slash-delimited path, as returned by `GET /runs/{id}/reviews/expected`. |
+
+**Request body**
+
+```ts
+// RunReviewExpectedFileUpdateRequest
+```
+
+**Response**
+
+```ts
+// RunReviewExpectedFileUpdateResponse
+```
+
+### `client.runs.reviews.deleteExpected`
+
+**`DELETE /api/v1/runs/:id/reviews/expected/:filename`**
+
+Delete corrected artifact file
+
+Deletes one corrected artifact file attached to the run review.
+
+**Path parameters**
+
+| Name       | Type     | Description                                                                                             |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `id`       | `string` | Run id.                                                                                                 |
+| `filename` | `string` | Corrected artifact file name or slash-delimited path, as returned by `GET /runs/{id}/reviews/expected`. |
 
 ## Files
 
@@ -1000,27 +1246,44 @@ List workflow and agent runs with cursor pagination.
 
 **Query parameters**
 
-| Name                | Type     | Description |
-| ------------------- | -------- | ----------- |
-| `type`              | `string` | (optional)  |
-| `source`            | `string` | (optional)  |
-| `status`            | `string` | (optional)  |
-| `trigger`           | `string` | (optional)  |
-| `triggeredBy`       | `string` | (optional)  |
-| `sourceRef`         | `string` | (optional)  |
-| `batchId`           | `string` | (optional)  |
-| `exampleId`         | `string` | (optional)  |
-| `exampleIdContains` | `string` | (optional)  |
-| `from`              | `string` | (optional)  |
-| `to`                | `string` | (optional)  |
-| `createdAfter`      | `string` | (optional)  |
-| `createdBefore`     | `string` | (optional)  |
-| `completedAfter`    | `string` | (optional)  |
-| `completedBefore`   | `string` | (optional)  |
-| `cursor`            | `string` | (optional)  |
-| `offset`            | `number` | (optional)  |
-| `limit`             | `number` | (optional)  |
-| `ids`               | `string` | (optional)  |
+| Name                  | Type     | Description                                                                                                                   |
+| --------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `type`                | `string` | (optional)                                                                                                                    |
+| `source`              | `string` | (optional)                                                                                                                    |
+| `status`              | `string` | (optional)                                                                                                                    |
+| `trigger`             | `string` | (optional)                                                                                                                    |
+| `triggeredBy`         | `string` | (optional)                                                                                                                    |
+| `sourceRef`           | `string` | (optional)                                                                                                                    |
+| `batchId`             | `string` | (optional)                                                                                                                    |
+| `exampleId`           | `string` | (optional)                                                                                                                    |
+| `exampleIdContains`   | `string` | (optional)                                                                                                                    |
+| `from`                | `string` | (optional)                                                                                                                    |
+| `to`                  | `string` | (optional)                                                                                                                    |
+| `createdAfter`        | `string` | (optional)                                                                                                                    |
+| `createdBefore`       | `string` | (optional)                                                                                                                    |
+| `completedAfter`      | `string` | (optional)                                                                                                                    |
+| `completedBefore`     | `string` | (optional)                                                                                                                    |
+| `cursor`              | `string` | (optional)                                                                                                                    |
+| `offset`              | `number` | (optional)                                                                                                                    |
+| `limit`               | `number` | (optional)                                                                                                                    |
+| `ids`                 | `string` | (optional)                                                                                                                    |
+| `experiments`         | `string` | (optional)                                                                                                                    |
+| `sort`                | `string` | (optional)                                                                                                                    |
+| `order`               | `string` | (optional)                                                                                                                    |
+| `reviewStatus`        | `string` | (optional)                                                                                                                    |
+| `reviewVerdict`       | `string` | (optional)                                                                                                                    |
+| `hasReview`           | `string` | (optional)                                                                                                                    |
+| `noReview`            | `string` | (optional)                                                                                                                    |
+| `hasCorrections`      | `string` | (optional)                                                                                                                    |
+| `reviewNoteContains`  | `string` | (optional)                                                                                                                    |
+| `reviewCreatedAfter`  | `string` | (optional)                                                                                                                    |
+| `reviewCreatedBefore` | `string` | (optional)                                                                                                                    |
+| `reviewUpdatedAfter`  | `string` | (optional)                                                                                                                    |
+| `reviewUpdatedBefore` | `string` | (optional)                                                                                                                    |
+| `reviewClosedAfter`   | `string` | (optional)                                                                                                                    |
+| `reviewClosedBefore`  | `string` | (optional)                                                                                                                    |
+| `sinceLastClosed`     | `string` | (optional)                                                                                                                    |
+| `sampleRate`          | `string` | (optional)Keep runs whose `sampleRank` is below this threshold (0–1). Pages may return fewer than `limit` rows when filtered. |
 
 **Response**
 
@@ -1061,7 +1324,7 @@ Start a run. Send JSON or multipart/form-data.
 
 Get a run
 
-Fetch one run by id. By default this returns core metadata plus terminal output/error fields. Pass `?expand=input,usage,execution,debug` to include detailed sub-objects; `expand=execution` is also where embedded feedback and expected artifacts appear.
+Fetch one run by id. By default this returns core metadata plus terminal output/error fields. Pass `?expand=input,usage,execution,debug` to include detailed sub-objects; `expand=execution` is also where embedded review and expected artifacts appear.
 
 **Path parameters**
 
@@ -1097,10 +1360,11 @@ Returns a JSON list of downloadable artifact paths for a run. Pass `zip=1` to sw
 
 **Query parameters**
 
-| Name    | Type     | Description                                                                                                                                                                               |
-| ------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `zip`   | `"1"`    | (optional)When `1`, download output files as a ZIP instead of listing paths. Does not include trace, scores, or input — use `GET /runs/{id}/scores` and `GET /runs/{id}/trace` for those. |
-| `token` | `string` | (optional)Signed email download token (zip only; no Bearer required).                                                                                                                     |
+| Name     | Type       | Description                                                                                                                                                                               |
+| -------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `zip`    | `"1"`      | (optional)When `1`, download output files as a ZIP instead of listing paths. Does not include trace, scores, or input — use `GET /runs/{id}/scores` and `GET /runs/{id}/trace` for those. |
+| `bundle` | `"review"` | (optional)With `zip=1`, use `review` to download a ZIP with `output/` and `expected/` folders (corrected review artifacts).                                                               |
+| `token`  | `string`   | (optional)Signed email download token (zip only; no Bearer required).                                                                                                                     |
 
 **Response**
 
@@ -1161,207 +1425,6 @@ List a stable chronological lifecycle timeline for a run.
 
 ```ts
 // RunEventsResponse
-```
-
-### `client.runs.feedback.get`
-
-**`GET /api/v1/runs/:id/feedback`**
-
-Get run feedback
-
-Returns the complete feedback state for one run, including the human feedback object, expected JSON output, and expected files. Use `GET /api/v1/runs/:id` with `expand=execution` when you only need feedback embedded in a run response.
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` | Run id.     |
-
-**Response**
-
-```ts
-// RunFeedbackDetail
-```
-
-### `client.runs.feedback.update`
-
-**`PUT /api/v1/runs/:id/feedback`**
-
-Update run feedback
-
-Partially update human feedback and expected JSON output for a run. Omitted fields are left unchanged. Pass null to clear a field.
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` | Run id.     |
-
-**Request body**
-
-```ts
-// RunFeedbackRequest
-```
-
-**Response**
-
-```ts
-// RunFeedbackDetail
-```
-
-### `client.runs.feedback.clear`
-
-**`DELETE /api/v1/runs/:id/feedback`**
-
-Clear run feedback
-
-Deletes all feedback state for the run: human feedback, expected JSON output, and every expected artifact file.
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` | Run id.     |
-
-**Response**
-
-```ts
-// RunFeedbackDetail
-```
-
-### `client.runs.feedback.listExpected`
-
-**`GET /api/v1/runs/:id/feedback/expected`**
-
-Get expected output
-
-Returns the expected JSON output and expected files currently attached to the run feedback record.
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` | Run id.     |
-
-**Response**
-
-```ts
-// RunExpectedArtifacts
-```
-
-### `client.runs.feedback.copyOutputToExpected / uploadExpected`
-
-**`POST /api/v1/runs/:id/feedback/expected`**
-
-Add expected file
-
-Attach one expected file to run feedback. Send multipart/form-data with `file` and optional `name` to upload a local file, or JSON with `outputFileName` and optional `expectedName` to copy an existing run output file.
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` | Run id.     |
-
-**Request body**
-
-```ts
-// RunExpectedFileCopyRequest
-```
-
-**Response**
-
-```ts
-// RunExpectedFileMutationResponse
-```
-
-### `client.runs.feedback.downloadExpected`
-
-**`GET /api/v1/runs/:id/feedback/expected/:filename`**
-
-Download expected artifact file
-
-Downloads one expected artifact file attached to the run feedback record. Use the `filename` returned by the expected-output collection endpoint.
-
-**Path parameters**
-
-| Name       | Type     | Description                                                                                             |
-| ---------- | -------- | ------------------------------------------------------------------------------------------------------- |
-| `id`       | `string` | Run id.                                                                                                 |
-| `filename` | `string` | Expected artifact file name or slash-delimited path, as returned by `GET /runs/{id}/feedback/expected`. |
-
-**Response**
-
-```ts
-// Blob
-```
-
-### `client.runs.feedback.renameExpected`
-
-**`PATCH /api/v1/runs/:id/feedback/expected/:filename`**
-
-Rename expected artifact file
-
-Renames one expected artifact file attached to the run feedback record.
-
-**Path parameters**
-
-| Name       | Type     | Description                                                                                             |
-| ---------- | -------- | ------------------------------------------------------------------------------------------------------- |
-| `id`       | `string` | Run id.                                                                                                 |
-| `filename` | `string` | Expected artifact file name or slash-delimited path, as returned by `GET /runs/{id}/feedback/expected`. |
-
-**Request body**
-
-```ts
-// RunExpectedFileUpdateRequest
-```
-
-**Response**
-
-```ts
-// RunExpectedFileUpdateResponse
-```
-
-### `client.runs.feedback.deleteExpected`
-
-**`DELETE /api/v1/runs/:id/feedback/expected/:filename`**
-
-Delete expected artifact file
-
-Deletes one expected artifact file attached to the run feedback record. The feedback text and expected JSON output are left unchanged.
-
-**Path parameters**
-
-| Name       | Type     | Description                                                                                             |
-| ---------- | -------- | ------------------------------------------------------------------------------------------------------- |
-| `id`       | `string` | Run id.                                                                                                 |
-| `filename` | `string` | Expected artifact file name or slash-delimited path, as returned by `GET /runs/{id}/feedback/expected`. |
-
-### `client.runs.promote`
-
-**`POST /api/v1/runs/:id/promote`**
-
-Promote run to example
-
-Turn a reviewed run into a dataset example. The new example uses the run input, the run output, and any expected output/files stored through the feedback endpoints. Use this after adding feedback or expected artifacts to capture a regression test.
-
-**Path parameters**
-
-| Name | Type     | Description |
-| ---- | -------- | ----------- |
-| `id` | `string` | Run id.     |
-
-**Request body**
-
-```ts
-// PromoteRunRequest
-```
-
-**Response**
-
-```ts
-// PromoteRunResponse
 ```
 
 ### `client.rerun`

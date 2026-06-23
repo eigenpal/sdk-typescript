@@ -36,27 +36,27 @@ replaceInFile(
 // file uploads while preserving the JSON copy-file path.
 replaceInFile(
   'src/generated/types.gen.ts',
-  `export type RunsFeedbackExpectedCreateData = {
-    body: RunExpectedFileCopyRequest;`,
-  `export type RunsFeedbackExpectedCreateData = {
-    body: RunExpectedFileCopyRequest | RunExpectedFileUploadRequest;`
+  `export type RunsReviewsExpectedCreateData = {
+    body: RunReviewExpectedFileCopyRequest;`,
+  `export type RunsReviewsExpectedCreateData = {
+    body: RunReviewExpectedFileCopyRequest | RunReviewExpectedFileUploadRequest;`
 );
 
 replaceInFile(
   'src/generated/sdk.gen.ts',
-  `export const runsFeedbackExpectedCreate = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackExpectedCreateData, ThrowOnError>) => (options.client ?? client).post<RunsFeedbackExpectedCreateResponses, RunsFeedbackExpectedCreateErrors, ThrowOnError>({
+  `export const runsReviewsExpectedCreate = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsExpectedCreateData, ThrowOnError>) => (options.client ?? client).post<RunsReviewsExpectedCreateResponses, RunsReviewsExpectedCreateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/feedback/expected',
+    url: '/api/v1/runs/{id}/reviews/expected',
     ...options,
     headers: {
         'Content-Type': 'application/json',
         ...options.headers
     }
 });`,
-  `export const runsFeedbackExpectedCreate = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackExpectedCreateData, ThrowOnError>) => (options.client ?? client).post<RunsFeedbackExpectedCreateResponses, RunsFeedbackExpectedCreateErrors, ThrowOnError>({
+  `export const runsReviewsExpectedCreate = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsExpectedCreateData, ThrowOnError>) => (options.client ?? client).post<RunsReviewsExpectedCreateResponses, RunsReviewsExpectedCreateErrors, ThrowOnError>({
     ...((options.body && typeof options.body === 'object' && 'file' in options.body) ? formDataBodySerializer : {}),
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/feedback/expected',
+    url: '/api/v1/runs/{id}/reviews/expected',
     ...options,
     headers: {
         'Content-Type': (options.body && typeof options.body === 'object' && 'file' in options.body) ? null : 'application/json',

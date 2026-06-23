@@ -58,8 +58,12 @@ await client.runs.usage(id);
 await client.runs.steps(id);
 await client.runs.events(id);
 await client.runs.trace.get(id);
-await client.runs.feedback.get(id);
-await client.runs.feedback.update(id, { body: 'Looks wrong', status: 'open' });
+await client.runs.reviews.get(id);
+await client.runs.reviews.update(id, {
+  note: 'Looks wrong',
+  verdict: 'incorrect',
+  status: 'open',
+});
 ```
 
 ## Artifacts
@@ -80,7 +84,7 @@ const rerun = await client.rerun(id, { waitForCompletion: 60 });
 
 ## Promote
 
-Copy a completed run's input, output, feedback, and expected artifacts into a dataset example on the same automation:
+Copy a completed run's input, output, review, and corrected artifacts into a dataset example on the same automation:
 
 ```ts
 const { exampleId, name } = await client.runs.promote(id, { name: 'golden-invoice' });

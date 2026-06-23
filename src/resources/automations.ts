@@ -20,10 +20,12 @@ import {
   automationsExperimentsList,
   automationsGet,
   automationsList,
+  automationsReviewsHealth,
   automationsSync,
   automationsTriggersGet,
   automationsVersionsList,
 } from '../generated/sdk.gen';
+import type { AutomationsReviewsHealthData } from '../generated/types.gen';
 
 type Dispatch = <T>(call: () => Promise<OperationResult<T>>) => Promise<T>;
 type SignalOptions = { signal?: AbortSignal };
@@ -34,6 +36,7 @@ export class AutomationsResource {
   public readonly examples: AutomationExamplesResource;
   public readonly evaluators: AutomationEvaluatorsResource;
   public readonly experiments: AutomationExperimentsResource;
+  public readonly reviews: AutomationReviewsResource;
 
   constructor(
     private readonly client: Client,
@@ -43,6 +46,7 @@ export class AutomationsResource {
     this.examples = new AutomationExamplesResource(client, dispatch);
     this.evaluators = new AutomationEvaluatorsResource(client, dispatch);
     this.experiments = new AutomationExperimentsResource(client, dispatch);
+    this.reviews = new AutomationReviewsResource(client, dispatch);
   }
 
   async list(
@@ -79,6 +83,31 @@ export class AutomationsResource {
   async sync(id: string, options: SignalOptions = {}): Promise<AnyResponse> {
     return this.dispatch(() =>
       automationsSync({ client: this.client, path: { id }, signal: options.signal })
+    );
+  }
+}
+
+type AutomationReviewHealthOptions = NonNullable<AutomationsReviewsHealthData['query']> &
+  SignalOptions;
+
+export class AutomationReviewsResource {
+  constructor(
+    private readonly client: Client,
+    private readonly dispatch: Dispatch
+  ) {}
+
+  async health(
+    automationId: string,
+    options: AutomationReviewHealthOptions = {}
+  ): Promise<AnyResponse> {
+    const { signal, ...query } = options;
+    return this.dispatch(() =>
+      automationsReviewsHealth({
+        client: this.client,
+        path: { id: automationId },
+        query,
+        signal,
+      })
     );
   }
 }

@@ -158,7 +158,7 @@ describe('EigenpalClient public SDK', () => {
     });
   });
 
-  test('automations, runs, files, artifacts, trace, and feedback use public routes', async () => {
+  test('automations, runs, files, artifacts, trace, and reviews use public routes', async () => {
     const captured: { url: string; method: string; body?: string }[] = [];
     const client = new EigenpalClient({
       apiKey: 'eg_test',
@@ -204,7 +204,7 @@ describe('EigenpalClient public SDK', () => {
           { status: 200, body: { steps: [] } },
           { status: 200, body: { events: [] } },
           { status: 200, body: { artifacts: [] } },
-          { status: 200, body: { feedback: null } },
+          { status: 200, body: { review: null } },
           { status: 200, body: { lines: [] } },
           { status: 201, body: { id: 'file_123', filename: 'input.txt' } },
           { status: 200, body: { id: 'file_123', filename: 'input.txt' } },
@@ -232,7 +232,7 @@ describe('EigenpalClient public SDK', () => {
     await client.runs.steps('run_123');
     await client.runs.events('run_123');
     await client.runs.artifacts.list('run_123');
-    await client.runs.feedback.get('run_123');
+    await client.runs.reviews.get('run_123');
     await client.runs.trace.get('run_123');
     await client.files.upload(new Blob(['hello'], { type: 'text/plain' }));
     await client.files.get('file_123');
@@ -256,7 +256,7 @@ describe('EigenpalClient public SDK', () => {
     expect(paths).toContain('/api/v1/runs/run_123/steps');
     expect(paths).toContain('/api/v1/runs/run_123/events');
     expect(paths).toContain('/api/v1/runs/run_123/artifacts');
-    expect(paths).toContain('/api/v1/runs/run_123/feedback');
+    expect(paths).toContain('/api/v1/runs/run_123/reviews');
     expect(paths).toContain('/api/v1/runs/run_123/trace');
     expect(paths).toContain('/api/v1/files');
     expect(paths).toContain('/api/v1/files/file_123');

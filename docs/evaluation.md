@@ -38,8 +38,9 @@ An experiment runs dataset examples and records automated evaluator scores.
 Older CLI docs may call the same id a `batchId`; API and SDK methods call it an
 `experimentId`.
 
-## Scores vs feedback
+## Scores vs reviews
 
-Evaluator `score` values are automated results. Run feedback `rating` values are
-human review verdicts (`pass`, `fail`, or `partial`). Use run feedback endpoints
-when humans correct or promote a real run into the dataset.
+Evaluator `score` values are automated results. Run review `verdict` values are
+human review decisions (`correct`, `incorrect`, or Nit). Use run review endpoints
+when humans correct or promote a real run into the dataset. See
+[Reviews](/concepts/reviews) for the review model.

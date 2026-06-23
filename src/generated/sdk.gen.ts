@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthCheckData, AuthCheckErrors, AuthCheckResponses, AutomationsDatasetExportData, AutomationsDatasetExportErrors, AutomationsDatasetExportResponses, AutomationsDatasetImportData, AutomationsDatasetImportErrors, AutomationsDatasetImportResponses, AutomationsEvaluatorsGetData, AutomationsEvaluatorsGetErrors, AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsUpdateData, AutomationsEvaluatorsUpdateErrors, AutomationsEvaluatorsUpdateResponses, AutomationsExamplesCreateData, AutomationsExamplesCreateErrors, AutomationsExamplesCreateResponses, AutomationsExamplesDeleteData, AutomationsExamplesDeleteErrors, AutomationsExamplesDeleteResponses, AutomationsExamplesExpectedFileDeleteData, AutomationsExamplesExpectedFileDeleteErrors, AutomationsExamplesExpectedFileDeleteResponses, AutomationsExamplesExpectedFileGetData, AutomationsExamplesExpectedFileGetErrors, AutomationsExamplesExpectedFileGetResponses, AutomationsExamplesExpectedFilesCreateData, AutomationsExamplesExpectedFilesCreateErrors, AutomationsExamplesExpectedFilesCreateResponses, AutomationsExamplesExpectedFilesListData, AutomationsExamplesExpectedFilesListErrors, AutomationsExamplesExpectedFilesListResponses, AutomationsExamplesExpectedFileUpdateData, AutomationsExamplesExpectedFileUpdateErrors, AutomationsExamplesExpectedFileUpdateResponses, AutomationsExamplesGetData, AutomationsExamplesGetErrors, AutomationsExamplesGetResponses, AutomationsExamplesInputFileDeleteData, AutomationsExamplesInputFileDeleteErrors, AutomationsExamplesInputFileDeleteResponses, AutomationsExamplesInputFileGetData, AutomationsExamplesInputFileGetErrors, AutomationsExamplesInputFileGetResponses, AutomationsExamplesInputFilesCreateData, AutomationsExamplesInputFilesCreateErrors, AutomationsExamplesInputFilesCreateResponses, AutomationsExamplesInputFilesListData, AutomationsExamplesInputFilesListErrors, AutomationsExamplesInputFilesListResponses, AutomationsExamplesInputFileUpdateData, AutomationsExamplesInputFileUpdateErrors, AutomationsExamplesInputFileUpdateResponses, AutomationsExamplesListData, AutomationsExamplesListErrors, AutomationsExamplesListResponses, AutomationsExamplesRunData, AutomationsExamplesRunErrors, AutomationsExamplesRunResponses, AutomationsExamplesUpdateData, AutomationsExamplesUpdateErrors, AutomationsExamplesUpdateResponses, AutomationsExperimentsCancelData, AutomationsExperimentsCancelErrors, AutomationsExperimentsCancelResponses, AutomationsExperimentsCreateData, AutomationsExperimentsCreateErrors, AutomationsExperimentsCreateResponses, AutomationsExperimentsCreateStreamData, AutomationsExperimentsCreateStreamErrors, AutomationsExperimentsCreateStreamResponses, AutomationsExperimentsExportAllData, AutomationsExperimentsExportAllErrors, AutomationsExperimentsExportAllResponses, AutomationsExperimentsExportData, AutomationsExperimentsExportErrors, AutomationsExperimentsExportResponses, AutomationsExperimentsGetData, AutomationsExperimentsGetErrors, AutomationsExperimentsGetResponses, AutomationsExperimentsListData, AutomationsExperimentsListErrors, AutomationsExperimentsListResponses, AutomationsGetData, AutomationsGetErrors, AutomationsGetResponses, AutomationsListData, AutomationsListErrors, AutomationsListResponses, AutomationsSyncData, AutomationsSyncErrors, AutomationsSyncResponses, AutomationsTriggersGetData, AutomationsTriggersGetErrors, AutomationsTriggersGetResponses, AutomationsVersionsListData, AutomationsVersionsListErrors, AutomationsVersionsListResponses, ExperimentsResolveData, ExperimentsResolveErrors, ExperimentsResolveResponses, FilesContentGetData, FilesContentGetErrors, FilesContentGetResponses, FilesCreateData, FilesCreateErrors, FilesCreateResponses, FilesDeleteData, FilesDeleteErrors, FilesDeleteResponses, FilesGetData, FilesGetErrors, FilesGetResponses, RunsArtifactsGetData, RunsArtifactsGetErrors, RunsArtifactsGetResponses, RunsArtifactsListData, RunsArtifactsListErrors, RunsArtifactsListResponses, RunsCancelData, RunsCancelErrors, RunsCancelResponses, RunsEventsListData, RunsEventsListErrors, RunsEventsListResponses, RunsFeedbackClearData, RunsFeedbackClearErrors, RunsFeedbackClearResponses, RunsFeedbackExpectedCreateData, RunsFeedbackExpectedCreateErrors, RunsFeedbackExpectedCreateResponses, RunsFeedbackExpectedFileDeleteData, RunsFeedbackExpectedFileDeleteErrors, RunsFeedbackExpectedFileDeleteResponses, RunsFeedbackExpectedFileGetData, RunsFeedbackExpectedFileGetErrors, RunsFeedbackExpectedFileGetResponses, RunsFeedbackExpectedFileUpdateData, RunsFeedbackExpectedFileUpdateErrors, RunsFeedbackExpectedFileUpdateResponses, RunsFeedbackExpectedGetData, RunsFeedbackExpectedGetErrors, RunsFeedbackExpectedGetResponses, RunsFeedbackGetData, RunsFeedbackGetErrors, RunsFeedbackGetResponses, RunsFeedbackUpdateData, RunsFeedbackUpdateErrors, RunsFeedbackUpdateResponses, RunsGetData, RunsGetErrors, RunsGetResponses, RunsListData, RunsListErrors, RunsListResponses, RunsPromoteData, RunsPromoteErrors, RunsPromoteResponses, RunsRerunData, RunsRerunErrors, RunsRerunResponses, RunsScoresListData, RunsScoresListErrors, RunsScoresListResponses, RunsStartData, RunsStartErrors, RunsStartResponses, RunsStepsListData, RunsStepsListErrors, RunsStepsListResponses, RunsTraceGetData, RunsTraceGetErrors, RunsTraceGetResponses, RunsUsageGetData, RunsUsageGetErrors, RunsUsageGetResponses } from './types.gen';
+import type { AuthCheckData, AuthCheckErrors, AuthCheckResponses, AutomationsDatasetExportData, AutomationsDatasetExportErrors, AutomationsDatasetExportResponses, AutomationsDatasetImportData, AutomationsDatasetImportErrors, AutomationsDatasetImportResponses, AutomationsEvaluatorsGetData, AutomationsEvaluatorsGetErrors, AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsUpdateData, AutomationsEvaluatorsUpdateErrors, AutomationsEvaluatorsUpdateResponses, AutomationsExamplesCreateData, AutomationsExamplesCreateErrors, AutomationsExamplesCreateResponses, AutomationsExamplesDeleteData, AutomationsExamplesDeleteErrors, AutomationsExamplesDeleteResponses, AutomationsExamplesExpectedFileDeleteData, AutomationsExamplesExpectedFileDeleteErrors, AutomationsExamplesExpectedFileDeleteResponses, AutomationsExamplesExpectedFileGetData, AutomationsExamplesExpectedFileGetErrors, AutomationsExamplesExpectedFileGetResponses, AutomationsExamplesExpectedFilesCreateData, AutomationsExamplesExpectedFilesCreateErrors, AutomationsExamplesExpectedFilesCreateResponses, AutomationsExamplesExpectedFilesListData, AutomationsExamplesExpectedFilesListErrors, AutomationsExamplesExpectedFilesListResponses, AutomationsExamplesExpectedFileUpdateData, AutomationsExamplesExpectedFileUpdateErrors, AutomationsExamplesExpectedFileUpdateResponses, AutomationsExamplesGetData, AutomationsExamplesGetErrors, AutomationsExamplesGetResponses, AutomationsExamplesInputFileDeleteData, AutomationsExamplesInputFileDeleteErrors, AutomationsExamplesInputFileDeleteResponses, AutomationsExamplesInputFileGetData, AutomationsExamplesInputFileGetErrors, AutomationsExamplesInputFileGetResponses, AutomationsExamplesInputFilesCreateData, AutomationsExamplesInputFilesCreateErrors, AutomationsExamplesInputFilesCreateResponses, AutomationsExamplesInputFilesListData, AutomationsExamplesInputFilesListErrors, AutomationsExamplesInputFilesListResponses, AutomationsExamplesInputFileUpdateData, AutomationsExamplesInputFileUpdateErrors, AutomationsExamplesInputFileUpdateResponses, AutomationsExamplesListData, AutomationsExamplesListErrors, AutomationsExamplesListResponses, AutomationsExamplesRunData, AutomationsExamplesRunErrors, AutomationsExamplesRunResponses, AutomationsExamplesUpdateData, AutomationsExamplesUpdateErrors, AutomationsExamplesUpdateResponses, AutomationsExperimentsCancelData, AutomationsExperimentsCancelErrors, AutomationsExperimentsCancelResponses, AutomationsExperimentsCreateData, AutomationsExperimentsCreateErrors, AutomationsExperimentsCreateResponses, AutomationsExperimentsCreateStreamData, AutomationsExperimentsCreateStreamErrors, AutomationsExperimentsCreateStreamResponses, AutomationsExperimentsExportAllData, AutomationsExperimentsExportAllErrors, AutomationsExperimentsExportAllResponses, AutomationsExperimentsExportData, AutomationsExperimentsExportErrors, AutomationsExperimentsExportResponses, AutomationsExperimentsGetData, AutomationsExperimentsGetErrors, AutomationsExperimentsGetResponses, AutomationsExperimentsListData, AutomationsExperimentsListErrors, AutomationsExperimentsListResponses, AutomationsGetData, AutomationsGetErrors, AutomationsGetResponses, AutomationsListData, AutomationsListErrors, AutomationsListResponses, AutomationsReviewsHealthData, AutomationsReviewsHealthErrors, AutomationsReviewsHealthResponses, AutomationsSyncData, AutomationsSyncErrors, AutomationsSyncResponses, AutomationsTriggersGetData, AutomationsTriggersGetErrors, AutomationsTriggersGetResponses, AutomationsVersionsListData, AutomationsVersionsListErrors, AutomationsVersionsListResponses, ExperimentsResolveData, ExperimentsResolveErrors, ExperimentsResolveResponses, FilesContentGetData, FilesContentGetErrors, FilesContentGetResponses, FilesCreateData, FilesCreateErrors, FilesCreateResponses, FilesDeleteData, FilesDeleteErrors, FilesDeleteResponses, FilesGetData, FilesGetErrors, FilesGetResponses, RunsArtifactsGetData, RunsArtifactsGetErrors, RunsArtifactsGetResponses, RunsArtifactsListData, RunsArtifactsListErrors, RunsArtifactsListResponses, RunsCancelData, RunsCancelErrors, RunsCancelResponses, RunsEventsListData, RunsEventsListErrors, RunsEventsListResponses, RunsGetData, RunsGetErrors, RunsGetResponses, RunsListData, RunsListErrors, RunsListResponses, RunsPromoteData, RunsPromoteErrors, RunsPromoteResponses, RunsRerunData, RunsRerunErrors, RunsRerunResponses, RunsReviewsClearData, RunsReviewsClearErrors, RunsReviewsClearResponses, RunsReviewsExpectedCreateData, RunsReviewsExpectedCreateErrors, RunsReviewsExpectedCreateResponses, RunsReviewsExpectedFileDeleteData, RunsReviewsExpectedFileDeleteErrors, RunsReviewsExpectedFileDeleteResponses, RunsReviewsExpectedFileGetData, RunsReviewsExpectedFileGetErrors, RunsReviewsExpectedFileGetResponses, RunsReviewsExpectedFileUpdateData, RunsReviewsExpectedFileUpdateErrors, RunsReviewsExpectedFileUpdateResponses, RunsReviewsExpectedGetData, RunsReviewsExpectedGetErrors, RunsReviewsExpectedGetResponses, RunsReviewsGetData, RunsReviewsGetErrors, RunsReviewsGetResponses, RunsReviewsUpdateData, RunsReviewsUpdateErrors, RunsReviewsUpdateResponses, RunsScoresListData, RunsScoresListErrors, RunsScoresListResponses, RunsStartData, RunsStartErrors, RunsStartResponses, RunsStepsListData, RunsStepsListErrors, RunsStepsListResponses, RunsTraceGetData, RunsTraceGetErrors, RunsTraceGetResponses, RunsUsageGetData, RunsUsageGetErrors, RunsUsageGetResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -81,7 +81,7 @@ export const automationsDatasetImport = <ThrowOnError extends boolean = false>(o
 /**
  * Get evaluators
  *
- * Fetch the evaluator configuration for an automation. Evaluators produce automated `score` results, which are separate from human feedback `rating` values.
+ * Fetch the evaluator configuration for an automation. Evaluators produce automated `score` results, which are separate from human review verdicts.
  */
 export const automationsEvaluatorsGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsEvaluatorsGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -298,7 +298,7 @@ export const automationsExamplesInputFileUpdate = <ThrowOnError extends boolean 
 /**
  * Run dataset example
  *
- * Start an asynchronous run using the input from one dataset example. Poll `GET /api/v1/runs/{id}` for completion and use run scores or feedback endpoints to review the result.
+ * Start an asynchronous run using the input from one dataset example. Poll `GET /api/v1/runs/{id}` for completion and use run scores or review endpoints to review the result.
  */
 export const automationsExamplesRun = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesRunData, ThrowOnError>) => (options.client ?? client).post<AutomationsExamplesRunResponses, AutomationsExamplesRunErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -389,6 +389,17 @@ export const automationsExperimentsCreateStream = <ThrowOnError extends boolean 
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Get automation review health
+ *
+ * Aggregates reviewed correctness, review coverage, bucketed counts, and rolling-window confidence for one automation. Prefer this endpoint for single-automation monitoring dashboards.
+ */
+export const automationsReviewsHealth = <ThrowOnError extends boolean = false>(options: Options<AutomationsReviewsHealthData, ThrowOnError>) => (options.client ?? client).get<AutomationsReviewsHealthResponses, AutomationsReviewsHealthErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/automations/{id}/reviews/health',
+    ...options
 });
 
 /**
@@ -513,7 +524,7 @@ export const runsStart = <ThrowOnError extends boolean = false>(options: Options
 /**
  * Get a run
  *
- * Fetch one run by id. By default this returns core metadata plus terminal output/error fields. Pass `?expand=input,usage,execution,debug` to include detailed sub-objects; `expand=execution` is also where embedded feedback and expected artifacts appear.
+ * Fetch one run by id. By default this returns core metadata plus terminal output/error fields. Pass `?expand=input,usage,execution,debug` to include detailed sub-objects; `expand=execution` is also where embedded review and expected artifacts appear.
  */
 export const runsGet = <ThrowOnError extends boolean = false>(options: Options<RunsGetData, ThrowOnError>) => (options.client ?? client).get<RunsGetResponses, RunsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -566,110 +577,9 @@ export const runsEventsList = <ThrowOnError extends boolean = false>(options: Op
 });
 
 /**
- * Clear run feedback
- *
- * Deletes all feedback state for the run: human feedback, expected JSON output, and every expected artifact file.
- */
-export const runsFeedbackClear = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackClearData, ThrowOnError>) => (options.client ?? client).delete<RunsFeedbackClearResponses, RunsFeedbackClearErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/feedback',
-    ...options
-});
-
-/**
- * Get run feedback
- *
- * Returns the complete feedback state for one run, including the human feedback object, expected JSON output, and expected files. Use `GET /api/v1/runs/{id}` with `expand=execution` when you only need feedback embedded in a run response.
- */
-export const runsFeedbackGet = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackGetData, ThrowOnError>) => (options.client ?? client).get<RunsFeedbackGetResponses, RunsFeedbackGetErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/feedback',
-    ...options
-});
-
-/**
- * Update run feedback
- *
- * Partially update human feedback and expected JSON output for a run. Omitted fields are left unchanged. Pass null to clear a field.
- */
-export const runsFeedbackUpdate = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackUpdateData, ThrowOnError>) => (options.client ?? client).put<RunsFeedbackUpdateResponses, RunsFeedbackUpdateErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/feedback',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Get expected output
- *
- * Returns the expected JSON output and expected files currently attached to the run feedback record.
- */
-export const runsFeedbackExpectedGet = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackExpectedGetData, ThrowOnError>) => (options.client ?? client).get<RunsFeedbackExpectedGetResponses, RunsFeedbackExpectedGetErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/feedback/expected',
-    ...options
-});
-
-/**
- * Add expected file
- *
- * Attach one expected file to run feedback. Send multipart/form-data with `file` and optional `name` to upload a local file, or JSON with `outputFileName` and optional `expectedName` to copy an existing run output file.
- */
-export const runsFeedbackExpectedCreate = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackExpectedCreateData, ThrowOnError>) => (options.client ?? client).post<RunsFeedbackExpectedCreateResponses, RunsFeedbackExpectedCreateErrors, ThrowOnError>({
-    ...((options.body && typeof options.body === 'object' && 'file' in options.body) ? formDataBodySerializer : {}),
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/feedback/expected',
-    ...options,
-    headers: {
-        'Content-Type': (options.body && typeof options.body === 'object' && 'file' in options.body) ? null : 'application/json',
-        ...options.headers
-    }
-});
-
-/**
- * Delete expected artifact file
- *
- * Deletes one expected artifact file attached to the run feedback record. The feedback text and expected JSON output are left unchanged.
- */
-export const runsFeedbackExpectedFileDelete = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackExpectedFileDeleteData, ThrowOnError>) => (options.client ?? client).delete<RunsFeedbackExpectedFileDeleteResponses, RunsFeedbackExpectedFileDeleteErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/feedback/expected/{filename}',
-    ...options
-});
-
-/**
- * Download expected artifact file
- *
- * Downloads one expected artifact file attached to the run feedback record. Use the `filename` returned by the expected-output collection endpoint.
- */
-export const runsFeedbackExpectedFileGet = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackExpectedFileGetData, ThrowOnError>) => (options.client ?? client).get<RunsFeedbackExpectedFileGetResponses, RunsFeedbackExpectedFileGetErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/feedback/expected/{filename}',
-    ...options
-});
-
-/**
- * Rename expected artifact file
- *
- * Renames one expected artifact file attached to the run feedback record.
- */
-export const runsFeedbackExpectedFileUpdate = <ThrowOnError extends boolean = false>(options: Options<RunsFeedbackExpectedFileUpdateData, ThrowOnError>) => (options.client ?? client).patch<RunsFeedbackExpectedFileUpdateResponses, RunsFeedbackExpectedFileUpdateErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/feedback/expected/{filename}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
  * Promote run to example
  *
- * Turn a reviewed run into a dataset example. The new example uses the run input, the run output, and any expected output/files stored through the feedback endpoints. Use this after adding feedback or expected artifacts to capture a regression test.
+ * Turn a reviewed run into a dataset example. The new example uses the run input and any corrected output/files stored through the review endpoints.
  */
 export const runsPromote = <ThrowOnError extends boolean = false>(options: Options<RunsPromoteData, ThrowOnError>) => (options.client ?? client).post<RunsPromoteResponses, RunsPromoteErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -693,9 +603,110 @@ export const runsRerun = <ThrowOnError extends boolean = false>(options: Options
 });
 
 /**
+ * Clear run review
+ *
+ * Deletes review metadata, corrections, and corrected files for the run.
+ */
+export const runsReviewsClear = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsClearData, ThrowOnError>) => (options.client ?? client).delete<RunsReviewsClearResponses, RunsReviewsClearErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/reviews',
+    ...options
+});
+
+/**
+ * Get run review
+ *
+ * Returns review metadata and corrections for a run. Corrected files are listed at GET /runs/{id}/reviews/expected; embed review + expected artifacts with GET /runs/{id}?expand=execution.
+ */
+export const runsReviewsGet = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsGetData, ThrowOnError>) => (options.client ?? client).get<RunsReviewsGetResponses, RunsReviewsGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/reviews',
+    ...options
+});
+
+/**
+ * Update run review
+ *
+ * Create or replace review metadata for a run.
+ */
+export const runsReviewsUpdate = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsUpdateData, ThrowOnError>) => (options.client ?? client).put<RunsReviewsUpdateResponses, RunsReviewsUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/reviews',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List corrected files
+ *
+ * Returns corrected artifact files attached to the run review. Review metadata and corrected JSON output live at GET /runs/{id}/reviews.
+ */
+export const runsReviewsExpectedGet = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsExpectedGetData, ThrowOnError>) => (options.client ?? client).get<RunsReviewsExpectedGetResponses, RunsReviewsExpectedGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/reviews/expected',
+    ...options
+});
+
+/**
+ * Add corrected file
+ *
+ * Attach one corrected file to a run review. Send multipart/form-data with `file` and optional `name` to upload a local file, or JSON with `outputFileName` and optional `expectedName` to copy an existing run output file.
+ */
+export const runsReviewsExpectedCreate = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsExpectedCreateData, ThrowOnError>) => (options.client ?? client).post<RunsReviewsExpectedCreateResponses, RunsReviewsExpectedCreateErrors, ThrowOnError>({
+    ...((options.body && typeof options.body === 'object' && 'file' in options.body) ? formDataBodySerializer : {}),
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/reviews/expected',
+    ...options,
+    headers: {
+        'Content-Type': (options.body && typeof options.body === 'object' && 'file' in options.body) ? null : 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete corrected artifact file
+ *
+ * Deletes one corrected artifact file attached to the run review.
+ */
+export const runsReviewsExpectedFileDelete = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsExpectedFileDeleteData, ThrowOnError>) => (options.client ?? client).delete<RunsReviewsExpectedFileDeleteResponses, RunsReviewsExpectedFileDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/reviews/expected/{filename}',
+    ...options
+});
+
+/**
+ * Download corrected artifact file
+ *
+ * Downloads one corrected artifact file attached to the run review. Use the `filename` returned by the corrected-output collection endpoint.
+ */
+export const runsReviewsExpectedFileGet = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsExpectedFileGetData, ThrowOnError>) => (options.client ?? client).get<RunsReviewsExpectedFileGetResponses, RunsReviewsExpectedFileGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/reviews/expected/{filename}',
+    ...options
+});
+
+/**
+ * Rename corrected artifact file
+ *
+ * Renames one corrected artifact file attached to the run review.
+ */
+export const runsReviewsExpectedFileUpdate = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsExpectedFileUpdateData, ThrowOnError>) => (options.client ?? client).patch<RunsReviewsExpectedFileUpdateResponses, RunsReviewsExpectedFileUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/runs/{id}/reviews/expected/{filename}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * List run evaluator scores
  *
- * List automated evaluator results for one run. Use `score` for evaluator output and `rating` on run feedback for human verdicts.
+ * List automated evaluator results for one run. Use `score` for evaluator output and run reviews for human verdicts.
  */
 export const runsScoresList = <ThrowOnError extends boolean = false>(options: Options<RunsScoresListData, ThrowOnError>) => (options.client ?? client).get<RunsScoresListResponses, RunsScoresListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
