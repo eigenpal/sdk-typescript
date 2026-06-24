@@ -267,7 +267,6 @@ export type RunReviewRequest = {
         originalValue?: unknown;
         correctedValue?: unknown;
         note?: string | null;
-        fileVerdict?: 'correct' | 'wrong' | 'replaced' | null;
         correctedArtifactPath?: string | null;
     }>;
 };
@@ -1271,7 +1270,6 @@ export type RunReviewCorrection = {
     originalValue?: unknown | null;
     correctedValue?: unknown | null;
     note: string;
-    fileVerdict?: 'correct' | 'wrong' | 'replaced' | null;
     correctedArtifactPath?: string | null;
     createdAt: string;
     updatedAt: string;

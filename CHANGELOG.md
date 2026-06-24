@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.10.3
+
+### Patch Changes
+
+- e48cb81: Remove `fileVerdict` from run review correction types; file correction intent is encoded via `correctedArtifactPath`.
+
 ## 0.9.0
 
 ### Minor Changes
