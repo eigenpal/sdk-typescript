@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.10.5
+
+### Minor Changes
+
+- d3a8b79: Run start types now model file inputs explicitly. SDK users can pass reusable file handles with `$fileId` or inline file bytes with `$inline`, matching the public API behavior for file-backed workflow runs.
+
 ## 0.10.3
 
 ### Patch Changes

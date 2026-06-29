@@ -80,14 +80,14 @@ Use `client.files` for reusable upload-first blobs. When referenced by a run inp
 const uploaded = await client.files.upload(file);
 
 const started = await client.run('workflows.extract-invoice', {
-  contract_document: { fileId: uploaded.id },
+  contract_document: { $fileId: uploaded.id },
 });
 
 const artifacts = await client.runs.artifacts.list(started.id);
 const pdf = await client.runs.artifacts.download(started.id, artifacts.artifacts[0].path);
 ```
 
-You can also pass a `File`, `Blob`, or `{ content, filename, mimeType }` directly to `client.run`; the SDK sends multipart form data automatically.
+You can also pass a `File`, `Blob`, or `{ content, filename, mimeType }` directly to `client.run`; the SDK sends multipart form data automatically. Durable run inputs and dataset examples store scoped `{ "$file": "input/..." }` artifact refs after ingestion.
 
 ## Errors
 

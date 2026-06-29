@@ -173,19 +173,49 @@ export type RunStartBody = {
         [key: string]: unknown;
     };
     /**
-     * File inputs as references (`{ fileId, filename?, mimeType? }`). Upload bytes via multipart `files.<fieldName>` parts instead.
+     * File inputs as ingress references (`{ "$fileId": "file_..." }` or `{ "$inline": { filename, mimeType, base64 } }`). Upload bytes via multipart `files.<fieldName>` parts instead.
      */
     files?: {
         [key: string]: {
-            fileId: string;
-            filename?: string;
-            mimeType?: string;
-            [key: string]: unknown;
+            /**
+             * Reusable file-pool id to materialize
+             */
+            $fileId: string;
+        } | {
+            $inline: {
+                /**
+                 * Original filename for the materialized artifact
+                 */
+                filename: string;
+                /**
+                 * MIME type for the materialized artifact
+                 */
+                mimeType: string;
+                /**
+                 * Base64-encoded file bytes
+                 */
+                base64: string;
+            };
         } | Array<{
-            fileId: string;
-            filename?: string;
-            mimeType?: string;
-            [key: string]: unknown;
+            /**
+             * Reusable file-pool id to materialize
+             */
+            $fileId: string;
+        } | {
+            $inline: {
+                /**
+                 * Original filename for the materialized artifact
+                 */
+                filename: string;
+                /**
+                 * MIME type for the materialized artifact
+                 */
+                mimeType: string;
+                /**
+                 * Base64-encoded file bytes
+                 */
+                base64: string;
+            };
         }>;
     };
     /**
