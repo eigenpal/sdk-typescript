@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.10.8
+
+### Patch Changes
+
+- 548b976: The Python SDK now requires Python 3.10 or newer. Python 3.9 has reached the end of its support window, and dropping it keeps the SDK on current, actively maintained dependencies. If you are still on Python 3.9, upgrade to 3.10+ to continue receiving SDK updates.
+
 ## 0.10.5
 
 ### Minor Changes
