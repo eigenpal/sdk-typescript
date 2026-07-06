@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.10.15
+
+### Patch Changes
+
+- 064ec4f: SDK clients now expose the trace-inclusive experiment export option for deeper debugging and audit review.
+
 ## 0.10.8
 
 ### Patch Changes

@@ -3085,6 +3085,7 @@ export type AutomationsExperimentsExportData = {
     };
     query: {
         format: 'csv' | 'json';
+        includeTrace?: '0' | '1' | 'true' | 'false';
     };
     url: '/api/v1/automations/{id}/experiments/{experimentId}/export';
 };

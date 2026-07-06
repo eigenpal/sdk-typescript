@@ -818,9 +818,10 @@ Download eval result rows for a single experiment batch as CSV or JSON.
 
 **Query parameters**
 
-| Name     | Type              | Description |
-| -------- | ----------------- | ----------- |
-| `format` | `"csv" \| "json"` |             |
+| Name           | Type                              | Description |
+| -------------- | --------------------------------- | ----------- |
+| `format`       | `"csv" \| "json"`                 |             |
+| `includeTrace` | `"0" \| "1" \| "true" \| "false"` | (optional)  |
 
 **Response**
 
