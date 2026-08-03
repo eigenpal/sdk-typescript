@@ -19,7 +19,7 @@
 export const SDK_LANGUAGE = 'typescript';
 // Rewritten at publish time by scripts/release/platform/render-sdk-versions.sh.
 // Keep this string literal exactly stable — sed matches on it.
-export const SDK_VERSION = '0.10.49';
+export const SDK_VERSION = '0.10.50';
 
 function detectRuntime(): string {
   const g = globalThis as unknown as {
