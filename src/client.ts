@@ -5,7 +5,14 @@ import type {
   RunStartResponse as GeneratedRunStartResponse,
   Run,
 } from './generated/types.gen';
-import { buildRunJsonBody, buildRunMultipart, hasFileInput } from './lib/files';
+import {
+  buildRunJsonBody,
+  buildRunMultipart,
+  hasFileInput,
+  isFileInput,
+  resolveFileBlob,
+} from './lib/files';
+import { DEFAULT_MULTIPART_MAX_BYTES, keysRequiringPreUpload } from './lib/upload-limits';
 import { AuthResource } from './resources/auth';
 import { AutomationsResource } from './resources/automations';
 import { FilesResource } from './resources/files';
@@ -23,11 +30,19 @@ export interface EigenpalOptions {
   /**
    * Override the API base URL.
    *
-   * Defaults to `EIGENPAL_BASE_URL` if set, otherwise `https://studio.eigenpal.com`.
+   * Defaults to `EIGENPAL_BASE_URL` if set, otherwise `https://api.eigenpal.com`.
    */
   baseUrl?: string;
   /** Per-request timeout in milliseconds. Defaults to 60_000. */
   timeoutMs?: number;
+  /**
+   * Maximum total HTTP multipart body size before run files are pre-uploaded.
+   *
+   * Defaults to `EIGENPAL_MULTIPART_MAX_BYTES` or 4.5 MiB. Set `null` (or the
+   * environment value `none`) to disable pre-uploads and keep every file on
+   * the run's multipart request, typically for self-hosted deployments.
+   */
+  multipartMaxBytes?: number | null;
   /** How many times to retry on 5xx / 429 / network errors. Defaults to 3. */
   maxRetries?: number;
   /** Inject a custom fetch implementation (testing). Defaults to global fetch. */
@@ -36,7 +51,7 @@ export interface EigenpalOptions {
   defaultHeaders?: Record<string, string>;
 }
 
-const DEFAULT_BASE_URL = 'https://studio.eigenpal.com';
+const DEFAULT_BASE_URL = 'https://api.eigenpal.com';
 const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_MAX_RETRIES = 3;
 
@@ -53,6 +68,10 @@ export interface OperationResult<T> {
   error?: unknown;
   response?: Response;
   request?: Request;
+}
+
+export interface RequestDispatchOptions {
+  responseKind?: 'json' | 'binary';
 }
 
 export type RunTarget =
@@ -131,6 +150,7 @@ export class EigenpalClient {
   private readonly client: Client;
   private readonly maxRetries: number;
   private readonly timeoutMs: number;
+  private readonly multipartMaxBytes: number | null;
 
   constructor(options: EigenpalOptions = {}) {
     const apiKey = options.apiKey ?? readEnv('EIGENPAL_API_KEY');
@@ -143,6 +163,7 @@ export class EigenpalClient {
 
     this.maxRetries = options.maxRetries ?? DEFAULT_MAX_RETRIES;
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    this.multipartMaxBytes = resolveMultipartMaxBytes(options.multipartMaxBytes);
 
     const baseUrl = options.baseUrl ?? readEnv('EIGENPAL_BASE_URL') ?? DEFAULT_BASE_URL;
     const config: Config = createConfig({
@@ -191,17 +212,21 @@ export class EigenpalClient {
       version,
     });
 
-    if (hasFileInput(input)) {
+    const preparedInput = input ? await this.prepareRunFileInputs(input, options.signal) : input;
+
+    if (hasFileInput(preparedInput)) {
+      // Small files stay on the explicit multipart contract (and on-prem has no
+      // Vercel body ceiling). Large values were already replaced with $fileId.
       const { formData } = await buildRunMultipart({
         target: pathTarget,
-        input,
+        input: preparedInput,
         overrides: options.overrides,
         metadata: options.metadata,
       });
       return this._request<RunStartResponse>(
         () =>
           this.client.post({
-            url: '/api/v1/runs',
+            url: '/v1/runs',
             query,
             body: formData,
             bodySerializer: null,
@@ -211,16 +236,57 @@ export class EigenpalClient {
       );
     }
 
-    const body = buildRunJsonBody(pathTarget, input, options.overrides, options.metadata);
+    const body = buildRunJsonBody(pathTarget, preparedInput, options.overrides, options.metadata);
     return this._request<RunStartResponse>(
       () =>
         this.client.post({
-          url: '/api/v1/runs',
+          url: '/v1/runs',
           query,
           body,
           signal: options.signal,
         }) as Promise<OperationResult<RunStartResponse>>
     );
+  }
+
+  /**
+   * Pre-upload file values when the aggregate multipart payload (all file
+   * bytes + envelope headroom) would exceed the configured body limit.
+   * Remaining small files keep the multipart path for a single round-trip;
+   * a null limit keeps every file there.
+   */
+  private async prepareRunFileInputs(input: RunInput, signal?: AbortSignal): Promise<RunInput> {
+    if (!hasFileInput(input)) return input;
+
+    const resolved: Array<{ key: string; blob: Blob; filename: string }> = [];
+    for (const [key, value] of Object.entries(input)) {
+      if (!isFileInput(value)) continue;
+      const { blob, filename } = await resolveFileBlob(value);
+      resolved.push({ key, blob, filename });
+    }
+
+    const preUploadKeys = keysRequiringPreUpload(
+      resolved.map(({ key, blob }) => ({ key, size: blob.size })),
+      this.multipartMaxBytes
+    );
+
+    const next: RunInput = { ...input };
+    for (const { key, blob, filename } of resolved) {
+      if (preUploadKeys.has(key)) {
+        const uploaded = await this.files.upload(blob, {
+          filename,
+          signal,
+          purpose: 'run-input',
+        });
+        next[key] = { $fileId: uploaded.id };
+        continue;
+      }
+      // Prefer a concrete Blob/File so drained streams can still be multiparted.
+      next[key] =
+        typeof File !== 'undefined'
+          ? new File([blob], filename, { type: blob.type || 'application/octet-stream' })
+          : blob;
+    }
+    return next;
   }
 
   async rerun(runId: string, options: RerunOptions = {}): Promise<RunStartResponse> {
@@ -235,7 +301,7 @@ export class EigenpalClient {
     return this._request<RunStartResponse>(
       () =>
         this.client.post({
-          url: '/api/v1/runs/{id}/rerun',
+          url: '/v1/runs/{id}/rerun',
           path: { id: runId },
           query: Object.keys(query).length > 0 ? query : undefined,
           signal: options.signal,
@@ -251,14 +317,17 @@ export class EigenpalClient {
    * The retry budget is `maxRetries`; backoff is exponential (250ms × 2^attempt)
    * unless the response carries a `Retry-After` header.
    */
-  private async _request<T>(call: () => Promise<OperationResult<T>>): Promise<T> {
+  private async _request<T>(
+    call: () => Promise<OperationResult<T>>,
+    options: RequestDispatchOptions = {}
+  ): Promise<T> {
     for (let attempt = 0; ; attempt++) {
       try {
         const result = await call();
         const response = result.response;
         const status = response?.status ?? 0;
         // Guard against misconfigured `baseUrl` pointed at an HTML host
-        // (e.g. `https://eigenpal.com` instead of `https://studio.eigenpal.com`).
+        // (e.g. `https://eigenpal.com` instead of `https://api.eigenpal.com`).
         // Fires for both 2xx and non-2xx so a 4xx with HTML surfaces a typed
         // baseUrl-pointing error instead of a misleading NotFoundError or a
         // downstream JSON-parse crash. 0.4.10 shipped with this footgun.
@@ -268,7 +337,10 @@ export class EigenpalClient {
         // attempt zero. Only fire when we're about to surface the response
         // as a final result or final error.
         const willRetry = isRetriableStatus(status) && attempt < this.maxRetries;
-        if (response && !willRetry) assertJsonResponse(response);
+        if (response && !willRetry) {
+          if (options.responseKind === 'binary') assertBinaryResponse(response);
+          else assertJsonResponse(response);
+        }
         if (response && response.ok && result.data !== undefined) {
           return result.data;
         }
@@ -378,7 +450,20 @@ function assertJsonResponse(response: Response): void {
     `Expected a JSON response from the API but got Content-Type "${contentType}". ` +
       `This usually means \`baseUrl\` points at a non-API host (e.g. the marketing site or ` +
       `a misconfigured proxy). Set \`baseUrl\` to your EigenPal instance root, ` +
-      `e.g. "https://studio.eigenpal.com".`,
+      `e.g. "https://api.eigenpal.com".`,
+    { status: response.status }
+  );
+}
+
+function assertBinaryResponse(response: Response): void {
+  if (response.status === 204) return;
+  const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+  if (contentType === '' || (!contentType.includes('html') && !contentType.includes('json'))) {
+    return;
+  }
+  throw new EigenpalError(
+    `Expected a binary response from the API but got Content-Type "${contentType}". ` +
+      `This usually means \`baseUrl\` points at a non-API host or a misconfigured proxy.`,
     { status: response.status }
   );
 }
@@ -461,4 +546,24 @@ function readEnv(name: string): string | undefined {
     return v && v.length > 0 ? v : undefined;
   }
   return undefined;
+}
+
+function resolveMultipartMaxBytes(explicit: number | null | undefined): number | null {
+  if (explicit !== undefined) {
+    if (explicit === null) return null;
+    if (Number.isSafeInteger(explicit) && explicit >= 0) return explicit;
+    throw new EigenpalError('multipartMaxBytes must be a non-negative integer or null.', {
+      status: 0,
+    });
+  }
+
+  const raw = readEnv('EIGENPAL_MULTIPART_MAX_BYTES')?.trim().toLowerCase();
+  if (!raw) return DEFAULT_MULTIPART_MAX_BYTES;
+  if (raw === 'none' || raw === 'null' || raw === 'unlimited') return null;
+  const parsed = Number(raw);
+  if (Number.isSafeInteger(parsed) && parsed >= 0) return parsed;
+  throw new EigenpalError(
+    'EIGENPAL_MULTIPART_MAX_BYTES must be a non-negative integer or one of: none, null, unlimited.',
+    { status: 0 }
+  );
 }

@@ -1,5 +1,15 @@
 # @eigenpal/sdk
 
+## 0.11.0
+
+### Minor Changes
+
+- ac3c115: The TypeScript and Python SDKs now transparently upload large run inputs without crossing cloud request limits, follow secure storage-direct downloads, and default cloud calls to `api.eigenpal.com`. Set `multipartMaxBytes` / `multipart_max_bytes`, or `EIGENPAL_MULTIPART_MAX_BYTES`, to match a self-hosted proxy; use `null` / `None` to keep every run file on multipart. Explicit `files.upload` files remain reusable until deleted.
+
+### Patch Changes
+
+- 6b3e08f: TypeScript file uploads now follow the server-negotiated multipart endpoint, improving compatibility across hosted and self-managed route layouts.
+
 ## 0.10.15
 
 ### Patch Changes

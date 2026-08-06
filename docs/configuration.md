@@ -3,7 +3,7 @@
 ```ts
 new EigenpalClient({
   apiKey: 'eig_live_...', // or EIGENPAL_API_KEY env var
-  baseUrl: 'https://studio.eigenpal.com', // or EIGENPAL_BASE_URL env var
+  baseUrl: 'https://api.eigenpal.com', // or EIGENPAL_BASE_URL env var
   timeoutMs: 60_000, // per-request timeout
   maxRetries: 3, // 5xx / 429 / network
   defaultHeaders: { 'X-Trace-Id': '...' }, // merged into every request
@@ -27,7 +27,7 @@ new EigenpalClient({
 });
 ```
 
-`baseUrl` overrides `EIGENPAL_BASE_URL`. Defaults to `https://studio.eigenpal.com`.
+`baseUrl` overrides `EIGENPAL_BASE_URL`. Defaults to `https://api.eigenpal.com` for cloud API calls. Studio browser clients continue to use same-origin `/api/v1`.
 
 ## Timeouts
 

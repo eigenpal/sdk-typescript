@@ -85,7 +85,7 @@ describe('EigenpalClient public SDK', () => {
 
     expect(result.id).toBe('run_abc');
     expect(captured[0]?.method).toBe('POST');
-    expect(captured[0]?.url).toContain('/api/v1/runs');
+    expect(captured[0]?.url).toContain('/v1/runs');
     expect(captured[0]?.url).toContain('version=1.2.3');
     expect(JSON.parse(captured[0]?.body ?? '{}')).toEqual({
       target: 'workflows.extract-invoice',
@@ -206,8 +206,16 @@ describe('EigenpalClient public SDK', () => {
           { status: 200, body: { artifacts: [] } },
           { status: 200, body: { review: null } },
           { status: 200, body: { lines: [] } },
-          { status: 201, body: { id: 'file_123', filename: 'input.txt' } },
-          { status: 200, body: { id: 'file_123', filename: 'input.txt' } },
+          {
+            status: 200,
+            body: {
+              transport: 'multipart',
+              url: '/v1/files',
+              maxFileSizeBytes: 100 * 1024 * 1024,
+            },
+          },
+          { status: 201, body: { id: 'file_123', filename: 'hello.txt' } },
+          { status: 200, body: { id: 'file_123', filename: 'hello.txt' } },
           { status: 204 },
         ],
         captured
@@ -234,32 +242,47 @@ describe('EigenpalClient public SDK', () => {
     await client.runs.artifacts.list('run_123');
     await client.runs.reviews.get('run_123');
     await client.runs.trace.get('run_123');
-    await client.files.upload(new Blob(['hello'], { type: 'text/plain' }));
+    // Nameless Blob still requires an explicit filename — do not invent one.
+    await client.files.upload(new Blob(['hello'], { type: 'text/plain' }), {
+      filename: 'hello.txt',
+    });
     await client.files.get('file_123');
     await client.files.delete('file_123');
 
     const paths = captured.map((req) => new URL(req.url).pathname);
-    expect(paths).toContain('/api/v1/auth/check');
-    expect(paths).toContain('/api/v1/automations');
-    expect(paths).toContain('/api/v1/automations/workflows.extract-invoice');
-    expect(paths).toContain('/api/v1/automations/workflows.extract-invoice/versions');
-    expect(paths).toContain('/api/v1/automations/workflows.extract-invoice/triggers');
-    expect(paths).toContain('/api/v1/automations/workflows.extract-invoice/sync');
-    expect(paths).toContain(
-      '/api/v1/automations/workflows.extract-invoice/experiments/exp_1/export'
+    expect(paths).toContain('/v1/auth/check');
+    expect(paths).toContain('/v1/automations');
+    expect(paths).toContain('/v1/automations/workflows.extract-invoice');
+    expect(paths).toContain('/v1/automations/workflows.extract-invoice/versions');
+    expect(paths).toContain('/v1/automations/workflows.extract-invoice/triggers');
+    expect(paths).toContain('/v1/automations/workflows.extract-invoice/sync');
+    expect(paths).toContain('/v1/automations/workflows.extract-invoice/experiments/exp_1/export');
+    expect(paths).toContain('/v1/automations/workflows.extract-invoice/experiments/export');
+    expect(paths).toContain('/v1/automations/workflows.extract-invoice/experiments/stream');
+    expect(paths).toContain('/v1/runs');
+    expect(paths).toContain('/v1/runs/run_123');
+    expect(paths).toContain('/v1/runs/run_123/usage');
+    expect(paths).toContain('/v1/runs/run_123/steps');
+    expect(paths).toContain('/v1/runs/run_123/events');
+    expect(paths).toContain('/v1/runs/run_123/artifacts');
+    expect(paths).toContain('/v1/runs/run_123/reviews');
+    expect(paths).toContain('/v1/runs/run_123/trace');
+    expect(paths).toContain('/v1/files/uploads');
+    expect(paths).toContain('/v1/files');
+    expect(paths).toContain('/v1/files/file_123');
+  });
+
+  test('files.upload rejects a nameless Blob without filename', async () => {
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch: mockFetch([{ status: 200, body: {} }]),
+      maxRetries: 0,
+    });
+
+    await expect(client.files.upload(new Blob(['hello'], { type: 'text/plain' }))).rejects.toThrow(
+      'filename is required when uploading a Blob'
     );
-    expect(paths).toContain('/api/v1/automations/workflows.extract-invoice/experiments/export');
-    expect(paths).toContain('/api/v1/automations/workflows.extract-invoice/experiments/stream');
-    expect(paths).toContain('/api/v1/runs');
-    expect(paths).toContain('/api/v1/runs/run_123');
-    expect(paths).toContain('/api/v1/runs/run_123/usage');
-    expect(paths).toContain('/api/v1/runs/run_123/steps');
-    expect(paths).toContain('/api/v1/runs/run_123/events');
-    expect(paths).toContain('/api/v1/runs/run_123/artifacts');
-    expect(paths).toContain('/api/v1/runs/run_123/reviews');
-    expect(paths).toContain('/api/v1/runs/run_123/trace');
-    expect(paths).toContain('/api/v1/files');
-    expect(paths).toContain('/api/v1/files/file_123');
   });
 
   test('runs.cancel and client.rerun use public control routes', async () => {
@@ -281,9 +304,9 @@ describe('EigenpalClient public SDK', () => {
     await client.rerun('run_123', { waitForCompletion: 30 });
 
     expect(captured[0]?.method).toBe('POST');
-    expect(captured[0]?.url).toContain('/api/v1/runs/run_123/cancel');
+    expect(captured[0]?.url).toContain('/v1/runs/run_123/cancel');
     expect(captured[1]?.method).toBe('POST');
-    expect(captured[1]?.url).toContain('/api/v1/runs/run_123/rerun');
+    expect(captured[1]?.url).toContain('/v1/runs/run_123/rerun');
     expect(captured[1]?.url).toContain('wait_for_completion=30');
   });
 

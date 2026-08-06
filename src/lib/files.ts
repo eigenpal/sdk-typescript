@@ -132,7 +132,7 @@ function basename(path: string): string {
  * so the body can be replayed if the SDK retries the request. (A consumed
  * stream cannot be re-read; a Blob can.)
  */
-async function resolveFileBlob(file: FileInput): Promise<{ blob: Blob; filename: string }> {
+export async function resolveFileBlob(file: FileInput): Promise<{ blob: Blob; filename: string }> {
   // `File` extends `Blob`, so this branch covers both.
   if (typeof Blob !== 'undefined' && file instanceof Blob) {
     return { blob: file, filename: (file as File).name || 'file' };

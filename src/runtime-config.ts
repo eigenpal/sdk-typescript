@@ -11,5 +11,5 @@ import type { CreateClientConfig } from './generated/client.gen';
  */
 export const createClientConfig: CreateClientConfig = (config) => ({
   ...config,
-  baseUrl: config?.baseUrl ?? 'https://studio.eigenpal.com',
+  baseUrl: config?.baseUrl ?? 'https://api.eigenpal.com',
 });

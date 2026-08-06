@@ -250,7 +250,7 @@ export class RunsReviewsResource {
     return this.dispatch(
       () =>
         this.client.post({
-          url: '/api/v1/runs/{id}/reviews/expected',
+          url: '/v1/runs/{id}/reviews/expected',
           path: { id: runId },
           body: formData,
           bodySerializer: null,

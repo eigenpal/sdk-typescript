@@ -7,7 +7,7 @@ import { EigenpalClient } from '@eigenpal/sdk';
 
 const client = new EigenpalClient({ apiKey: process.env.EIGENPAL_API_KEY });
 
-// Run a workflow with a file input (multipart upload, no base64).
+// Small files use multipart; larger files are pre-uploaded automatically.
 const result = await client.run(
   'workflows.extract-invoice',
   { contract: file }, // File / Blob / { content, filename, mimeType }
@@ -16,6 +16,8 @@ const result = await client.run(
 
 console.log(result.finished, result.output);
 ```
+
+Set `multipartMaxBytes: null` or `EIGENPAL_MULTIPART_MAX_BYTES=none` to keep every run file on multipart for a self-hosted deployment.
 
 ## Surface
 
@@ -92,6 +94,9 @@ client
 │   └── usage
 ├── files
 │   ├── get
+│   ├── abortUpload
+│   ├── completeUpload
+│   ├── createUpload
 │   ├── delete
 │   ├── download
 │   └── upload
@@ -121,20 +126,21 @@ const client = new EigenpalClient({
 
 The constructor option always wins; the env var is a fallback so scripts don't have to write `{ apiKey: process.env.EIGENPAL_API_KEY }` explicitly.
 
-| Option           | Type                     | Default                                                            | Description                                       |
-| ---------------- | ------------------------ | ------------------------------------------------------------------ | ------------------------------------------------- |
-| `apiKey`         | `string`                 | `process.env.EIGENPAL_API_KEY`                                     | Bearer key from the dashboard.                    |
-| `baseUrl`        | `string`                 | `process.env.EIGENPAL_BASE_URL` ?? `'https://studio.eigenpal.com'` | API host. Set to your deployment for self-hosted. |
-| `timeoutMs`      | `number`                 | `60_000`                                                           | Per-request timeout.                              |
-| `maxRetries`     | `number`                 | `3`                                                                | Retries on 5xx / 429 / network errors.            |
-| `fetch`          | `typeof fetch`           | global                                                             | Custom fetch (for tests / proxies).               |
-| `defaultHeaders` | `Record<string, string>` | `{}`                                                               | Extra headers attached to every request.          |
+| Option              | Type                     | Default                                                         | Description                                                                                    |
+| ------------------- | ------------------------ | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `apiKey`            | `string`                 | `process.env.EIGENPAL_API_KEY`                                  | Bearer key from the dashboard.                                                                 |
+| `baseUrl`           | `string`                 | `process.env.EIGENPAL_BASE_URL` ?? `'https://api.eigenpal.com'` | API host. Set to your deployment for self-hosted.                                              |
+| `timeoutMs`         | `number`                 | `60_000`                                                        | Per-request timeout.                                                                           |
+| `multipartMaxBytes` | `number \| null`         | `EIGENPAL_MULTIPART_MAX_BYTES` ?? 4.5 MiB                       | Pre-upload run files above the aggregate multipart limit. `null` keeps all files on multipart. |
+| `maxRetries`        | `number`                 | `3`                                                             | Retries on 5xx / 429 / network errors.                                                         |
+| `fetch`             | `typeof fetch`           | global                                                          | Custom fetch (for tests / proxies).                                                            |
+| `defaultHeaders`    | `Record<string, string>` | `{}`                                                            | Extra headers attached to every request.                                                       |
 
 ## Metadata
 
 ### `client.auth.check`
 
-**`GET /api/v1/auth/check`**
+**`GET /v1/auth/check`**
 
 Check API key identity
 
@@ -150,7 +156,7 @@ Return the tenant, user, API key, and scope represented by the current API key.
 
 ### `client.automations.list`
 
-**`GET /api/v1/automations`**
+**`GET /v1/automations`**
 
 List automations
 
@@ -173,7 +179,7 @@ Returns workflows and agents through one runnable automation collection. Use `ty
 
 ### `client.automations.get`
 
-**`GET /api/v1/automations/:id`**
+**`GET /v1/automations/:id`**
 
 Get automation
 
@@ -193,7 +199,7 @@ Get one runnable workflow or agent automation by id or typed alias.
 
 ### `client.automations.sync`
 
-**`POST /api/v1/automations/:id/sync`**
+**`POST /v1/automations/:id/sync`**
 
 Sync automation from latest Git release
 
@@ -213,7 +219,7 @@ Reconciles automation registry metadata and trigger projections from the latest 
 
 ### `client.automations.triggers`
 
-**`GET /api/v1/automations/:id/triggers`**
+**`GET /v1/automations/:id/triggers`**
 
 Get automation triggers
 
@@ -233,7 +239,7 @@ Read trigger state for a workflow or agent automation. Trigger mutation is not p
 
 ### `client.automations.versions`
 
-**`GET /api/v1/automations/:id/versions`**
+**`GET /v1/automations/:id/versions`**
 
 List automation versions
 
@@ -255,11 +261,11 @@ List versions for a workflow or agent automation through one read-only route.
 
 ### `client.automations.dataset.export`
 
-**`GET /api/v1/automations/:id/dataset/export`**
+**`GET /v1/automations/:id/dataset/export`**
 
 Export automation dataset
 
-Download the automation dataset as a ZIP archive. The archive uses the examples/<name>/input and examples/<name>/expected folder convention, so it can be re-imported into another automation or environment.
+Download the automation dataset as a ZIP archive. The archive uses the examples/<name>/input and examples/<name>/expected folder convention, so it can be re-imported into another automation or environment. Cloud deployments may redirect large archives to a short-lived storage URL.
 
 **Path parameters**
 
@@ -281,7 +287,7 @@ Download the automation dataset as a ZIP archive. The archive uses the examples/
 
 ### `client.automations.dataset.import`
 
-**`POST /api/v1/automations/:id/dataset/import`**
+**`POST /v1/automations/:id/dataset/import`**
 
 Import automation dataset
 
@@ -301,7 +307,7 @@ Import a dataset ZIP archive using the examples/<name>/input and examples/<name>
 
 ### `client.automations.evaluators.get`
 
-**`GET /api/v1/automations/:id/evaluators`**
+**`GET /v1/automations/:id/evaluators`**
 
 Get evaluators
 
@@ -321,7 +327,7 @@ Fetch the evaluator configuration for an automation. Evaluators produce automate
 
 ### `client.automations.evaluators.update`
 
-**`PUT /api/v1/automations/:id/evaluators`**
+**`PUT /v1/automations/:id/evaluators`**
 
 Replace evaluators
 
@@ -347,7 +353,7 @@ Replace the evaluator YAML for an automation. The submitted YAML is validated be
 
 ### `client.automations.examples.list`
 
-**`GET /api/v1/automations/:id/examples`**
+**`GET /v1/automations/:id/examples`**
 
 List dataset examples
 
@@ -374,7 +380,7 @@ List dataset examples for one automation. Examples contain input, expected outpu
 
 ### `client.automations.examples.create`
 
-**`POST /api/v1/automations/:id/examples`**
+**`POST /v1/automations/:id/examples`**
 
 Create dataset example
 
@@ -400,7 +406,7 @@ Create one dataset example from JSON fields. Use dataset import for archive-base
 
 ### `client.automations.examples.get`
 
-**`GET /api/v1/automations/:id/examples/:exampleId`**
+**`GET /v1/automations/:id/examples/:exampleId`**
 
 Get dataset example
 
@@ -421,7 +427,7 @@ Fetch one dataset example, including input, expected output, expected files, met
 
 ### `client.automations.examples.update`
 
-**`PATCH /api/v1/automations/:id/examples/:exampleId`**
+**`PATCH /v1/automations/:id/examples/:exampleId`**
 
 Update dataset example
 
@@ -448,7 +454,7 @@ Partially update a dataset example. Omitted fields are preserved; pass null for 
 
 ### `client.automations.examples.delete`
 
-**`DELETE /api/v1/automations/:id/examples/:exampleId`**
+**`DELETE /v1/automations/:id/examples/:exampleId`**
 
 Delete dataset example
 
@@ -469,7 +475,7 @@ Delete one dataset example from the automation dataset. This removes the example
 
 ### `client.automations.examples.expectedFiles.list`
 
-**`GET /api/v1/automations/:id/examples/:exampleId/expected`**
+**`GET /v1/automations/:id/examples/:exampleId/expected`**
 
 List expected files
 
@@ -490,7 +496,7 @@ List files stored under the expected folder for one automation dataset example.
 
 ### `client.automations.examples.expectedFiles.create`
 
-**`POST /api/v1/automations/:id/examples/:exampleId/expected`**
+**`POST /v1/automations/:id/examples/:exampleId/expected`**
 
 Upload expected files
 
@@ -511,7 +517,7 @@ Upload one or more files into the expected folder for an automation dataset exam
 
 ### `client.automations.examples.expectedFile.get`
 
-**`GET /api/v1/automations/:id/examples/:exampleId/expected/:path`**
+**`GET /v1/automations/:id/examples/:exampleId/expected/:path`**
 
 Download expected dataset file
 
@@ -533,7 +539,7 @@ Download one expected file attached to an automation dataset example.
 
 ### `client.automations.examples.expectedFile.update`
 
-**`PATCH /api/v1/automations/:id/examples/:exampleId/expected/:path`**
+**`PATCH /v1/automations/:id/examples/:exampleId/expected/:path`**
 
 Rename expected file
 
@@ -561,7 +567,7 @@ Rename one expected file attached to an automation dataset example. The parent f
 
 ### `client.automations.examples.expectedFile.delete`
 
-**`DELETE /api/v1/automations/:id/examples/:exampleId/expected/:path`**
+**`DELETE /v1/automations/:id/examples/:exampleId/expected/:path`**
 
 Delete expected file
 
@@ -577,7 +583,7 @@ Delete one file from an automation dataset example expected folder.
 
 ### `client.automations.examples.inputFiles.list`
 
-**`GET /api/v1/automations/:id/examples/:exampleId/input`**
+**`GET /v1/automations/:id/examples/:exampleId/input`**
 
 List input files
 
@@ -598,7 +604,7 @@ List files stored under the input folder for one automation dataset example.
 
 ### `client.automations.examples.inputFiles.create`
 
-**`POST /api/v1/automations/:id/examples/:exampleId/input`**
+**`POST /v1/automations/:id/examples/:exampleId/input`**
 
 Upload input files
 
@@ -619,7 +625,7 @@ Upload one or more files into the input folder for an automation dataset example
 
 ### `client.automations.examples.inputFile.get`
 
-**`GET /api/v1/automations/:id/examples/:exampleId/input/:path`**
+**`GET /v1/automations/:id/examples/:exampleId/input/:path`**
 
 Download input file
 
@@ -641,7 +647,7 @@ Download one file from an automation dataset example input folder.
 
 ### `client.automations.examples.inputFile.update`
 
-**`PATCH /api/v1/automations/:id/examples/:exampleId/input/:path`**
+**`PATCH /v1/automations/:id/examples/:exampleId/input/:path`**
 
 Rename input file
 
@@ -669,7 +675,7 @@ Rename one input file attached to an automation dataset example. The parent fold
 
 ### `client.automations.examples.inputFile.delete`
 
-**`DELETE /api/v1/automations/:id/examples/:exampleId/input/:path`**
+**`DELETE /v1/automations/:id/examples/:exampleId/input/:path`**
 
 Delete input file
 
@@ -685,7 +691,7 @@ Delete one file from an automation dataset example input folder.
 
 ### `client.automations.examples.run`
 
-**`POST /api/v1/automations/:id/examples/:exampleId/run`**
+**`POST /v1/automations/:id/examples/:exampleId/run`**
 
 Run dataset example
 
@@ -706,7 +712,7 @@ Start an asynchronous run using the input from one dataset example. Poll `GET /a
 
 ### `client.automations.experiments.list`
 
-**`GET /api/v1/automations/:id/experiments`**
+**`GET /v1/automations/:id/experiments`**
 
 List experiments
 
@@ -735,7 +741,7 @@ List experiment batches for one automation. Each experiment runs selected datase
 
 ### `client.automations.experiments.create`
 
-**`POST /api/v1/automations/:id/experiments`**
+**`POST /v1/automations/:id/experiments`**
 
 Create experiment
 
@@ -761,7 +767,7 @@ Start an asynchronous experiment batch for one automation. Omit `examples` to ru
 
 ### `client.automations.experiments.get`
 
-**`GET /api/v1/automations/:id/experiments/:experimentId`**
+**`GET /v1/automations/:id/experiments/:experimentId`**
 
 Get experiment
 
@@ -782,7 +788,7 @@ Fetch one experiment batch with its run summaries and evaluator results grouped 
 
 ### `client.automations.experiments.cancel`
 
-**`POST /api/v1/automations/:id/experiments/:experimentId/cancel`**
+**`POST /v1/automations/:id/experiments/:experimentId/cancel`**
 
 Cancel experiment
 
@@ -803,7 +809,7 @@ Request cancellation for an experiment batch. Already-completed runs remain reco
 
 ### `client.automations.experiments.export`
 
-**`GET /api/v1/automations/:id/experiments/:experimentId/export`**
+**`GET /v1/automations/:id/experiments/:experimentId/export`**
 
 Export experiment eval results
 
@@ -831,7 +837,7 @@ Download eval result rows for a single experiment batch as CSV or JSON.
 
 ### `client.automations.experiments.exportAll`
 
-**`GET /api/v1/automations/:id/experiments/export`**
+**`GET /v1/automations/:id/experiments/export`**
 
 Export all experiment eval results
 
@@ -857,7 +863,7 @@ Download every eval result row for an automation as CSV or JSON.
 
 ### `client.automations.experiments.createStream`
 
-**`POST /api/v1/automations/:id/experiments/stream`**
+**`POST /v1/automations/:id/experiments/stream`**
 
 Create automation experiment with NDJSON progress
 
@@ -883,7 +889,7 @@ Starts a batch eval experiment for workflow or agent automations and streams per
 
 ### `client.experiments.resolve`
 
-**`GET /api/v1/experiments/:experimentId`**
+**`GET /v1/experiments/:experimentId`**
 
 Resolve experiment by id
 
@@ -903,7 +909,7 @@ Returns the owning automation for an experiment batch id. Used when callers only
 
 ### `client.runs.scores.list`
 
-**`GET /api/v1/runs/:id/scores`**
+**`GET /v1/runs/:id/scores`**
 
 List run evaluator scores
 
@@ -925,7 +931,7 @@ List automated evaluator results for one run. Use `score` for evaluator output a
 
 ### `client.automations.reviews.health`
 
-**`GET /api/v1/automations/:id/reviews/health`**
+**`GET /v1/automations/:id/reviews/health`**
 
 Get automation review health
 
@@ -966,7 +972,7 @@ Aggregates reviewed correctness, review coverage, bucketed counts, and rolling-w
 
 ### `client.runs.promote`
 
-**`POST /api/v1/runs/:id/promote`**
+**`POST /v1/runs/:id/promote`**
 
 Promote run to example
 
@@ -992,7 +998,7 @@ Turn a reviewed run into a dataset example. The new example uses the run input a
 
 ### `client.runs.reviews.get`
 
-**`GET /api/v1/runs/:id/reviews`**
+**`GET /v1/runs/:id/reviews`**
 
 Get run review
 
@@ -1012,7 +1018,7 @@ Returns review metadata and corrections for a run. Corrected files are listed at
 
 ### `client.runs.reviews.update`
 
-**`PUT /api/v1/runs/:id/reviews`**
+**`PUT /v1/runs/:id/reviews`**
 
 Update run review
 
@@ -1038,7 +1044,7 @@ Create or replace review metadata for a run.
 
 ### `client.runs.reviews.clear`
 
-**`DELETE /api/v1/runs/:id/reviews`**
+**`DELETE /v1/runs/:id/reviews`**
 
 Clear run review
 
@@ -1058,7 +1064,7 @@ Deletes review metadata, corrections, and corrected files for the run.
 
 ### `client.runs.reviews.listExpected`
 
-**`GET /api/v1/runs/:id/reviews/expected`**
+**`GET /v1/runs/:id/reviews/expected`**
 
 List corrected files
 
@@ -1078,7 +1084,7 @@ Returns corrected artifact files attached to the run review. Review metadata and
 
 ### `client.runs.reviews.copyOutputToExpected / uploadExpected`
 
-**`POST /api/v1/runs/:id/reviews/expected`**
+**`POST /v1/runs/:id/reviews/expected`**
 
 Add corrected file
 
@@ -1104,7 +1110,7 @@ Attach one corrected file to a run review. Send multipart/form-data with `file` 
 
 ### `client.runs.reviews.downloadExpected`
 
-**`GET /api/v1/runs/:id/reviews/expected/:filename`**
+**`GET /v1/runs/:id/reviews/expected/:filename`**
 
 Download corrected artifact file
 
@@ -1125,7 +1131,7 @@ Downloads one corrected artifact file attached to the run review. Use the `filen
 
 ### `client.runs.reviews.renameExpected`
 
-**`PATCH /api/v1/runs/:id/reviews/expected/:filename`**
+**`PATCH /v1/runs/:id/reviews/expected/:filename`**
 
 Rename corrected artifact file
 
@@ -1152,7 +1158,7 @@ Renames one corrected artifact file attached to the run review.
 
 ### `client.runs.reviews.deleteExpected`
 
-**`DELETE /api/v1/runs/:id/reviews/expected/:filename`**
+**`DELETE /v1/runs/:id/reviews/expected/:filename`**
 
 Delete corrected artifact file
 
@@ -1169,7 +1175,7 @@ Deletes one corrected artifact file attached to the run review.
 
 ### `client.files.upload`
 
-**`POST /api/v1/files`**
+**`POST /v1/files`**
 
 Upload file
 
@@ -1183,7 +1189,7 @@ Upload a reusable file that can later be referenced by run inputs or dataset exa
 
 ### `client.files.get`
 
-**`GET /api/v1/files/:id`**
+**`GET /v1/files/:id`**
 
 Get file metadata
 
@@ -1203,7 +1209,7 @@ Get metadata for a reusable uploaded file.
 
 ### `client.files.delete`
 
-**`DELETE /api/v1/files/:id`**
+**`DELETE /v1/files/:id`**
 
 Delete file
 
@@ -1223,11 +1229,11 @@ Delete a reusable uploaded file. Historical run and dataset snapshots are separa
 
 ### `client.files.download`
 
-**`GET /api/v1/files/:id/content`**
+**`GET /v1/files/:id/content`**
 
 Download file content
 
-Download bytes for a reusable uploaded file.
+Download bytes for a reusable uploaded file. Direct-enabled deployments redirect responses above their configured body limit to a short-lived signed storage URL; multipart-only/on-prem deployments stream through the API.
 
 **Path parameters**
 
@@ -1235,11 +1241,71 @@ Download bytes for a reusable uploaded file.
 | ---- | -------- | ----------- |
 | `id` | `string` | File id     |
 
+### `client.files.createUpload`
+
+**`POST /v1/files/uploads`**
+
+Prepare file upload
+
+Negotiate multipart when the file fits the deployment body limit (or direct storage is disabled), otherwise return a short-lived signed storage PUT. The response transport is authoritative; clients must not guess from file size alone.
+
+**Request body**
+
+```ts
+// CreateFileUploadSessionRequest
+```
+
+**Response**
+
+```ts
+// PresignedFileUploadSession | MultipartFileUploadFallback
+```
+
+### `client.files.abortUpload`
+
+**`DELETE /v1/files/uploads/:uploadId`**
+
+Abort file upload
+
+Abort a pending storage-direct upload and remove its pending object.
+
+**Path parameters**
+
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| `uploadId` | `string` |             |
+
+**Response**
+
+```ts
+// AbortFileUploadResponse
+```
+
+### `client.files.completeUpload`
+
+**`POST /v1/files/uploads/:uploadId/complete`**
+
+Complete file upload
+
+Verify a storage-direct pending object and promote it into a reusable file. Safe to retry.
+
+**Path parameters**
+
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| `uploadId` | `string` |             |
+
+**Response**
+
+```ts
+// File
+```
+
 ## Runs
 
 ### `client.runs.list`
 
-**`GET /api/v1/runs`**
+**`GET /v1/runs`**
 
 List runs
 
@@ -1294,7 +1360,7 @@ List workflow and agent runs with cursor pagination.
 
 ### `client.run`
 
-**`POST /api/v1/runs`**
+**`POST /v1/runs`**
 
 Start a run
 
@@ -1321,7 +1387,7 @@ Start a run. Send JSON or multipart/form-data.
 
 ### `client.runs.get`
 
-**`GET /api/v1/runs/:id`**
+**`GET /v1/runs/:id`**
 
 Get a run
 
@@ -1347,7 +1413,7 @@ Fetch one run by id. By default this returns core metadata plus terminal output/
 
 ### `client.runs.artifacts.list`
 
-**`GET /api/v1/runs/:id/artifacts`**
+**`GET /v1/runs/:id/artifacts`**
 
 List run artifacts
 
@@ -1361,11 +1427,11 @@ Returns a JSON list of downloadable artifact paths for a run. Pass `zip=1` to sw
 
 **Query parameters**
 
-| Name     | Type       | Description                                                                                                                                                                               |
-| -------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `zip`    | `"1"`      | (optional)When `1`, download output files as a ZIP instead of listing paths. Does not include trace, scores, or input — use `GET /runs/{id}/scores` and `GET /runs/{id}/trace` for those. |
-| `bundle` | `"review"` | (optional)With `zip=1`, use `review` to download a ZIP with `output/` and `expected/` folders (corrected review artifacts).                                                               |
-| `token`  | `string`   | (optional)Signed email download token (zip only; no Bearer required).                                                                                                                     |
+| Name     | Type       | Description                                                                                                                                                                                                                                                                                                                                                         |
+| -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `zip`    | `"1"`      | (optional)When `1`, download output files as a ZIP instead of listing paths. Does not include trace, scores, or input — use `GET /runs/{id}/scores` and `GET /runs/{id}/trace` for those. Cloud deployments reject archives whose uncompressed inputs exceed 32 MiB (`413 artifacts_zip_too_large`); download files individually or pass a smaller `files=` subset. |
+| `bundle` | `"review"` | (optional)With `zip=1`, use `review` to download a ZIP with `output/` and `expected/` folders (corrected review artifacts).                                                                                                                                                                                                                                         |
+| `token`  | `string`   | (optional)Signed email download token (zip only; no Bearer required).                                                                                                                                                                                                                                                                                               |
 
 **Response**
 
@@ -1375,11 +1441,11 @@ Returns a JSON list of downloadable artifact paths for a run. Pass `zip=1` to sw
 
 ### `client.runs.artifacts.download`
 
-**`GET /api/v1/runs/:id/artifacts/:path`**
+**`GET /v1/runs/:id/artifacts/:path`**
 
 Download run artifact
 
-Download one artifact by path.
+Download one artifact by path. Cloud deployments may redirect to a short-lived storage URL for large files.
 
 **Path parameters**
 
@@ -1390,7 +1456,7 @@ Download one artifact by path.
 
 ### `client.runs.cancel`
 
-**`POST /api/v1/runs/:id/cancel`**
+**`POST /v1/runs/:id/cancel`**
 
 Cancel run
 
@@ -1410,7 +1476,7 @@ Cancel a queued run or request cancellation of an in-flight run.
 
 ### `client.runs.events`
 
-**`GET /api/v1/runs/:id/events`**
+**`GET /v1/runs/:id/events`**
 
 List run events
 
@@ -1430,7 +1496,7 @@ List a stable chronological lifecycle timeline for a run.
 
 ### `client.rerun`
 
-**`POST /api/v1/runs/:id/rerun`**
+**`POST /v1/runs/:id/rerun`**
 
 Retry run
 
@@ -1457,7 +1523,7 @@ Start a new run using the source run input. By default the retry uses the latest
 
 ### `client.runs.steps`
 
-**`GET /api/v1/runs/:id/steps`**
+**`GET /v1/runs/:id/steps`**
 
 List run steps
 
@@ -1477,7 +1543,7 @@ List workflow steps or an agent-compatible execution step summary for a run.
 
 ### `client.runs.trace.get`
 
-**`GET /api/v1/runs/:id/trace`**
+**`GET /v1/runs/:id/trace`**
 
 Get run trace
 
@@ -1497,7 +1563,7 @@ Return low-level execution trace events for debugging one run. Workflow runs exp
 
 ### `client.runs.usage`
 
-**`GET /api/v1/runs/:id/usage`**
+**`GET /v1/runs/:id/usage`**
 
 Get run usage
 

@@ -2,6 +2,8 @@
 
 When a workflow input is a file, the SDK uploads it as `multipart/form-data` (the same shape as `curl -F`). No base64, no payload doubling.
 
+When the aggregate multipart payload (all file bytes plus form envelope headroom) would exceed ~4 MB, maintained `client.run(...)` helpers pre-upload enough files through the Files API (storage-direct on cloud, multipart fallback on-prem) with `purpose: "run-input"` and send `{ "$fileId": "file_..." }` so cloud deployments stay under Vercel's request-body limit. The server keeps those temporary pool files available for safe run-start retries and reaps them after 24 hours. Explicit `client.files.upload(...)` omits purpose and remains reusable. Remaining small files keep the single multipart round-trip.
+
 ## Browser
 
 ```ts

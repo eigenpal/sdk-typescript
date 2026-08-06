@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthCheckData, AuthCheckErrors, AuthCheckResponses, AutomationsDatasetExportData, AutomationsDatasetExportErrors, AutomationsDatasetExportResponses, AutomationsDatasetImportData, AutomationsDatasetImportErrors, AutomationsDatasetImportResponses, AutomationsEvaluatorsGetData, AutomationsEvaluatorsGetErrors, AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsUpdateData, AutomationsEvaluatorsUpdateErrors, AutomationsEvaluatorsUpdateResponses, AutomationsExamplesCreateData, AutomationsExamplesCreateErrors, AutomationsExamplesCreateResponses, AutomationsExamplesDeleteData, AutomationsExamplesDeleteErrors, AutomationsExamplesDeleteResponses, AutomationsExamplesExpectedFileDeleteData, AutomationsExamplesExpectedFileDeleteErrors, AutomationsExamplesExpectedFileDeleteResponses, AutomationsExamplesExpectedFileGetData, AutomationsExamplesExpectedFileGetErrors, AutomationsExamplesExpectedFileGetResponses, AutomationsExamplesExpectedFilesCreateData, AutomationsExamplesExpectedFilesCreateErrors, AutomationsExamplesExpectedFilesCreateResponses, AutomationsExamplesExpectedFilesListData, AutomationsExamplesExpectedFilesListErrors, AutomationsExamplesExpectedFilesListResponses, AutomationsExamplesExpectedFileUpdateData, AutomationsExamplesExpectedFileUpdateErrors, AutomationsExamplesExpectedFileUpdateResponses, AutomationsExamplesGetData, AutomationsExamplesGetErrors, AutomationsExamplesGetResponses, AutomationsExamplesInputFileDeleteData, AutomationsExamplesInputFileDeleteErrors, AutomationsExamplesInputFileDeleteResponses, AutomationsExamplesInputFileGetData, AutomationsExamplesInputFileGetErrors, AutomationsExamplesInputFileGetResponses, AutomationsExamplesInputFilesCreateData, AutomationsExamplesInputFilesCreateErrors, AutomationsExamplesInputFilesCreateResponses, AutomationsExamplesInputFilesListData, AutomationsExamplesInputFilesListErrors, AutomationsExamplesInputFilesListResponses, AutomationsExamplesInputFileUpdateData, AutomationsExamplesInputFileUpdateErrors, AutomationsExamplesInputFileUpdateResponses, AutomationsExamplesListData, AutomationsExamplesListErrors, AutomationsExamplesListResponses, AutomationsExamplesRunData, AutomationsExamplesRunErrors, AutomationsExamplesRunResponses, AutomationsExamplesUpdateData, AutomationsExamplesUpdateErrors, AutomationsExamplesUpdateResponses, AutomationsExperimentsCancelData, AutomationsExperimentsCancelErrors, AutomationsExperimentsCancelResponses, AutomationsExperimentsCreateData, AutomationsExperimentsCreateErrors, AutomationsExperimentsCreateResponses, AutomationsExperimentsCreateStreamData, AutomationsExperimentsCreateStreamErrors, AutomationsExperimentsCreateStreamResponses, AutomationsExperimentsExportAllData, AutomationsExperimentsExportAllErrors, AutomationsExperimentsExportAllResponses, AutomationsExperimentsExportData, AutomationsExperimentsExportErrors, AutomationsExperimentsExportResponses, AutomationsExperimentsGetData, AutomationsExperimentsGetErrors, AutomationsExperimentsGetResponses, AutomationsExperimentsListData, AutomationsExperimentsListErrors, AutomationsExperimentsListResponses, AutomationsGetData, AutomationsGetErrors, AutomationsGetResponses, AutomationsListData, AutomationsListErrors, AutomationsListResponses, AutomationsReviewsHealthData, AutomationsReviewsHealthErrors, AutomationsReviewsHealthResponses, AutomationsSyncData, AutomationsSyncErrors, AutomationsSyncResponses, AutomationsTriggersGetData, AutomationsTriggersGetErrors, AutomationsTriggersGetResponses, AutomationsVersionsListData, AutomationsVersionsListErrors, AutomationsVersionsListResponses, ExperimentsResolveData, ExperimentsResolveErrors, ExperimentsResolveResponses, FilesContentGetData, FilesContentGetErrors, FilesContentGetResponses, FilesCreateData, FilesCreateErrors, FilesCreateResponses, FilesDeleteData, FilesDeleteErrors, FilesDeleteResponses, FilesGetData, FilesGetErrors, FilesGetResponses, RunsArtifactsGetData, RunsArtifactsGetErrors, RunsArtifactsGetResponses, RunsArtifactsListData, RunsArtifactsListErrors, RunsArtifactsListResponses, RunsCancelData, RunsCancelErrors, RunsCancelResponses, RunsEventsListData, RunsEventsListErrors, RunsEventsListResponses, RunsGetData, RunsGetErrors, RunsGetResponses, RunsListData, RunsListErrors, RunsListResponses, RunsPromoteData, RunsPromoteErrors, RunsPromoteResponses, RunsRerunData, RunsRerunErrors, RunsRerunResponses, RunsReviewsClearData, RunsReviewsClearErrors, RunsReviewsClearResponses, RunsReviewsExpectedCreateData, RunsReviewsExpectedCreateErrors, RunsReviewsExpectedCreateResponses, RunsReviewsExpectedFileDeleteData, RunsReviewsExpectedFileDeleteErrors, RunsReviewsExpectedFileDeleteResponses, RunsReviewsExpectedFileGetData, RunsReviewsExpectedFileGetErrors, RunsReviewsExpectedFileGetResponses, RunsReviewsExpectedFileUpdateData, RunsReviewsExpectedFileUpdateErrors, RunsReviewsExpectedFileUpdateResponses, RunsReviewsExpectedGetData, RunsReviewsExpectedGetErrors, RunsReviewsExpectedGetResponses, RunsReviewsGetData, RunsReviewsGetErrors, RunsReviewsGetResponses, RunsReviewsUpdateData, RunsReviewsUpdateErrors, RunsReviewsUpdateResponses, RunsScoresListData, RunsScoresListErrors, RunsScoresListResponses, RunsStartData, RunsStartErrors, RunsStartResponses, RunsStepsListData, RunsStepsListErrors, RunsStepsListResponses, RunsTraceGetData, RunsTraceGetErrors, RunsTraceGetResponses, RunsUsageGetData, RunsUsageGetErrors, RunsUsageGetResponses } from './types.gen';
+import type { AuthCheckData, AuthCheckErrors, AuthCheckResponses, AutomationsDatasetExportData, AutomationsDatasetExportErrors, AutomationsDatasetExportResponses, AutomationsDatasetImportData, AutomationsDatasetImportErrors, AutomationsDatasetImportResponses, AutomationsEvaluatorsGetData, AutomationsEvaluatorsGetErrors, AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsUpdateData, AutomationsEvaluatorsUpdateErrors, AutomationsEvaluatorsUpdateResponses, AutomationsExamplesCreateData, AutomationsExamplesCreateErrors, AutomationsExamplesCreateResponses, AutomationsExamplesDeleteData, AutomationsExamplesDeleteErrors, AutomationsExamplesDeleteResponses, AutomationsExamplesExpectedFileDeleteData, AutomationsExamplesExpectedFileDeleteErrors, AutomationsExamplesExpectedFileDeleteResponses, AutomationsExamplesExpectedFileGetData, AutomationsExamplesExpectedFileGetErrors, AutomationsExamplesExpectedFileGetResponses, AutomationsExamplesExpectedFilesCreateData, AutomationsExamplesExpectedFilesCreateErrors, AutomationsExamplesExpectedFilesCreateResponses, AutomationsExamplesExpectedFilesListData, AutomationsExamplesExpectedFilesListErrors, AutomationsExamplesExpectedFilesListResponses, AutomationsExamplesExpectedFileUpdateData, AutomationsExamplesExpectedFileUpdateErrors, AutomationsExamplesExpectedFileUpdateResponses, AutomationsExamplesGetData, AutomationsExamplesGetErrors, AutomationsExamplesGetResponses, AutomationsExamplesInputFileDeleteData, AutomationsExamplesInputFileDeleteErrors, AutomationsExamplesInputFileDeleteResponses, AutomationsExamplesInputFileGetData, AutomationsExamplesInputFileGetErrors, AutomationsExamplesInputFileGetResponses, AutomationsExamplesInputFilesCreateData, AutomationsExamplesInputFilesCreateErrors, AutomationsExamplesInputFilesCreateResponses, AutomationsExamplesInputFilesListData, AutomationsExamplesInputFilesListErrors, AutomationsExamplesInputFilesListResponses, AutomationsExamplesInputFileUpdateData, AutomationsExamplesInputFileUpdateErrors, AutomationsExamplesInputFileUpdateResponses, AutomationsExamplesListData, AutomationsExamplesListErrors, AutomationsExamplesListResponses, AutomationsExamplesRunData, AutomationsExamplesRunErrors, AutomationsExamplesRunResponses, AutomationsExamplesUpdateData, AutomationsExamplesUpdateErrors, AutomationsExamplesUpdateResponses, AutomationsExperimentsCancelData, AutomationsExperimentsCancelErrors, AutomationsExperimentsCancelResponses, AutomationsExperimentsCreateData, AutomationsExperimentsCreateErrors, AutomationsExperimentsCreateResponses, AutomationsExperimentsCreateStreamData, AutomationsExperimentsCreateStreamErrors, AutomationsExperimentsCreateStreamResponses, AutomationsExperimentsExportAllData, AutomationsExperimentsExportAllErrors, AutomationsExperimentsExportAllResponses, AutomationsExperimentsExportData, AutomationsExperimentsExportErrors, AutomationsExperimentsExportResponses, AutomationsExperimentsGetData, AutomationsExperimentsGetErrors, AutomationsExperimentsGetResponses, AutomationsExperimentsListData, AutomationsExperimentsListErrors, AutomationsExperimentsListResponses, AutomationsGetData, AutomationsGetErrors, AutomationsGetResponses, AutomationsListData, AutomationsListErrors, AutomationsListResponses, AutomationsReviewsHealthData, AutomationsReviewsHealthErrors, AutomationsReviewsHealthResponses, AutomationsSyncData, AutomationsSyncErrors, AutomationsSyncResponses, AutomationsTriggersGetData, AutomationsTriggersGetErrors, AutomationsTriggersGetResponses, AutomationsVersionsListData, AutomationsVersionsListErrors, AutomationsVersionsListResponses, ExperimentsResolveData, ExperimentsResolveErrors, ExperimentsResolveResponses, FilesContentGetData, FilesContentGetErrors, FilesContentGetResponses, FilesCreateData, FilesCreateErrors, FilesCreateResponses, FilesDeleteData, FilesDeleteErrors, FilesDeleteResponses, FilesGetData, FilesGetErrors, FilesGetResponses, FilesUploadsAbortData, FilesUploadsAbortErrors, FilesUploadsAbortResponses, FilesUploadsCompleteData, FilesUploadsCompleteErrors, FilesUploadsCompleteResponses, FilesUploadsCreateData, FilesUploadsCreateErrors, FilesUploadsCreateResponses, RunsArtifactsGetData, RunsArtifactsGetErrors, RunsArtifactsGetResponses, RunsArtifactsListData, RunsArtifactsListErrors, RunsArtifactsListResponses, RunsCancelData, RunsCancelErrors, RunsCancelResponses, RunsEventsListData, RunsEventsListErrors, RunsEventsListResponses, RunsGetData, RunsGetErrors, RunsGetResponses, RunsListData, RunsListErrors, RunsListResponses, RunsPromoteData, RunsPromoteErrors, RunsPromoteResponses, RunsRerunData, RunsRerunErrors, RunsRerunResponses, RunsReviewsClearData, RunsReviewsClearErrors, RunsReviewsClearResponses, RunsReviewsExpectedCreateData, RunsReviewsExpectedCreateErrors, RunsReviewsExpectedCreateResponses, RunsReviewsExpectedFileDeleteData, RunsReviewsExpectedFileDeleteErrors, RunsReviewsExpectedFileDeleteResponses, RunsReviewsExpectedFileGetData, RunsReviewsExpectedFileGetErrors, RunsReviewsExpectedFileGetResponses, RunsReviewsExpectedFileUpdateData, RunsReviewsExpectedFileUpdateErrors, RunsReviewsExpectedFileUpdateResponses, RunsReviewsExpectedGetData, RunsReviewsExpectedGetErrors, RunsReviewsExpectedGetResponses, RunsReviewsGetData, RunsReviewsGetErrors, RunsReviewsGetResponses, RunsReviewsUpdateData, RunsReviewsUpdateErrors, RunsReviewsUpdateResponses, RunsScoresListData, RunsScoresListErrors, RunsScoresListResponses, RunsStartData, RunsStartErrors, RunsStartResponses, RunsStepsListData, RunsStepsListErrors, RunsStepsListResponses, RunsTraceGetData, RunsTraceGetErrors, RunsTraceGetResponses, RunsUsageGetData, RunsUsageGetErrors, RunsUsageGetResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -25,7 +25,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
  */
 export const authCheck = <ThrowOnError extends boolean = false>(options?: Options<AuthCheckData, ThrowOnError>) => (options?.client ?? client).get<AuthCheckResponses, AuthCheckErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/auth/check',
+    url: '/v1/auth/check',
     ...options
 });
 
@@ -36,7 +36,7 @@ export const authCheck = <ThrowOnError extends boolean = false>(options?: Option
  */
 export const automationsList = <ThrowOnError extends boolean = false>(options?: Options<AutomationsListData, ThrowOnError>) => (options?.client ?? client).get<AutomationsListResponses, AutomationsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations',
+    url: '/v1/automations',
     ...options
 });
 
@@ -47,18 +47,18 @@ export const automationsList = <ThrowOnError extends boolean = false>(options?: 
  */
 export const automationsGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsGetResponses, AutomationsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}',
+    url: '/v1/automations/{id}',
     ...options
 });
 
 /**
  * Export automation dataset
  *
- * Download the automation dataset as a ZIP archive. The archive uses the examples/<name>/input and examples/<name>/expected folder convention, so it can be re-imported into another automation or environment.
+ * Download the automation dataset as a ZIP archive. The archive uses the examples/<name>/input and examples/<name>/expected folder convention, so it can be re-imported into another automation or environment. Cloud deployments may redirect large archives to a short-lived storage URL.
  */
 export const automationsDatasetExport = <ThrowOnError extends boolean = false>(options: Options<AutomationsDatasetExportData, ThrowOnError>) => (options.client ?? client).get<AutomationsDatasetExportResponses, AutomationsDatasetExportErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/dataset/export',
+    url: '/v1/automations/{id}/dataset/export',
     ...options
 });
 
@@ -70,7 +70,7 @@ export const automationsDatasetExport = <ThrowOnError extends boolean = false>(o
 export const automationsDatasetImport = <ThrowOnError extends boolean = false>(options: Options<AutomationsDatasetImportData, ThrowOnError>) => (options.client ?? client).post<AutomationsDatasetImportResponses, AutomationsDatasetImportErrors, ThrowOnError>({
     ...formDataBodySerializer,
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/dataset/import',
+    url: '/v1/automations/{id}/dataset/import',
     ...options,
     headers: {
         'Content-Type': null,
@@ -85,7 +85,7 @@ export const automationsDatasetImport = <ThrowOnError extends boolean = false>(o
  */
 export const automationsEvaluatorsGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsEvaluatorsGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/evaluators',
+    url: '/v1/automations/{id}/evaluators',
     ...options
 });
 
@@ -96,7 +96,7 @@ export const automationsEvaluatorsGet = <ThrowOnError extends boolean = false>(o
  */
 export const automationsEvaluatorsUpdate = <ThrowOnError extends boolean = false>(options: Options<AutomationsEvaluatorsUpdateData, ThrowOnError>) => (options.client ?? client).put<AutomationsEvaluatorsUpdateResponses, AutomationsEvaluatorsUpdateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/evaluators',
+    url: '/v1/automations/{id}/evaluators',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -111,7 +111,7 @@ export const automationsEvaluatorsUpdate = <ThrowOnError extends boolean = false
  */
 export const automationsExamplesList = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesListData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesListResponses, AutomationsExamplesListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples',
+    url: '/v1/automations/{id}/examples',
     ...options
 });
 
@@ -122,7 +122,7 @@ export const automationsExamplesList = <ThrowOnError extends boolean = false>(op
  */
 export const automationsExamplesCreate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesCreateData, ThrowOnError>) => (options.client ?? client).post<AutomationsExamplesCreateResponses, AutomationsExamplesCreateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples',
+    url: '/v1/automations/{id}/examples',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -137,7 +137,7 @@ export const automationsExamplesCreate = <ThrowOnError extends boolean = false>(
  */
 export const automationsExamplesDelete = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesDeleteData, ThrowOnError>) => (options.client ?? client).delete<AutomationsExamplesDeleteResponses, AutomationsExamplesDeleteErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}',
+    url: '/v1/automations/{id}/examples/{exampleId}',
     ...options
 });
 
@@ -148,7 +148,7 @@ export const automationsExamplesDelete = <ThrowOnError extends boolean = false>(
  */
 export const automationsExamplesGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesGetResponses, AutomationsExamplesGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}',
+    url: '/v1/automations/{id}/examples/{exampleId}',
     ...options
 });
 
@@ -159,7 +159,7 @@ export const automationsExamplesGet = <ThrowOnError extends boolean = false>(opt
  */
 export const automationsExamplesUpdate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesUpdateData, ThrowOnError>) => (options.client ?? client).patch<AutomationsExamplesUpdateResponses, AutomationsExamplesUpdateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}',
+    url: '/v1/automations/{id}/examples/{exampleId}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -174,7 +174,7 @@ export const automationsExamplesUpdate = <ThrowOnError extends boolean = false>(
  */
 export const automationsExamplesExpectedFilesList = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesExpectedFilesListData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesExpectedFilesListResponses, AutomationsExamplesExpectedFilesListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}/expected',
+    url: '/v1/automations/{id}/examples/{exampleId}/expected',
     ...options
 });
 
@@ -186,7 +186,7 @@ export const automationsExamplesExpectedFilesList = <ThrowOnError extends boolea
 export const automationsExamplesExpectedFilesCreate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesExpectedFilesCreateData, ThrowOnError>) => (options.client ?? client).post<AutomationsExamplesExpectedFilesCreateResponses, AutomationsExamplesExpectedFilesCreateErrors, ThrowOnError>({
     ...formDataBodySerializer,
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}/expected',
+    url: '/v1/automations/{id}/examples/{exampleId}/expected',
     ...options,
     headers: {
         'Content-Type': null,
@@ -201,7 +201,7 @@ export const automationsExamplesExpectedFilesCreate = <ThrowOnError extends bool
  */
 export const automationsExamplesExpectedFileDelete = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesExpectedFileDeleteData, ThrowOnError>) => (options.client ?? client).delete<AutomationsExamplesExpectedFileDeleteResponses, AutomationsExamplesExpectedFileDeleteErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}/expected/{path}',
+    url: '/v1/automations/{id}/examples/{exampleId}/expected/{path}',
     ...options
 });
 
@@ -212,7 +212,7 @@ export const automationsExamplesExpectedFileDelete = <ThrowOnError extends boole
  */
 export const automationsExamplesExpectedFileGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesExpectedFileGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesExpectedFileGetResponses, AutomationsExamplesExpectedFileGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}/expected/{path}',
+    url: '/v1/automations/{id}/examples/{exampleId}/expected/{path}',
     ...options
 });
 
@@ -223,7 +223,7 @@ export const automationsExamplesExpectedFileGet = <ThrowOnError extends boolean 
  */
 export const automationsExamplesExpectedFileUpdate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesExpectedFileUpdateData, ThrowOnError>) => (options.client ?? client).patch<AutomationsExamplesExpectedFileUpdateResponses, AutomationsExamplesExpectedFileUpdateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}/expected/{path}',
+    url: '/v1/automations/{id}/examples/{exampleId}/expected/{path}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -238,7 +238,7 @@ export const automationsExamplesExpectedFileUpdate = <ThrowOnError extends boole
  */
 export const automationsExamplesInputFilesList = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesInputFilesListData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesInputFilesListResponses, AutomationsExamplesInputFilesListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}/input',
+    url: '/v1/automations/{id}/examples/{exampleId}/input',
     ...options
 });
 
@@ -250,7 +250,7 @@ export const automationsExamplesInputFilesList = <ThrowOnError extends boolean =
 export const automationsExamplesInputFilesCreate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesInputFilesCreateData, ThrowOnError>) => (options.client ?? client).post<AutomationsExamplesInputFilesCreateResponses, AutomationsExamplesInputFilesCreateErrors, ThrowOnError>({
     ...formDataBodySerializer,
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}/input',
+    url: '/v1/automations/{id}/examples/{exampleId}/input',
     ...options,
     headers: {
         'Content-Type': null,
@@ -265,7 +265,7 @@ export const automationsExamplesInputFilesCreate = <ThrowOnError extends boolean
  */
 export const automationsExamplesInputFileDelete = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesInputFileDeleteData, ThrowOnError>) => (options.client ?? client).delete<AutomationsExamplesInputFileDeleteResponses, AutomationsExamplesInputFileDeleteErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}/input/{path}',
+    url: '/v1/automations/{id}/examples/{exampleId}/input/{path}',
     ...options
 });
 
@@ -276,7 +276,7 @@ export const automationsExamplesInputFileDelete = <ThrowOnError extends boolean 
  */
 export const automationsExamplesInputFileGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesInputFileGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsExamplesInputFileGetResponses, AutomationsExamplesInputFileGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}/input/{path}',
+    url: '/v1/automations/{id}/examples/{exampleId}/input/{path}',
     ...options
 });
 
@@ -287,7 +287,7 @@ export const automationsExamplesInputFileGet = <ThrowOnError extends boolean = f
  */
 export const automationsExamplesInputFileUpdate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesInputFileUpdateData, ThrowOnError>) => (options.client ?? client).patch<AutomationsExamplesInputFileUpdateResponses, AutomationsExamplesInputFileUpdateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}/input/{path}',
+    url: '/v1/automations/{id}/examples/{exampleId}/input/{path}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -302,7 +302,7 @@ export const automationsExamplesInputFileUpdate = <ThrowOnError extends boolean 
  */
 export const automationsExamplesRun = <ThrowOnError extends boolean = false>(options: Options<AutomationsExamplesRunData, ThrowOnError>) => (options.client ?? client).post<AutomationsExamplesRunResponses, AutomationsExamplesRunErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/examples/{exampleId}/run',
+    url: '/v1/automations/{id}/examples/{exampleId}/run',
     ...options
 });
 
@@ -313,7 +313,7 @@ export const automationsExamplesRun = <ThrowOnError extends boolean = false>(opt
  */
 export const automationsExperimentsList = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsListData, ThrowOnError>) => (options.client ?? client).get<AutomationsExperimentsListResponses, AutomationsExperimentsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/experiments',
+    url: '/v1/automations/{id}/experiments',
     ...options
 });
 
@@ -324,7 +324,7 @@ export const automationsExperimentsList = <ThrowOnError extends boolean = false>
  */
 export const automationsExperimentsCreate = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsCreateData, ThrowOnError>) => (options.client ?? client).post<AutomationsExperimentsCreateResponses, AutomationsExperimentsCreateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/experiments',
+    url: '/v1/automations/{id}/experiments',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -339,7 +339,7 @@ export const automationsExperimentsCreate = <ThrowOnError extends boolean = fals
  */
 export const automationsExperimentsGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsExperimentsGetResponses, AutomationsExperimentsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/experiments/{experimentId}',
+    url: '/v1/automations/{id}/experiments/{experimentId}',
     ...options
 });
 
@@ -350,7 +350,7 @@ export const automationsExperimentsGet = <ThrowOnError extends boolean = false>(
  */
 export const automationsExperimentsCancel = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsCancelData, ThrowOnError>) => (options.client ?? client).post<AutomationsExperimentsCancelResponses, AutomationsExperimentsCancelErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/experiments/{experimentId}/cancel',
+    url: '/v1/automations/{id}/experiments/{experimentId}/cancel',
     ...options
 });
 
@@ -361,7 +361,7 @@ export const automationsExperimentsCancel = <ThrowOnError extends boolean = fals
  */
 export const automationsExperimentsExport = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsExportData, ThrowOnError>) => (options.client ?? client).get<AutomationsExperimentsExportResponses, AutomationsExperimentsExportErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/experiments/{experimentId}/export',
+    url: '/v1/automations/{id}/experiments/{experimentId}/export',
     ...options
 });
 
@@ -372,7 +372,7 @@ export const automationsExperimentsExport = <ThrowOnError extends boolean = fals
  */
 export const automationsExperimentsExportAll = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsExportAllData, ThrowOnError>) => (options.client ?? client).get<AutomationsExperimentsExportAllResponses, AutomationsExperimentsExportAllErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/experiments/export',
+    url: '/v1/automations/{id}/experiments/export',
     ...options
 });
 
@@ -383,7 +383,7 @@ export const automationsExperimentsExportAll = <ThrowOnError extends boolean = f
  */
 export const automationsExperimentsCreateStream = <ThrowOnError extends boolean = false>(options: Options<AutomationsExperimentsCreateStreamData, ThrowOnError>) => (options.client ?? client).post<AutomationsExperimentsCreateStreamResponses, AutomationsExperimentsCreateStreamErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/experiments/stream',
+    url: '/v1/automations/{id}/experiments/stream',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -398,7 +398,7 @@ export const automationsExperimentsCreateStream = <ThrowOnError extends boolean 
  */
 export const automationsReviewsHealth = <ThrowOnError extends boolean = false>(options: Options<AutomationsReviewsHealthData, ThrowOnError>) => (options.client ?? client).get<AutomationsReviewsHealthResponses, AutomationsReviewsHealthErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/reviews/health',
+    url: '/v1/automations/{id}/reviews/health',
     ...options
 });
 
@@ -409,7 +409,7 @@ export const automationsReviewsHealth = <ThrowOnError extends boolean = false>(o
  */
 export const automationsSync = <ThrowOnError extends boolean = false>(options: Options<AutomationsSyncData, ThrowOnError>) => (options.client ?? client).post<AutomationsSyncResponses, AutomationsSyncErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/sync',
+    url: '/v1/automations/{id}/sync',
     ...options
 });
 
@@ -420,7 +420,7 @@ export const automationsSync = <ThrowOnError extends boolean = false>(options: O
  */
 export const automationsTriggersGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsTriggersGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsTriggersGetResponses, AutomationsTriggersGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/triggers',
+    url: '/v1/automations/{id}/triggers',
     ...options
 });
 
@@ -431,7 +431,7 @@ export const automationsTriggersGet = <ThrowOnError extends boolean = false>(opt
  */
 export const automationsVersionsList = <ThrowOnError extends boolean = false>(options: Options<AutomationsVersionsListData, ThrowOnError>) => (options.client ?? client).get<AutomationsVersionsListResponses, AutomationsVersionsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/automations/{id}/versions',
+    url: '/v1/automations/{id}/versions',
     ...options
 });
 
@@ -442,7 +442,7 @@ export const automationsVersionsList = <ThrowOnError extends boolean = false>(op
  */
 export const experimentsResolve = <ThrowOnError extends boolean = false>(options: Options<ExperimentsResolveData, ThrowOnError>) => (options.client ?? client).get<ExperimentsResolveResponses, ExperimentsResolveErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/experiments/{experimentId}',
+    url: '/v1/experiments/{experimentId}',
     ...options
 });
 
@@ -454,7 +454,7 @@ export const experimentsResolve = <ThrowOnError extends boolean = false>(options
 export const filesCreate = <ThrowOnError extends boolean = false>(options: Options<FilesCreateData, ThrowOnError>) => (options.client ?? client).post<FilesCreateResponses, FilesCreateErrors, ThrowOnError>({
     ...formDataBodySerializer,
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/files',
+    url: '/v1/files',
     ...options,
     headers: {
         'Content-Type': null,
@@ -469,7 +469,7 @@ export const filesCreate = <ThrowOnError extends boolean = false>(options: Optio
  */
 export const filesDelete = <ThrowOnError extends boolean = false>(options: Options<FilesDeleteData, ThrowOnError>) => (options.client ?? client).delete<FilesDeleteResponses, FilesDeleteErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/files/{id}',
+    url: '/v1/files/{id}',
     ...options
 });
 
@@ -480,18 +480,55 @@ export const filesDelete = <ThrowOnError extends boolean = false>(options: Optio
  */
 export const filesGet = <ThrowOnError extends boolean = false>(options: Options<FilesGetData, ThrowOnError>) => (options.client ?? client).get<FilesGetResponses, FilesGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/files/{id}',
+    url: '/v1/files/{id}',
     ...options
 });
 
 /**
  * Download file content
  *
- * Download bytes for a reusable uploaded file.
+ * Download bytes for a reusable uploaded file. Direct-enabled deployments redirect responses above their configured body limit to a short-lived signed storage URL; multipart-only/on-prem deployments stream through the API.
  */
 export const filesContentGet = <ThrowOnError extends boolean = false>(options: Options<FilesContentGetData, ThrowOnError>) => (options.client ?? client).get<FilesContentGetResponses, FilesContentGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/files/{id}/content',
+    url: '/v1/files/{id}/content',
+    ...options
+});
+
+/**
+ * Prepare file upload
+ *
+ * Negotiate multipart when the file fits the deployment body limit (or direct storage is disabled), otherwise return a short-lived signed storage PUT. The response transport is authoritative; clients must not guess from file size alone.
+ */
+export const filesUploadsCreate = <ThrowOnError extends boolean = false>(options: Options<FilesUploadsCreateData, ThrowOnError>) => (options.client ?? client).post<FilesUploadsCreateResponses, FilesUploadsCreateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/files/uploads',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Abort file upload
+ *
+ * Abort a pending storage-direct upload and remove its pending object.
+ */
+export const filesUploadsAbort = <ThrowOnError extends boolean = false>(options: Options<FilesUploadsAbortData, ThrowOnError>) => (options.client ?? client).delete<FilesUploadsAbortResponses, FilesUploadsAbortErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/files/uploads/{uploadId}',
+    ...options
+});
+
+/**
+ * Complete file upload
+ *
+ * Verify a storage-direct pending object and promote it into a reusable file. Safe to retry.
+ */
+export const filesUploadsComplete = <ThrowOnError extends boolean = false>(options: Options<FilesUploadsCompleteData, ThrowOnError>) => (options.client ?? client).post<FilesUploadsCompleteResponses, FilesUploadsCompleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/files/uploads/{uploadId}/complete',
     ...options
 });
 
@@ -502,7 +539,7 @@ export const filesContentGet = <ThrowOnError extends boolean = false>(options: O
  */
 export const runsList = <ThrowOnError extends boolean = false>(options?: Options<RunsListData, ThrowOnError>) => (options?.client ?? client).get<RunsListResponses, RunsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs',
+    url: '/v1/runs',
     ...options
 });
 
@@ -513,7 +550,7 @@ export const runsList = <ThrowOnError extends boolean = false>(options?: Options
  */
 export const runsStart = <ThrowOnError extends boolean = false>(options: Options<RunsStartData, ThrowOnError>) => (options.client ?? client).post<RunsStartResponses, RunsStartErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs',
+    url: '/v1/runs',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -528,7 +565,7 @@ export const runsStart = <ThrowOnError extends boolean = false>(options: Options
  */
 export const runsGet = <ThrowOnError extends boolean = false>(options: Options<RunsGetData, ThrowOnError>) => (options.client ?? client).get<RunsGetResponses, RunsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}',
+    url: '/v1/runs/{id}',
     ...options
 });
 
@@ -539,18 +576,18 @@ export const runsGet = <ThrowOnError extends boolean = false>(options: Options<R
  */
 export const runsArtifactsList = <ThrowOnError extends boolean = false>(options: Options<RunsArtifactsListData, ThrowOnError>) => (options.client ?? client).get<RunsArtifactsListResponses, RunsArtifactsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/artifacts',
+    url: '/v1/runs/{id}/artifacts',
     ...options
 });
 
 /**
  * Download run artifact
  *
- * Download one artifact by path.
+ * Download one artifact by path. Cloud deployments may redirect to a short-lived storage URL for large files.
  */
 export const runsArtifactsGet = <ThrowOnError extends boolean = false>(options: Options<RunsArtifactsGetData, ThrowOnError>) => (options.client ?? client).get<RunsArtifactsGetResponses, RunsArtifactsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/artifacts/{path}',
+    url: '/v1/runs/{id}/artifacts/{path}',
     ...options
 });
 
@@ -561,7 +598,7 @@ export const runsArtifactsGet = <ThrowOnError extends boolean = false>(options: 
  */
 export const runsCancel = <ThrowOnError extends boolean = false>(options: Options<RunsCancelData, ThrowOnError>) => (options.client ?? client).post<RunsCancelResponses, RunsCancelErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/cancel',
+    url: '/v1/runs/{id}/cancel',
     ...options
 });
 
@@ -572,7 +609,7 @@ export const runsCancel = <ThrowOnError extends boolean = false>(options: Option
  */
 export const runsEventsList = <ThrowOnError extends boolean = false>(options: Options<RunsEventsListData, ThrowOnError>) => (options.client ?? client).get<RunsEventsListResponses, RunsEventsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/events',
+    url: '/v1/runs/{id}/events',
     ...options
 });
 
@@ -583,7 +620,7 @@ export const runsEventsList = <ThrowOnError extends boolean = false>(options: Op
  */
 export const runsPromote = <ThrowOnError extends boolean = false>(options: Options<RunsPromoteData, ThrowOnError>) => (options.client ?? client).post<RunsPromoteResponses, RunsPromoteErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/promote',
+    url: '/v1/runs/{id}/promote',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -598,7 +635,7 @@ export const runsPromote = <ThrowOnError extends boolean = false>(options: Optio
  */
 export const runsRerun = <ThrowOnError extends boolean = false>(options: Options<RunsRerunData, ThrowOnError>) => (options.client ?? client).post<RunsRerunResponses, RunsRerunErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/rerun',
+    url: '/v1/runs/{id}/rerun',
     ...options
 });
 
@@ -609,7 +646,7 @@ export const runsRerun = <ThrowOnError extends boolean = false>(options: Options
  */
 export const runsReviewsClear = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsClearData, ThrowOnError>) => (options.client ?? client).delete<RunsReviewsClearResponses, RunsReviewsClearErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/reviews',
+    url: '/v1/runs/{id}/reviews',
     ...options
 });
 
@@ -620,7 +657,7 @@ export const runsReviewsClear = <ThrowOnError extends boolean = false>(options: 
  */
 export const runsReviewsGet = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsGetData, ThrowOnError>) => (options.client ?? client).get<RunsReviewsGetResponses, RunsReviewsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/reviews',
+    url: '/v1/runs/{id}/reviews',
     ...options
 });
 
@@ -631,7 +668,7 @@ export const runsReviewsGet = <ThrowOnError extends boolean = false>(options: Op
  */
 export const runsReviewsUpdate = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsUpdateData, ThrowOnError>) => (options.client ?? client).put<RunsReviewsUpdateResponses, RunsReviewsUpdateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/reviews',
+    url: '/v1/runs/{id}/reviews',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -646,7 +683,7 @@ export const runsReviewsUpdate = <ThrowOnError extends boolean = false>(options:
  */
 export const runsReviewsExpectedGet = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsExpectedGetData, ThrowOnError>) => (options.client ?? client).get<RunsReviewsExpectedGetResponses, RunsReviewsExpectedGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/reviews/expected',
+    url: '/v1/runs/{id}/reviews/expected',
     ...options
 });
 
@@ -658,7 +695,7 @@ export const runsReviewsExpectedGet = <ThrowOnError extends boolean = false>(opt
 export const runsReviewsExpectedCreate = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsExpectedCreateData, ThrowOnError>) => (options.client ?? client).post<RunsReviewsExpectedCreateResponses, RunsReviewsExpectedCreateErrors, ThrowOnError>({
     ...((options.body && typeof options.body === 'object' && 'file' in options.body) ? formDataBodySerializer : {}),
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/reviews/expected',
+    url: '/v1/runs/{id}/reviews/expected',
     ...options,
     headers: {
         'Content-Type': (options.body && typeof options.body === 'object' && 'file' in options.body) ? null : 'application/json',
@@ -673,7 +710,7 @@ export const runsReviewsExpectedCreate = <ThrowOnError extends boolean = false>(
  */
 export const runsReviewsExpectedFileDelete = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsExpectedFileDeleteData, ThrowOnError>) => (options.client ?? client).delete<RunsReviewsExpectedFileDeleteResponses, RunsReviewsExpectedFileDeleteErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/reviews/expected/{filename}',
+    url: '/v1/runs/{id}/reviews/expected/{filename}',
     ...options
 });
 
@@ -684,7 +721,7 @@ export const runsReviewsExpectedFileDelete = <ThrowOnError extends boolean = fal
  */
 export const runsReviewsExpectedFileGet = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsExpectedFileGetData, ThrowOnError>) => (options.client ?? client).get<RunsReviewsExpectedFileGetResponses, RunsReviewsExpectedFileGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/reviews/expected/{filename}',
+    url: '/v1/runs/{id}/reviews/expected/{filename}',
     ...options
 });
 
@@ -695,7 +732,7 @@ export const runsReviewsExpectedFileGet = <ThrowOnError extends boolean = false>
  */
 export const runsReviewsExpectedFileUpdate = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsExpectedFileUpdateData, ThrowOnError>) => (options.client ?? client).patch<RunsReviewsExpectedFileUpdateResponses, RunsReviewsExpectedFileUpdateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/reviews/expected/{filename}',
+    url: '/v1/runs/{id}/reviews/expected/{filename}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -710,7 +747,7 @@ export const runsReviewsExpectedFileUpdate = <ThrowOnError extends boolean = fal
  */
 export const runsScoresList = <ThrowOnError extends boolean = false>(options: Options<RunsScoresListData, ThrowOnError>) => (options.client ?? client).get<RunsScoresListResponses, RunsScoresListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/scores',
+    url: '/v1/runs/{id}/scores',
     ...options
 });
 
@@ -721,7 +758,7 @@ export const runsScoresList = <ThrowOnError extends boolean = false>(options: Op
  */
 export const runsStepsList = <ThrowOnError extends boolean = false>(options: Options<RunsStepsListData, ThrowOnError>) => (options.client ?? client).get<RunsStepsListResponses, RunsStepsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/steps',
+    url: '/v1/runs/{id}/steps',
     ...options
 });
 
@@ -732,7 +769,7 @@ export const runsStepsList = <ThrowOnError extends boolean = false>(options: Opt
  */
 export const runsTraceGet = <ThrowOnError extends boolean = false>(options: Options<RunsTraceGetData, ThrowOnError>) => (options.client ?? client).get<RunsTraceGetResponses, RunsTraceGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/trace',
+    url: '/v1/runs/{id}/trace',
     ...options
 });
 
@@ -743,6 +780,6 @@ export const runsTraceGet = <ThrowOnError extends boolean = false>(options: Opti
  */
 export const runsUsageGet = <ThrowOnError extends boolean = false>(options: Options<RunsUsageGetData, ThrowOnError>) => (options.client ?? client).get<RunsUsageGetResponses, RunsUsageGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/usage',
+    url: '/v1/runs/{id}/usage',
     ...options
 });

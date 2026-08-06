@@ -46,7 +46,7 @@ replaceInFile(
   'src/generated/sdk.gen.ts',
   `export const runsReviewsExpectedCreate = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsExpectedCreateData, ThrowOnError>) => (options.client ?? client).post<RunsReviewsExpectedCreateResponses, RunsReviewsExpectedCreateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/reviews/expected',
+    url: '/v1/runs/{id}/reviews/expected',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ replaceInFile(
   `export const runsReviewsExpectedCreate = <ThrowOnError extends boolean = false>(options: Options<RunsReviewsExpectedCreateData, ThrowOnError>) => (options.client ?? client).post<RunsReviewsExpectedCreateResponses, RunsReviewsExpectedCreateErrors, ThrowOnError>({
     ...((options.body && typeof options.body === 'object' && 'file' in options.body) ? formDataBodySerializer : {}),
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/runs/{id}/reviews/expected',
+    url: '/v1/runs/{id}/reviews/expected',
     ...options,
     headers: {
         'Content-Type': (options.body && typeof options.body === 'object' && 'file' in options.body) ? null : 'application/json',
