@@ -1366,6 +1366,8 @@ Start a run
 
 Start a run. Send JSON or multipart/form-data.
 
+How to read a run: the envelope is at the root. The automation business result is in `output` (per-automation, not this generic schema). Status is `execution.status` (`execution.retry.nextRun.status` is a later retry). `input`, `usage`, and `debug` appear only with `?expand=`. `eval` is present only on eval-scoped runs.
+
 **Query parameters**
 
 | Name                  | Type     | Description                                                           |
@@ -1382,7 +1384,7 @@ Start a run. Send JSON or multipart/form-data.
 **Response**
 
 ```ts
-// RunStartResponse
+// Run
 ```
 
 ### `client.runs.get`
@@ -1392,6 +1394,8 @@ Start a run. Send JSON or multipart/form-data.
 Get a run
 
 Fetch one run by id. By default this returns core metadata plus terminal output/error fields. Pass `?expand=input,usage,execution,debug` to include detailed sub-objects; `expand=execution` is also where embedded review and expected artifacts appear.
+
+How to read a run: the envelope is at the root. The automation business result is in `output` (per-automation, not this generic schema). Status is `execution.status` (`execution.retry.nextRun.status` is a later retry). `input`, `usage`, and `debug` appear only with `?expand=`. `eval` is present only on eval-scoped runs.
 
 **Path parameters**
 
@@ -1518,7 +1522,7 @@ Start a new run using the source run input. By default the retry uses the latest
 **Response**
 
 ```ts
-// RunRerunResponse
+// Run
 ```
 
 ### `client.runs.steps`

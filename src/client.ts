@@ -2,7 +2,7 @@ import { EigenpalError, EigenpalTimeoutError, errorFromResponse } from './errors
 import { createClient, createConfig, type Client, type Config } from './generated/client';
 import type {
   ApiErrorEnvelope,
-  RunStartResponse as GeneratedRunStartResponse,
+  RunsStartResponse as GeneratedRunStartResponse,
   Run,
 } from './generated/types.gen';
 import {

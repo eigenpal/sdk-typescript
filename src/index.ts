@@ -57,6 +57,7 @@ export type {
   ExecutionStatus,
   File,
   Run,
+  RunAccepted,
   RunArtifact,
   RunArtifactsResponse,
   RunEvent,

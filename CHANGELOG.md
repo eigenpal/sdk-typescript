@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.11.3
+
+### Minor Changes
+
+- c1e52c7: Generated run types now distinguish a completed run from the async accepted envelope (`RunAccepted`), and include `parentExecutionId` for child invoke-workflow runs.
+
 ## 0.11.0
 
 ### Minor Changes

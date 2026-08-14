@@ -996,15 +996,19 @@ export type RunListItem = {
      * Deterministic pseudo-random rank in [0, 1) for this run within the tenant. Use with a sample rate threshold to review a stable subset.
      */
     sampleRank: number;
+    /**
+     * Parent run id when this run was started by an invoke-workflow step. Omitted for top-level runs.
+     */
+    parentExecutionId?: string;
     timing: RunTiming;
     source: RunSource;
     trigger: RunTrigger;
     /**
-     * Present only when the run is eval-scoped.
+     * Present only on eval-scoped runs. Omitted otherwise.
      */
     eval?: RunEval;
     /**
-     * Terminal failure message. Null when the run succeeded or is still in flight.
+     * Terminal failure message. Present on terminal runs; null when the run succeeded. Absent while the run is still in flight.
      */
     error?: RunError;
     execution: RunExecutionMeta;
@@ -1097,6 +1101,9 @@ export type RunEval = {
 export type RunError = string | null;
 
 export type RunExecutionMeta = {
+    /**
+     * Status of this run. `retry.nextRun.status` is a later retry, not this run.
+     */
     status: ExecutionStatus;
     /**
      * Whether the completed output matched the workflow or agent output schema.
@@ -1125,7 +1132,7 @@ export type RunExecutionRetry = {
      */
     previousRunId: string | null;
     /**
-     * Retry run spawned from this run, if any.
+     * Retry run spawned from this run, if any. Present on list and detail without `expand`. `status` here is the later retry, not this run.
      */
     nextRun: {
         id: string;
@@ -1146,15 +1153,6 @@ export type RunReviewSummary = {
     correctionCount: number;
 };
 
-export type RunStartResponse = RunAccepted | Run;
-
-export type RunAccepted = {
-    id: string;
-    type: 'workflow' | 'agent';
-    finished: false;
-    source?: RunSource;
-};
-
 export type Run = {
     id: string;
     type: 'workflow' | 'agent';
@@ -1166,41 +1164,45 @@ export type Run = {
      * Deterministic pseudo-random rank in [0, 1) for this run within the tenant. Use with a sample rate threshold to review a stable subset.
      */
     sampleRank: number;
+    /**
+     * Parent run id when this run was started by an invoke-workflow step. Omitted for top-level runs.
+     */
+    parentExecutionId?: string;
     timing: RunTiming;
     source: RunSource;
     trigger: RunTrigger;
     /**
-     * Present only when the run is eval-scoped.
+     * Present only on eval-scoped runs. Omitted otherwise.
      */
     eval?: RunEval;
     /**
-     * Completed runs only.
+     * Completed runs only. Per-automation business result — not a generic schema. Absent until the run completes.
      */
     output?: {
         [key: string]: unknown;
     } | null;
     /**
-     * Completed runs only. Download with GET /api/v1/runs/:id/artifacts/:path.
+     * Completed runs only. Download with GET /api/v1/runs/:id/artifacts/:path. Absent until the run completes.
      */
     files?: Array<RunArtifact>;
     /**
-     * Terminal failure message. Null when the run succeeded or is still in flight.
+     * Terminal failure message. Present on terminal runs; null when the run succeeded. Absent while the run is still in flight.
      */
     error?: RunError;
     /**
-     * `expand=input`.
+     * Present only with `expand=input`.
      */
     input?: RunInput;
     /**
-     * `expand=usage`. Null for old runs without telemetry.
+     * Present only with `expand=usage`. Null for old runs without telemetry.
      */
     usage?: RunUsage | null;
     /**
-     * Slim execution metadata always present. Pass `expand=execution` to replace with full RunExecution (WorkflowRunExecution or AgentRunExecution depending on run type).
+     * Slim execution metadata always present (`status`, `schemaValid`, `batchId`, `retry`). Pass `expand=execution` to replace with full RunExecution (WorkflowRunExecution or AgentRunExecution depending on run type).
      */
     execution: RunExecutionMeta | RunExecution;
     /**
-     * `expand=debug`.
+     * Present only with `expand=debug`.
      */
     debug?: RunDebug;
 };
@@ -1268,6 +1270,9 @@ export type RunUsage = {
 export type RunExecution = WorkflowRunExecution | AgentRunExecution;
 
 export type WorkflowRunExecution = {
+    /**
+     * Status of this run. `retry.nextRun.status` is a later retry, not this run.
+     */
     status: ExecutionStatus;
     /**
      * Whether the completed output matched the workflow or agent output schema.
@@ -1280,11 +1285,15 @@ export type WorkflowRunExecution = {
     retry: RunExecutionRetry;
     review?: RunReview | null;
     /**
-     * Per-step executions of the workflow run.
+     * Per-step executions of the workflow run (`expand=execution`).
      */
     steps: Array<unknown>;
     /**
-     * Workflow definition snapshot captured when the run was created.
+     * Child invoke-workflow runs and their steps (`expand=execution`, workflow runs only). Omitted when there are no children.
+     */
+    childExecutions?: Array<unknown>;
+    /**
+     * Workflow definition snapshot captured when the run was created (`expand=execution`).
      */
     definitionSnapshot?: unknown | null;
     /**
@@ -1343,6 +1352,9 @@ export type RunReviewCorrection = {
 };
 
 export type AgentRunExecution = {
+    /**
+     * Status of this run. `retry.nextRun.status` is a later retry, not this run.
+     */
     status: ExecutionStatus;
     /**
      * Whether the completed output matched the workflow or agent output schema.
@@ -1382,6 +1394,13 @@ export type RunDebug = {
      * Workflow trace id for span lookup (workflow runs only).
      */
     traceId?: string | null;
+};
+
+export type RunAccepted = {
+    id: string;
+    type: 'workflow' | 'agent';
+    finished: false;
+    source?: RunSource;
 };
 
 export type RunArtifactsResponse = {
@@ -1442,8 +1461,6 @@ export type PromoteRunResponse = {
      */
     name: string | null;
 };
-
-export type RunRerunResponse = RunStartResponse;
 
 export type RunReviewDetail = {
     /**
@@ -4130,15 +4147,15 @@ export type RunsStartResponses = {
     /**
      * Run completed while waiting — same body as GET /api/v1/runs/:id
      */
-    200: RunStartResponse;
+    200: Run;
     /**
      * Run accepted (async)
      */
-    201: RunStartResponse;
+    201: RunAccepted;
     /**
      * Wait expired with a non-terminal status — poll GET /api/v1/runs/:id
      */
-    202: RunStartResponse;
+    202: RunAccepted;
 };
 
 export type RunsStartResponse = RunsStartResponses[keyof RunsStartResponses];
@@ -4536,15 +4553,15 @@ export type RunsRerunResponses = {
     /**
      * Rerun completed while waiting
      */
-    200: RunStartResponse;
+    200: Run;
     /**
      * Rerun accepted (async)
      */
-    201: RunStartResponse;
+    201: RunAccepted;
     /**
      * Wait expired with a non-terminal status — poll GET /api/v1/runs/:id
      */
-    202: RunStartResponse;
+    202: RunAccepted;
 };
 
 export type RunsRerunResponse = RunsRerunResponses[keyof RunsRerunResponses];
