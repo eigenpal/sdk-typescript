@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import {
   EigenpalAuthError,
   EigenpalClient,
+  EigenpalError,
   EigenpalNotFoundError,
   EigenpalRateLimitError,
   EigenpalValidationError,
@@ -183,6 +184,9 @@ describe('EigenpalClient public SDK', () => {
           { status: 200, body: { data: [] } },
           { status: 200, body: { id: 'workflows.extract-invoice' } },
           { status: 200, body: { data: [] } },
+          { status: 201, body: { id: 'wfh_new', automationId: 'wf_1', version: '1.2.0' } },
+          { status: 201, body: { id: 'wfh_restored', automationId: 'wf_1', version: null } },
+          { status: 200, body: { id: 'wfh_new', automationId: 'wf_1', version: '1.2.0' } },
           { status: 200, body: { triggers: [] } },
           {
             status: 200,
@@ -227,6 +231,13 @@ describe('EigenpalClient public SDK', () => {
     await client.automations.list();
     await client.automations.get('workflows.extract-invoice');
     await client.automations.versions('workflows.extract-invoice');
+    await client.automations.createVersion('workflows.extract-invoice', {
+      yaml: 'name: extract-invoice\n',
+      version: '1.2.0',
+      activate: false,
+    });
+    await client.automations.restoreVersion('workflows.extract-invoice', 'wfh_old');
+    await client.automations.promoteVersion('workflows.extract-invoice', 'wfh_new');
     await client.automations.triggers('workflows.extract-invoice');
     await client.automations.sync('workflows.extract-invoice');
     await client.automations.experiments.export('workflows.extract-invoice', 'exp_1');
@@ -254,6 +265,8 @@ describe('EigenpalClient public SDK', () => {
     expect(paths).toContain('/v1/automations');
     expect(paths).toContain('/v1/automations/workflows.extract-invoice');
     expect(paths).toContain('/v1/automations/workflows.extract-invoice/versions');
+    expect(paths).toContain('/v1/automations/workflows.extract-invoice/versions/wfh_old/restore');
+    expect(paths).toContain('/v1/automations/workflows.extract-invoice/versions/wfh_new/promote');
     expect(paths).toContain('/v1/automations/workflows.extract-invoice/triggers');
     expect(paths).toContain('/v1/automations/workflows.extract-invoice/sync');
     expect(paths).toContain('/v1/automations/workflows.extract-invoice/experiments/exp_1/export');
@@ -270,6 +283,12 @@ describe('EigenpalClient public SDK', () => {
     expect(paths).toContain('/v1/files/uploads');
     expect(paths).toContain('/v1/files');
     expect(paths).toContain('/v1/files/file_123');
+    const createVersionRequest = captured.find(
+      (request) =>
+        request.method === 'POST' &&
+        new URL(request.url).pathname === '/v1/automations/workflows.extract-invoice/versions'
+    );
+    expect(JSON.parse(createVersionRequest?.body ?? '{}')).toMatchObject({ activate: false });
   });
 
   test('files.upload rejects a nameless Blob without filename', async () => {
@@ -333,6 +352,36 @@ describe('EigenpalClient public SDK', () => {
     await expect(client.automations.list()).rejects.toBeInstanceOf(EigenpalValidationError);
   });
 
+  test('409 name-conflict envelopes expose conflictingWorkflowId', async () => {
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch: mockFetch([
+        {
+          status: 409,
+          body: {
+            issues: [{ field: 'name', message: 'already in use', code: 'workflow_name_conflict' }],
+            requestId: 'req_1',
+            conflictingWorkflowId: 'wf_existing',
+          },
+        },
+      ]),
+      maxRetries: 0,
+    });
+
+    const error = await client.automations
+      .createVersion('workflows.extract-invoice', { yaml: 'name: x\n', version: '1.2.0' })
+      .then(
+        () => {
+          throw new Error('expected 409');
+        },
+        (err: unknown) => err
+      );
+    expect(error).toBeInstanceOf(EigenpalError);
+    expect((error as EigenpalError).status).toBe(409);
+    expect((error as EigenpalError).envelope?.conflictingWorkflowId).toBe('wf_existing');
+  });
+
   test('retries retriable responses', async () => {
     const captured: { url: string }[] = [];
     const client = new EigenpalClient({
@@ -352,5 +401,24 @@ describe('EigenpalClient public SDK', () => {
 
     expect(result.data).toEqual([]);
     expect(captured).toHaveLength(2);
+  });
+
+  test('automations.examples.list forwards include=metadata', async () => {
+    const captured: { url: string; method: string }[] = [];
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch: mockFetch(
+        [{ status: 200, body: { data: [], total: 0, limit: 50, offset: 0 } }],
+        captured
+      ),
+      maxRetries: 0,
+    });
+
+    await client.automations.examples.list('workflows.extract-invoice', { include: 'metadata' });
+
+    const url = new URL(captured[0]?.url ?? '');
+    expect(url.pathname).toBe('/v1/automations/workflows.extract-invoice/examples');
+    expect(url.searchParams.get('include')).toBe('metadata');
   });
 });

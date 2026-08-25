@@ -1,5 +1,14 @@
 # @eigenpal/sdk
 
+## 0.13.0
+
+### Minor Changes
+
+- 4f84288: TypeScript and Python SDKs can list dataset examples with `include: "metadata"`. That returns ids, names, annotations, and expected file refs without loading each example's input and expected JSON. The default remains a full payload, so existing list calls stay unchanged.
+- aaf5a04: The TypeScript and Python SDKs can create, promote, and restore workflow versions. Create a tagged candidate with `activate: false`, evaluate it without moving the live version, then call `promoteVersion` / `promote_version` when it is ready. Existing restore helpers still roll a workflow back to an earlier snapshot.
+
+  Name-conflict errors expose `conflictingWorkflowId` on the typed error envelope.
+
 ## 0.11.3
 
 ### Minor Changes

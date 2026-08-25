@@ -30,6 +30,7 @@ client
 │   ├── get
 │   ├── versions
 │   ├── sync
+│   ├── createVersion
 │   ├── dataset
 │   │   ├── export
 │   │   └── import
@@ -65,6 +66,8 @@ client
 │   │   ├── createStream
 │   │   ├── export
 │   │   └── exportAll
+│   ├── promoteVersion
+│   ├── restoreVersion
 │   ├── reviews
 │   │   └── health
 │   └── triggers
@@ -243,7 +246,7 @@ Read trigger state for a workflow or agent automation. Trigger mutation is not p
 
 List automation versions
 
-List versions for a workflow or agent automation through one read-only route.
+List versions for a workflow or agent automation. YAML workflow lists include tagged releases plus the current untagged snapshot when HEAD is untagged (for example after restore), so the current version is always present. Agent lists remain Git release tags.
 
 **Path parameters**
 
@@ -255,6 +258,113 @@ List versions for a workflow or agent automation through one read-only route.
 
 ```ts
 // ListAutomationVersionsResponse
+```
+
+### `client.automations.createVersion`
+
+**`POST /v1/automations/:id/versions`**
+
+Create a workflow version
+
+Create a tagged YAML workflow candidate from validated YAML or by copying an existing snapshot (`historyId`). Provide exactly one of `yaml` or `historyId`. Copy creates a new tagged row and leaves the source tag unchanged; it does not retag the original. Defaults to making the new version current. Set `activate: false` to keep it off live traffic until promote — that path requires an existing current workflow version and returns 400 if HEAD is empty. Agent automations are Git-backed and return 400. Requires a Bearer API key or a dashboard session.
+
+**Example**
+
+```ts
+await client.automations.createVersion('workflows.extract-invoice', {
+  yaml: 'name: extract-invoice\n...',
+  version: '1.2.0',
+  activate: false, // requires an existing current version
+});
+// Copy without retagging the source snapshot:
+await client.automations.createVersion('workflows.extract-invoice', {
+  historyId: 'wfh_old',
+  version: '1.3.0',
+  activate: false,
+});
+```
+
+**Path parameters**
+
+| Name | Type     | Description                                                             |
+| ---- | -------- | ----------------------------------------------------------------------- |
+| `id` | `string` | Workflow id, agent id, or typed alias like workflows.slug / agents.slug |
+
+**Request body**
+
+```ts
+// CreateAutomationVersionRequest
+```
+
+**Response**
+
+```ts
+// AutomationVersion
+```
+
+### `client.automations.promoteVersion`
+
+**`POST /v1/automations/:id/versions/:versionId/promote`**
+
+Promote a workflow version
+
+Make an existing tagged YAML workflow candidate current without creating another history row. Only tagged version rows can be promoted; untagged snapshots (including restore HEAD) and missing ids return 404. Agent automations return 400. Requires a Bearer API key or a dashboard session.
+
+**Example**
+
+```ts
+await client.automations.promoteVersion('workflows.extract-invoice', 'wfh_candidate');
+// Untagged restore snapshots and unknown ids return 404.
+```
+
+**Path parameters**
+
+| Name        | Type     | Description                                                                                                                       |
+| ----------- | -------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `id`        | `string` | Workflow id, agent id, or typed alias like workflows.slug / agents.slug                                                           |
+| `versionId` | `string` | Tagged version id from GET /automations/{id}/versions. Untagged snapshots (for example after restore) and unknown ids return 404. |
+
+**Response**
+
+```ts
+// AutomationVersion
+```
+
+### `client.automations.restoreVersion`
+
+**`POST /v1/automations/:id/versions/:versionId/restore`**
+
+Restore a workflow version
+
+Restore a YAML workflow automation by copying a previous snapshot into a new untagged current version. The source tag is left unchanged; the new HEAD appears in subsequent version lists as the untagged current row and cannot be promoted until you create a tagged copy. The JSON body may be `{}`; `message` is optional and defaults to a timestamped restore note. Agent automations return 400. Requires a Bearer API key or a dashboard session.
+
+**Example**
+
+```ts
+await client.automations.restoreVersion('workflows.extract-invoice', 'wfh_old');
+await client.automations.restoreVersion('workflows.extract-invoice', 'wfh_old', {
+  message: 'Roll back after failed candidate',
+});
+// Restore creates a new untagged current snapshot. Send {} when no message is needed.
+```
+
+**Path parameters**
+
+| Name        | Type     | Description                                                             |
+| ----------- | -------- | ----------------------------------------------------------------------- |
+| `id`        | `string` | Workflow id, agent id, or typed alias like workflows.slug / agents.slug |
+| `versionId` | `string` | Version id from GET /automations/{id}/versions (a workflow history id). |
+
+**Request body**
+
+```ts
+// RestoreAutomationVersionRequest
+```
+
+**Response**
+
+```ts
+// AutomationVersion
 ```
 
 ## Evaluation
@@ -357,7 +467,7 @@ Replace the evaluator YAML for an automation. The submitted YAML is validated be
 
 List dataset examples
 
-List dataset examples for one automation. Examples contain input, expected output, expected files, metadata, and optional overrides used by evaluation runs.
+List dataset examples for one automation. Examples contain input, expected output, expected files, metadata, and optional overrides used by evaluation runs. Pass `include=metadata` to return ids, names, metadata, and expected file refs without loading input or expected JSON.
 
 **Path parameters**
 
@@ -367,10 +477,11 @@ List dataset examples for one automation. Examples contain input, expected outpu
 
 **Query parameters**
 
-| Name     | Type     | Description                                              |
-| -------- | -------- | -------------------------------------------------------- |
-| `limit`  | `number` | (optional)Maximum number of examples to return.          |
-| `offset` | `number` | (optional)Zero-based offset for paging through examples. |
+| Name      | Type                   | Description                                                                                                                               |
+| --------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `limit`   | `number`               | (optional)Maximum number of examples to return.                                                                                           |
+| `offset`  | `number`               | (optional)Zero-based offset for paging through examples.                                                                                  |
+| `include` | `"full" \| "metadata"` | (optional)Response payload scope. `metadata` returns ids, names, metadata, and expected file refs without loading input or expected JSON. |
 
 **Response**
 

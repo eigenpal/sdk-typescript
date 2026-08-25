@@ -151,6 +151,47 @@ export type ExperimentCreate = {
     sourceRef?: string;
 };
 
+/**
+ * Exactly one of `yaml` or `historyId`, plus a bare semver `version`. YAML is capped at 1 MiB. `historyId` copies the selected snapshot into a new tagged row and does not retag the source. Set `activate: false` to create a detached candidate that does not move live HEAD; that path requires an existing current version.
+ */
+export type CreateAutomationVersionRequest = {
+    /**
+     * Validated workflow YAML to publish as a new tagged version. Mutually exclusive with `historyId`. At most 1 MiB.
+     */
+    yaml: string;
+    /**
+     * Bare semver tag such as 1.2.0. Do not include a leading v.
+     */
+    version: string;
+    /**
+     * Whether to make the new version current immediately. Defaults to true. Set false to keep a tagged candidate off live traffic until promote. `activate: false` requires an existing current workflow version and returns 400 if HEAD is empty.
+     */
+    activate?: boolean;
+} | {
+    /**
+     * Existing version id from GET /automations/{id}/versions. Creates a new tagged snapshot copied from that version; the source tag is left unchanged. Mutually exclusive with `yaml`.
+     */
+    historyId: string;
+    /**
+     * Bare semver tag such as 1.2.0. Do not include a leading v.
+     */
+    version: string;
+    /**
+     * Whether to make the new version current immediately. Defaults to true. Set false to keep a tagged candidate off live traffic until promote. `activate: false` requires an existing current workflow version and returns 400 if HEAD is empty.
+     */
+    activate?: boolean;
+};
+
+/**
+ * Optional JSON body. Send `{}` when no message is needed. Restore always creates a new untagged current snapshot; it does not retag the source version.
+ */
+export type RestoreAutomationVersionRequest = {
+    /**
+     * Optional restore commit message. Defaults to a timestamped restore note.
+     */
+    message?: string;
+};
+
 export type CreateFileMultipartRequest = {
     /**
      * Binary file field
@@ -375,6 +416,10 @@ export type ApiErrorEnvelope = {
      * Link to relevant docs
      */
     docsUrl?: string;
+    /**
+     * Present on 409 workflow_name_conflict responses. Id of the workflow that already owns the requested name.
+     */
+    conflictingWorkflowId?: string;
 };
 
 export type ApiErrorIssue = {
@@ -522,13 +567,13 @@ export type DatasetExample = {
     automationId: string;
     automationType: AutomationType;
     /**
-     * Input arguments used when this example is run.
+     * Input arguments used when this example is run. Null when listing with `include=metadata`.
      */
     input: {
         [key: string]: unknown;
     } | null;
     /**
-     * Expected JSON output for evaluator comparisons.
+     * Expected JSON output for evaluator comparisons. Null when listing with `include=metadata`.
      */
     expected: unknown | null;
     /**
@@ -1953,6 +1998,10 @@ export type AutomationsExamplesListData = {
          * Zero-based offset for paging through examples.
          */
         offset?: number;
+        /**
+         * Response payload scope. `metadata` returns ids, names, metadata, and expected file refs without loading input or expected JSON.
+         */
+        include?: 'full' | 'metadata';
     };
     url: '/v1/automations/{id}/examples';
 };
@@ -3593,6 +3642,188 @@ export type AutomationsVersionsListResponses = {
 };
 
 export type AutomationsVersionsListResponse = AutomationsVersionsListResponses[keyof AutomationsVersionsListResponses];
+
+export type AutomationsVersionsCreateData = {
+    body: CreateAutomationVersionRequest;
+    path: {
+        /**
+         * Workflow id, agent id, or typed alias like workflows.slug / agents.slug
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/automations/{id}/versions';
+};
+
+export type AutomationsVersionsCreateErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Conflict. The resource is in a state that forbids the request.
+     */
+    409: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type AutomationsVersionsCreateError = AutomationsVersionsCreateErrors[keyof AutomationsVersionsCreateErrors];
+
+export type AutomationsVersionsCreateResponses = {
+    /**
+     * Created workflow version.
+     */
+    201: AutomationVersion;
+};
+
+export type AutomationsVersionsCreateResponse = AutomationsVersionsCreateResponses[keyof AutomationsVersionsCreateResponses];
+
+export type AutomationsVersionsPromoteData = {
+    body?: never;
+    path: {
+        /**
+         * Workflow id, agent id, or typed alias like workflows.slug / agents.slug
+         */
+        id: string;
+        /**
+         * Tagged version id from GET /automations/{id}/versions. Untagged snapshots (for example after restore) and unknown ids return 404.
+         */
+        versionId: string;
+    };
+    query?: never;
+    url: '/v1/automations/{id}/versions/{versionId}/promote';
+};
+
+export type AutomationsVersionsPromoteErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Conflict. The resource is in a state that forbids the request.
+     */
+    409: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type AutomationsVersionsPromoteError = AutomationsVersionsPromoteErrors[keyof AutomationsVersionsPromoteErrors];
+
+export type AutomationsVersionsPromoteResponses = {
+    /**
+     * Existing tagged workflow version promoted.
+     */
+    200: AutomationVersion;
+};
+
+export type AutomationsVersionsPromoteResponse = AutomationsVersionsPromoteResponses[keyof AutomationsVersionsPromoteResponses];
+
+export type AutomationsVersionsRestoreData = {
+    body: RestoreAutomationVersionRequest;
+    path: {
+        /**
+         * Workflow id, agent id, or typed alias like workflows.slug / agents.slug
+         */
+        id: string;
+        /**
+         * Version id from GET /automations/{id}/versions (a workflow history id).
+         */
+        versionId: string;
+    };
+    query?: never;
+    url: '/v1/automations/{id}/versions/{versionId}/restore';
+};
+
+export type AutomationsVersionsRestoreErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Conflict. The resource is in a state that forbids the request.
+     */
+    409: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type AutomationsVersionsRestoreError = AutomationsVersionsRestoreErrors[keyof AutomationsVersionsRestoreErrors];
+
+export type AutomationsVersionsRestoreResponses = {
+    /**
+     * New current version created from the restored snapshot.
+     */
+    201: AutomationVersion;
+};
+
+export type AutomationsVersionsRestoreResponse = AutomationsVersionsRestoreResponses[keyof AutomationsVersionsRestoreResponses];
 
 export type ExperimentsResolveData = {
     body?: never;

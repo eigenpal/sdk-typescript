@@ -23,9 +23,15 @@ import {
   automationsReviewsHealth,
   automationsSync,
   automationsTriggersGet,
+  automationsVersionsCreate,
   automationsVersionsList,
+  automationsVersionsPromote,
+  automationsVersionsRestore,
 } from '../generated/sdk.gen';
-import type { AutomationsReviewsHealthData } from '../generated/types.gen';
+import type {
+  AutomationsReviewsHealthData,
+  CreateAutomationVersionRequest,
+} from '../generated/types.gen';
 
 type Dispatch = <T>(call: () => Promise<OperationResult<T>>) => Promise<T>;
 type SignalOptions = { signal?: AbortSignal };
@@ -71,6 +77,51 @@ export class AutomationsResource {
   async versions(id: string, options: SignalOptions = {}): Promise<AnyResponse> {
     return this.dispatch(() =>
       automationsVersionsList({ client: this.client, path: { id }, signal: options.signal })
+    );
+  }
+
+  async createVersion(
+    id: string,
+    body: CreateAutomationVersionRequest,
+    options: SignalOptions = {}
+  ): Promise<AnyResponse> {
+    return this.dispatch(() =>
+      automationsVersionsCreate({
+        client: this.client,
+        path: { id },
+        body,
+        signal: options.signal,
+      })
+    );
+  }
+
+  async restoreVersion(
+    id: string,
+    versionId: string,
+    body: { message?: string } = {},
+    options: SignalOptions = {}
+  ): Promise<AnyResponse> {
+    return this.dispatch(() =>
+      automationsVersionsRestore({
+        client: this.client,
+        path: { id, versionId },
+        body,
+        signal: options.signal,
+      })
+    );
+  }
+
+  async promoteVersion(
+    id: string,
+    versionId: string,
+    options: SignalOptions = {}
+  ): Promise<AnyResponse> {
+    return this.dispatch(() =>
+      automationsVersionsPromote({
+        client: this.client,
+        path: { id, versionId },
+        signal: options.signal,
+      })
     );
   }
 
@@ -163,7 +214,12 @@ export class AutomationExamplesResource {
 
   async list(
     automationId: string,
-    options: { limit?: number; offset?: number; signal?: AbortSignal } = {}
+    options: {
+      limit?: number;
+      offset?: number;
+      include?: 'full' | 'metadata';
+      signal?: AbortSignal;
+    } = {}
   ): Promise<AnyResponse> {
     const { signal, ...query } = options;
     return this.dispatch(() =>
