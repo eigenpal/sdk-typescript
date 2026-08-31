@@ -99,6 +99,98 @@ describe('multipart file upload', () => {
     }
   });
 
+  test('aborts a presigned session after a thrown storage PUT failure', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async () => {
+      throw new TypeError('network failed');
+    }) as typeof fetch;
+    let abortSignal: AbortSignal | undefined;
+    try {
+      const client = new EigenpalClient({
+        apiKey: 'eg_test',
+        baseUrl: 'http://localhost:3000',
+        maxRetries: 0,
+        fetch: async (input) => {
+          const request = input instanceof Request ? input : new Request(input.toString());
+          if (request.url.endsWith('/v1/files/uploads')) {
+            return Response.json({
+              transport: 'presigned-put',
+              uploadId: 'fup_failed_put',
+              fileId: 'file_failed_put',
+              url: 'https://storage.example/pending',
+              headers: {},
+              expiresAt: '2026-08-04T10:00:00.000Z',
+              maxFileSizeBytes: 100 * 1024 * 1024,
+            });
+          }
+          if (
+            request.url.endsWith('/v1/files/uploads/fup_failed_put') &&
+            request.method === 'DELETE'
+          ) {
+            abortSignal = request.signal;
+            return Response.json({ aborted: true });
+          }
+          throw new Error(`Unexpected API request: ${request.url}`);
+        },
+      });
+
+      await expect(client.files.upload(new File(['hello'], 'input.txt'))).rejects.toThrow(
+        'network failed'
+      );
+      expect(abortSignal?.aborted).toBe(false);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  test('uses independent cleanup after completeUpload is aborted or its response is lost', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async () => new Response(null, { status: 200 })) as typeof fetch;
+    const controller = new AbortController();
+    let cleanupSignal: AbortSignal | undefined;
+    try {
+      const client = new EigenpalClient({
+        apiKey: 'eg_test',
+        baseUrl: 'http://localhost:3000',
+        maxRetries: 0,
+        fetch: async (input) => {
+          const request = input instanceof Request ? input : new Request(input.toString());
+          if (request.url.endsWith('/v1/files/uploads')) {
+            return Response.json({
+              transport: 'presigned-put',
+              uploadId: 'fup_lost_complete',
+              fileId: 'file_lost_complete',
+              url: 'https://storage.example/pending',
+              headers: {},
+              expiresAt: '2026-08-04T10:00:00.000Z',
+              maxFileSizeBytes: 100 * 1024 * 1024,
+            });
+          }
+          if (request.url.endsWith('/v1/files/uploads/fup_lost_complete/complete')) {
+            controller.abort();
+            throw new TypeError('complete response lost');
+          }
+          if (
+            request.url.endsWith('/v1/files/uploads/fup_lost_complete') &&
+            request.method === 'DELETE'
+          ) {
+            cleanupSignal = request.signal;
+            return Response.json({ aborted: true });
+          }
+          throw new Error(`Unexpected API request: ${request.url}`);
+        },
+      });
+
+      await expect(
+        client.files.upload(new File(['hello'], 'input.txt'), { signal: controller.signal })
+      ).rejects.toThrow();
+      expect(controller.signal.aborted).toBe(true);
+      expect(cleanupSignal?.aborted).toBe(false);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   test('client.files.upload sends raw multipart form data', async () => {
     const { fetch, captured } = await captureRequest();
     const client = new EigenpalClient({

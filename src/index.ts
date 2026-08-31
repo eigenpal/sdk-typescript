@@ -57,6 +57,10 @@ export type {
   CreateAutomationVersionRequest,
   ExecutionStatus,
   File,
+  ListModelsResponse,
+  PublicModel,
+  PublicModelCost,
+  PublicModelLimits,
   RestoreAutomationVersionRequest,
   Run,
   RunAccepted,
@@ -81,4 +85,6 @@ export type {
   RunsReviewsGetResponse,
   RunsReviewsUpdateResponse,
   RunsTraceGetResponse,
+  Template,
+  TemplateRevision,
 } from './generated/types.gen';

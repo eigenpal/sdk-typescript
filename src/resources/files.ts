@@ -32,6 +32,12 @@ type UploadOptions = SignalOptions & {
   onProgress?: (uploadedBytes: number, totalBytes: number) => void;
 };
 
+const UPLOAD_ABORT_CLEANUP_TIMEOUT_MS = 10_000;
+
+function uploadAbortCleanupSignal(): AbortSignal {
+  return AbortSignal.timeout(UPLOAD_ABORT_CLEANUP_TIMEOUT_MS);
+}
+
 export type CreateUploadInput = {
   filename: string;
   contentType: string;
@@ -72,22 +78,30 @@ export class FilesResource {
     );
 
     if (negotiation.transport === 'presigned-put') {
-      const response = await fetch(negotiation.url, {
-        method: 'PUT',
-        headers: Object.fromEntries(
-          Object.entries((negotiation.headers ?? {}) as Record<string, string>).filter(
-            ([name]) => name.toLowerCase() !== 'content-length'
-          )
-        ),
-        body: file,
-        signal: options.signal,
-      });
-      if (!response.ok) {
-        await this.abortUpload(negotiation.uploadId).catch(() => undefined);
-        throw new Error(`Storage upload failed (${response.status}); retry the upload`);
+      try {
+        const response = await fetch(negotiation.url, {
+          method: 'PUT',
+          headers: Object.fromEntries(
+            Object.entries((negotiation.headers ?? {}) as Record<string, string>).filter(
+              ([name]) => name.toLowerCase() !== 'content-length'
+            )
+          ),
+          body: file,
+          signal: options.signal,
+        });
+        if (!response.ok) {
+          throw new Error(`Storage upload failed (${response.status}); retry the upload`);
+        }
+        options.onProgress?.(file.size, file.size);
+        return await this.completeUpload(negotiation.uploadId, options);
+      } catch (error) {
+        // Caller cancellation and response-loss also reach here. Cleanup must
+        // not inherit the failed/aborted signal, and must remain bounded.
+        await this.abortUpload(negotiation.uploadId, {
+          signal: uploadAbortCleanupSignal(),
+        }).catch(() => undefined);
+        throw error;
       }
-      options.onProgress?.(file.size, file.size);
-      return this.completeUpload(negotiation.uploadId, options);
     }
 
     const form = new FormData();

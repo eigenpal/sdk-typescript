@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthCheckData, AuthCheckErrors, AuthCheckResponses, AutomationsDatasetExportData, AutomationsDatasetExportErrors, AutomationsDatasetExportResponses, AutomationsDatasetImportData, AutomationsDatasetImportErrors, AutomationsDatasetImportResponses, AutomationsEvaluatorsGetData, AutomationsEvaluatorsGetErrors, AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsUpdateData, AutomationsEvaluatorsUpdateErrors, AutomationsEvaluatorsUpdateResponses, AutomationsExamplesCreateData, AutomationsExamplesCreateErrors, AutomationsExamplesCreateResponses, AutomationsExamplesDeleteData, AutomationsExamplesDeleteErrors, AutomationsExamplesDeleteResponses, AutomationsExamplesExpectedFileDeleteData, AutomationsExamplesExpectedFileDeleteErrors, AutomationsExamplesExpectedFileDeleteResponses, AutomationsExamplesExpectedFileGetData, AutomationsExamplesExpectedFileGetErrors, AutomationsExamplesExpectedFileGetResponses, AutomationsExamplesExpectedFilesCreateData, AutomationsExamplesExpectedFilesCreateErrors, AutomationsExamplesExpectedFilesCreateResponses, AutomationsExamplesExpectedFilesListData, AutomationsExamplesExpectedFilesListErrors, AutomationsExamplesExpectedFilesListResponses, AutomationsExamplesExpectedFileUpdateData, AutomationsExamplesExpectedFileUpdateErrors, AutomationsExamplesExpectedFileUpdateResponses, AutomationsExamplesGetData, AutomationsExamplesGetErrors, AutomationsExamplesGetResponses, AutomationsExamplesInputFileDeleteData, AutomationsExamplesInputFileDeleteErrors, AutomationsExamplesInputFileDeleteResponses, AutomationsExamplesInputFileGetData, AutomationsExamplesInputFileGetErrors, AutomationsExamplesInputFileGetResponses, AutomationsExamplesInputFilesCreateData, AutomationsExamplesInputFilesCreateErrors, AutomationsExamplesInputFilesCreateResponses, AutomationsExamplesInputFilesListData, AutomationsExamplesInputFilesListErrors, AutomationsExamplesInputFilesListResponses, AutomationsExamplesInputFileUpdateData, AutomationsExamplesInputFileUpdateErrors, AutomationsExamplesInputFileUpdateResponses, AutomationsExamplesListData, AutomationsExamplesListErrors, AutomationsExamplesListResponses, AutomationsExamplesRunData, AutomationsExamplesRunErrors, AutomationsExamplesRunResponses, AutomationsExamplesUpdateData, AutomationsExamplesUpdateErrors, AutomationsExamplesUpdateResponses, AutomationsExperimentsCancelData, AutomationsExperimentsCancelErrors, AutomationsExperimentsCancelResponses, AutomationsExperimentsCreateData, AutomationsExperimentsCreateErrors, AutomationsExperimentsCreateResponses, AutomationsExperimentsCreateStreamData, AutomationsExperimentsCreateStreamErrors, AutomationsExperimentsCreateStreamResponses, AutomationsExperimentsExportAllData, AutomationsExperimentsExportAllErrors, AutomationsExperimentsExportAllResponses, AutomationsExperimentsExportData, AutomationsExperimentsExportErrors, AutomationsExperimentsExportResponses, AutomationsExperimentsGetData, AutomationsExperimentsGetErrors, AutomationsExperimentsGetResponses, AutomationsExperimentsListData, AutomationsExperimentsListErrors, AutomationsExperimentsListResponses, AutomationsGetData, AutomationsGetErrors, AutomationsGetResponses, AutomationsListData, AutomationsListErrors, AutomationsListResponses, AutomationsReviewsHealthData, AutomationsReviewsHealthErrors, AutomationsReviewsHealthResponses, AutomationsSyncData, AutomationsSyncErrors, AutomationsSyncResponses, AutomationsTriggersGetData, AutomationsTriggersGetErrors, AutomationsTriggersGetResponses, AutomationsVersionsCreateData, AutomationsVersionsCreateErrors, AutomationsVersionsCreateResponses, AutomationsVersionsListData, AutomationsVersionsListErrors, AutomationsVersionsListResponses, AutomationsVersionsPromoteData, AutomationsVersionsPromoteErrors, AutomationsVersionsPromoteResponses, AutomationsVersionsRestoreData, AutomationsVersionsRestoreErrors, AutomationsVersionsRestoreResponses, ExperimentsResolveData, ExperimentsResolveErrors, ExperimentsResolveResponses, FilesContentGetData, FilesContentGetErrors, FilesContentGetResponses, FilesCreateData, FilesCreateErrors, FilesCreateResponses, FilesDeleteData, FilesDeleteErrors, FilesDeleteResponses, FilesGetData, FilesGetErrors, FilesGetResponses, FilesUploadsAbortData, FilesUploadsAbortErrors, FilesUploadsAbortResponses, FilesUploadsCompleteData, FilesUploadsCompleteErrors, FilesUploadsCompleteResponses, FilesUploadsCreateData, FilesUploadsCreateErrors, FilesUploadsCreateResponses, RunsArtifactsGetData, RunsArtifactsGetErrors, RunsArtifactsGetResponses, RunsArtifactsListData, RunsArtifactsListErrors, RunsArtifactsListResponses, RunsCancelData, RunsCancelErrors, RunsCancelResponses, RunsEventsListData, RunsEventsListErrors, RunsEventsListResponses, RunsGetData, RunsGetErrors, RunsGetResponses, RunsListData, RunsListErrors, RunsListResponses, RunsPromoteData, RunsPromoteErrors, RunsPromoteResponses, RunsRerunData, RunsRerunErrors, RunsRerunResponses, RunsReviewsClearData, RunsReviewsClearErrors, RunsReviewsClearResponses, RunsReviewsExpectedCreateData, RunsReviewsExpectedCreateErrors, RunsReviewsExpectedCreateResponses, RunsReviewsExpectedFileDeleteData, RunsReviewsExpectedFileDeleteErrors, RunsReviewsExpectedFileDeleteResponses, RunsReviewsExpectedFileGetData, RunsReviewsExpectedFileGetErrors, RunsReviewsExpectedFileGetResponses, RunsReviewsExpectedFileUpdateData, RunsReviewsExpectedFileUpdateErrors, RunsReviewsExpectedFileUpdateResponses, RunsReviewsExpectedGetData, RunsReviewsExpectedGetErrors, RunsReviewsExpectedGetResponses, RunsReviewsGetData, RunsReviewsGetErrors, RunsReviewsGetResponses, RunsReviewsUpdateData, RunsReviewsUpdateErrors, RunsReviewsUpdateResponses, RunsScoresListData, RunsScoresListErrors, RunsScoresListResponses, RunsStartData, RunsStartErrors, RunsStartResponses, RunsStepsListData, RunsStepsListErrors, RunsStepsListResponses, RunsTraceGetData, RunsTraceGetErrors, RunsTraceGetResponses, RunsUsageGetData, RunsUsageGetErrors, RunsUsageGetResponses } from './types.gen';
+import type { AuthCheckData, AuthCheckErrors, AuthCheckResponses, AutomationsDatasetExportData, AutomationsDatasetExportErrors, AutomationsDatasetExportResponses, AutomationsDatasetImportData, AutomationsDatasetImportErrors, AutomationsDatasetImportResponses, AutomationsEvaluatorsGetData, AutomationsEvaluatorsGetErrors, AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsUpdateData, AutomationsEvaluatorsUpdateErrors, AutomationsEvaluatorsUpdateResponses, AutomationsExamplesCreateData, AutomationsExamplesCreateErrors, AutomationsExamplesCreateResponses, AutomationsExamplesDeleteData, AutomationsExamplesDeleteErrors, AutomationsExamplesDeleteResponses, AutomationsExamplesExpectedFileDeleteData, AutomationsExamplesExpectedFileDeleteErrors, AutomationsExamplesExpectedFileDeleteResponses, AutomationsExamplesExpectedFileGetData, AutomationsExamplesExpectedFileGetErrors, AutomationsExamplesExpectedFileGetResponses, AutomationsExamplesExpectedFilesCreateData, AutomationsExamplesExpectedFilesCreateErrors, AutomationsExamplesExpectedFilesCreateResponses, AutomationsExamplesExpectedFilesListData, AutomationsExamplesExpectedFilesListErrors, AutomationsExamplesExpectedFilesListResponses, AutomationsExamplesExpectedFileUpdateData, AutomationsExamplesExpectedFileUpdateErrors, AutomationsExamplesExpectedFileUpdateResponses, AutomationsExamplesGetData, AutomationsExamplesGetErrors, AutomationsExamplesGetResponses, AutomationsExamplesInputFileDeleteData, AutomationsExamplesInputFileDeleteErrors, AutomationsExamplesInputFileDeleteResponses, AutomationsExamplesInputFileGetData, AutomationsExamplesInputFileGetErrors, AutomationsExamplesInputFileGetResponses, AutomationsExamplesInputFilesCreateData, AutomationsExamplesInputFilesCreateErrors, AutomationsExamplesInputFilesCreateResponses, AutomationsExamplesInputFilesListData, AutomationsExamplesInputFilesListErrors, AutomationsExamplesInputFilesListResponses, AutomationsExamplesInputFileUpdateData, AutomationsExamplesInputFileUpdateErrors, AutomationsExamplesInputFileUpdateResponses, AutomationsExamplesListData, AutomationsExamplesListErrors, AutomationsExamplesListResponses, AutomationsExamplesRunData, AutomationsExamplesRunErrors, AutomationsExamplesRunResponses, AutomationsExamplesUpdateData, AutomationsExamplesUpdateErrors, AutomationsExamplesUpdateResponses, AutomationsExperimentsCancelData, AutomationsExperimentsCancelErrors, AutomationsExperimentsCancelResponses, AutomationsExperimentsCreateData, AutomationsExperimentsCreateErrors, AutomationsExperimentsCreateResponses, AutomationsExperimentsCreateStreamData, AutomationsExperimentsCreateStreamErrors, AutomationsExperimentsCreateStreamResponses, AutomationsExperimentsExportAllData, AutomationsExperimentsExportAllErrors, AutomationsExperimentsExportAllResponses, AutomationsExperimentsExportData, AutomationsExperimentsExportErrors, AutomationsExperimentsExportResponses, AutomationsExperimentsGetData, AutomationsExperimentsGetErrors, AutomationsExperimentsGetResponses, AutomationsExperimentsListData, AutomationsExperimentsListErrors, AutomationsExperimentsListResponses, AutomationsGetData, AutomationsGetErrors, AutomationsGetResponses, AutomationsListData, AutomationsListErrors, AutomationsListResponses, AutomationsReviewsHealthData, AutomationsReviewsHealthErrors, AutomationsReviewsHealthResponses, AutomationsSyncData, AutomationsSyncErrors, AutomationsSyncResponses, AutomationsTriggersGetData, AutomationsTriggersGetErrors, AutomationsTriggersGetResponses, AutomationsVersionsCreateData, AutomationsVersionsCreateErrors, AutomationsVersionsCreateResponses, AutomationsVersionsListData, AutomationsVersionsListErrors, AutomationsVersionsListResponses, AutomationsVersionsPromoteData, AutomationsVersionsPromoteErrors, AutomationsVersionsPromoteResponses, AutomationsVersionsRestoreData, AutomationsVersionsRestoreErrors, AutomationsVersionsRestoreResponses, ExperimentsResolveData, ExperimentsResolveErrors, ExperimentsResolveResponses, FilesContentGetData, FilesContentGetErrors, FilesContentGetResponses, FilesCreateData, FilesCreateErrors, FilesCreateResponses, FilesDeleteData, FilesDeleteErrors, FilesDeleteResponses, FilesGetData, FilesGetErrors, FilesGetResponses, FilesUploadsAbortData, FilesUploadsAbortErrors, FilesUploadsAbortResponses, FilesUploadsCompleteData, FilesUploadsCompleteErrors, FilesUploadsCompleteResponses, FilesUploadsCreateData, FilesUploadsCreateErrors, FilesUploadsCreateResponses, ModelsListData, ModelsListErrors, ModelsListResponses, RunsArtifactsGetData, RunsArtifactsGetErrors, RunsArtifactsGetResponses, RunsArtifactsListData, RunsArtifactsListErrors, RunsArtifactsListResponses, RunsCancelData, RunsCancelErrors, RunsCancelResponses, RunsEventsListData, RunsEventsListErrors, RunsEventsListResponses, RunsGetData, RunsGetErrors, RunsGetResponses, RunsListData, RunsListErrors, RunsListResponses, RunsPromoteData, RunsPromoteErrors, RunsPromoteResponses, RunsRerunData, RunsRerunErrors, RunsRerunResponses, RunsReviewsClearData, RunsReviewsClearErrors, RunsReviewsClearResponses, RunsReviewsExpectedCreateData, RunsReviewsExpectedCreateErrors, RunsReviewsExpectedCreateResponses, RunsReviewsExpectedFileDeleteData, RunsReviewsExpectedFileDeleteErrors, RunsReviewsExpectedFileDeleteResponses, RunsReviewsExpectedFileGetData, RunsReviewsExpectedFileGetErrors, RunsReviewsExpectedFileGetResponses, RunsReviewsExpectedFileUpdateData, RunsReviewsExpectedFileUpdateErrors, RunsReviewsExpectedFileUpdateResponses, RunsReviewsExpectedGetData, RunsReviewsExpectedGetErrors, RunsReviewsExpectedGetResponses, RunsReviewsGetData, RunsReviewsGetErrors, RunsReviewsGetResponses, RunsReviewsUpdateData, RunsReviewsUpdateErrors, RunsReviewsUpdateResponses, RunsScoresListData, RunsScoresListErrors, RunsScoresListResponses, RunsStartData, RunsStartErrors, RunsStartResponses, RunsStepsListData, RunsStepsListErrors, RunsStepsListResponses, RunsTraceGetData, RunsTraceGetErrors, RunsTraceGetResponses, RunsUsageGetData, RunsUsageGetErrors, RunsUsageGetResponses, TemplatesContentGetData, TemplatesContentGetErrors, TemplatesContentGetResponses, TemplatesCreateData, TemplatesCreateErrors, TemplatesCreateResponses, TemplatesDeleteData, TemplatesDeleteErrors, TemplatesDeleteResponses, TemplatesGetData, TemplatesGetErrors, TemplatesGetResponses, TemplatesListData, TemplatesListErrors, TemplatesListResponses, TemplatesReplaceData, TemplatesReplaceErrors, TemplatesReplaceResponses, TemplatesStagingData, TemplatesStagingErrors, TemplatesStagingResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -574,6 +574,17 @@ export const filesUploadsComplete = <ThrowOnError extends boolean = false>(optio
 });
 
 /**
+ * List configured models
+ *
+ * List text, vision, and OCR models configured for this tenant's environment from the workspace model catalog. This is a cheap read-only inventory: it does not call providers. `health` is `configured` or `unconfigured` from local credentials, never a live probe. Secrets and provider endpoints are never returned.
+ */
+export const modelsList = <ThrowOnError extends boolean = false>(options?: Options<ModelsListData, ThrowOnError>) => (options?.client ?? client).get<ModelsListResponses, ModelsListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/models',
+    ...options
+});
+
+/**
  * List runs
  *
  * List workflow and agent runs with cursor pagination.
@@ -827,4 +838,93 @@ export const runsUsageGet = <ThrowOnError extends boolean = false>(options: Opti
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/runs/{id}/usage',
     ...options
+});
+
+/**
+ * List templates
+ *
+ * List tenant-scoped DOCX and XLSX template resources.
+ */
+export const templatesList = <ThrowOnError extends boolean = false>(options?: Options<TemplatesListData, ThrowOnError>) => (options?.client ?? client).get<TemplatesListResponses, TemplatesListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/templates',
+    ...options
+});
+
+/**
+ * Upload template
+ *
+ * Create a stable `tmpl_…` resource and its first immutable content revision from a reusable `fileId`. Public SDK helpers `create(file)` and `createFromFileId(fileId)` upload through the Files API when needed, then send this JSON body. Generated clients send `{ fileId }` JSON only. The HTTP route still accepts a multipart `file` for CLI/internal use; that path is not generated into the public SDKs.
+ */
+export const templatesCreate = <ThrowOnError extends boolean = false>(options: Options<TemplatesCreateData, ThrowOnError>) => (options.client ?? client).post<TemplatesCreateResponses, TemplatesCreateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/templates',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete template
+ *
+ * Delete the mutable logical template. Immutable revisions are retained so workflows pinned with `templateRevisionId` continue to execute; unpinned workflows can no longer resolve the deleted `tmpl_…` id.
+ */
+export const templatesDelete = <ThrowOnError extends boolean = false>(options: Options<TemplatesDeleteData, ThrowOnError>) => (options.client ?? client).delete<TemplatesDeleteResponses, TemplatesDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/templates/{id}',
+    ...options
+});
+
+/**
+ * Inspect template
+ *
+ * Get template metadata, checksum, discovered tokens, grammar capabilities, and current immutable revision. Storage keys are never exposed.
+ */
+export const templatesGet = <ThrowOnError extends boolean = false>(options: Options<TemplatesGetData, ThrowOnError>) => (options.client ?? client).get<TemplatesGetResponses, TemplatesGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/templates/{id}',
+    ...options
+});
+
+/**
+ * Create template revision
+ *
+ * Append an immutable revision and advance the logical template pointer from a reusable `fileId`. Public SDK helpers `replace(file)` and `replaceFromFileId(fileId)` upload through the Files API when needed, then send this JSON body. Generated clients send `{ fileId }` JSON only. The HTTP route still accepts a multipart `file` for CLI/internal use; that path is not generated into the public SDKs.
+ */
+export const templatesReplace = <ThrowOnError extends boolean = false>(options: Options<TemplatesReplaceData, ThrowOnError>) => (options.client ?? client).put<TemplatesReplaceResponses, TemplatesReplaceErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/templates/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Download template content
+ *
+ * Download current bytes while the logical template exists, or a specific immutable revision using `revisionId`. Pinned revision downloads remain available after logical template deletion. Large objects may 302 to a short-lived signed storage URL.
+ */
+export const templatesContentGet = <ThrowOnError extends boolean = false>(options: Options<TemplatesContentGetData, ThrowOnError>) => (options.client ?? client).get<TemplatesContentGetResponses, TemplatesContentGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/templates/{id}/content',
+    ...options
+});
+
+/**
+ * Finalize or hard-clean a staged template
+ *
+ * Consume the one-time cleanupProof issued on a staged create. `finalize` makes the template live so later deletion keeps pinned revisions. `cleanup` hard-removes only unpublished resources from that staging attempt. Normal DELETE is unchanged and never takes this path.
+ */
+export const templatesStaging = <ThrowOnError extends boolean = false>(options: Options<TemplatesStagingData, ThrowOnError>) => (options.client ?? client).post<TemplatesStagingResponses, TemplatesStagingErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/templates/{id}/staging',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });

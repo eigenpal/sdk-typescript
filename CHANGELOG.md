@@ -1,5 +1,13 @@
 # @eigenpal/sdk
 
+## 0.13.1
+
+### Patch Changes
+
+- 56f8c5f: The TypeScript and Python SDKs now include `client.models.list()` so you can discover configured text, vision, and OCR models for the current environment from the public API catalog.
+- 57ccf0b: The TypeScript SDK now handles generated request parameters without exposing prototype-chain properties.
+- 56f8c5f: TypeScript and Python clients now expose `client.templates` for uploading, listing, inspecting, downloading, replacing, and deleting document templates. Uploads negotiate direct storage transfer when needed, existing reusable file IDs can be used without another upload, and downloads can target immutable revision IDs.
+
 ## 0.13.0
 
 ### Minor Changes

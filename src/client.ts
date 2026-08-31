@@ -16,7 +16,9 @@ import { DEFAULT_MULTIPART_MAX_BYTES, keysRequiringPreUpload } from './lib/uploa
 import { AuthResource } from './resources/auth';
 import { AutomationsResource } from './resources/automations';
 import { FilesResource } from './resources/files';
+import { ModelsResource } from './resources/models';
 import { RunsResource } from './resources/runs';
+import { TemplatesResource } from './resources/templates';
 import { buildTelemetryHeaders } from './telemetry';
 
 export interface EigenpalOptions {
@@ -139,12 +141,16 @@ export function isRunFinished(run: RunStartResponse): run is Run {
 export class EigenpalClient {
   /** API key identity and current tenant context. */
   public readonly auth: AuthResource;
+  /** Configured text, vision, and OCR models for this tenant environment. */
+  public readonly models: ModelsResource;
   /** Automation metadata across workflows and agents. Start runs with `client.run(...)`. */
   public readonly automations: AutomationsResource;
   /** Tenant-wide run operations across workflow, agent, manual, and eval runs. */
   public readonly runs: RunsResource;
   /** Reusable uploaded files that can be referenced by later runs. */
   public readonly files: FilesResource;
+  /** Tenant-scoped DOCX/XLSX templates with immutable content revisions. */
+  public readonly templates: TemplatesResource;
 
   /** Underlying hey-api client. Use `getRawClient()` for advanced cases. */
   private readonly client: Client;
@@ -188,9 +194,11 @@ export class EigenpalClient {
     this.installTimeoutInterceptor();
 
     this.auth = new AuthResource(this.client, this._request.bind(this));
+    this.models = new ModelsResource(this.client, this._request.bind(this));
     this.automations = new AutomationsResource(this.client, this._request.bind(this));
     this.runs = new RunsResource(this.client, this._request.bind(this));
     this.files = new FilesResource(this.client, this._request.bind(this));
+    this.templates = new TemplatesResource(this.client, this._request.bind(this), this.files);
   }
 
   /** Expose the underlying hey-api client for advanced use (custom interceptors, etc.). */

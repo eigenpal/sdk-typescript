@@ -97,16 +97,27 @@ client
 │   └── usage
 ├── files
 │   ├── get
+│   ├── download
+│   ├── delete
 │   ├── abortUpload
 │   ├── completeUpload
 │   ├── createUpload
-│   ├── delete
-│   ├── download
 │   └── upload
 ├── auth
 │   └── check
-└── experiments
-    └── resolve
+├── experiments
+│   └── resolve
+├── models
+│   └── list
+└── templates
+    ├── list
+    ├── get
+    ├── create
+    ├── createFromFileId
+    ├── replace
+    ├── replaceFromFileId
+    ├── download
+    └── delete
 ```
 
 Start runs with `client.run(...)` and create a new run from a previous snapshot with `client.rerun(...)`.
@@ -1412,6 +1423,28 @@ Verify a storage-direct pending object and promote it into a reusable file. Safe
 // File
 ```
 
+## Models
+
+### `client.models.list`
+
+**`GET /v1/models`**
+
+List configured models
+
+List text, vision, and OCR models configured for this tenant's environment from the workspace model catalog. This is a cheap read-only inventory: it does not call providers. `health` is `configured` or `unconfigured` from local credentials, never a live probe. Secrets and provider endpoints are never returned.
+
+**Query parameters**
+
+| Name         | Type                          | Description                                                                             |
+| ------------ | ----------------------------- | --------------------------------------------------------------------------------------- |
+| `capability` | `"text" \| "vision" \| "ocr"` | (optional)Return only models that support this capability (`text`, `vision`, or `ocr`). |
+
+**Response**
+
+```ts
+// ListModelsResponse
+```
+
 ## Runs
 
 ### `client.runs.list`
@@ -1694,6 +1727,155 @@ Get token, credit, duration, and execution usage for a run.
 
 ```ts
 // RunUsageResponse
+```
+
+## Templates
+
+### `client.templates.list`
+
+**`GET /v1/templates`**
+
+List templates
+
+List tenant-scoped DOCX and XLSX template resources.
+
+**Query parameters**
+
+| Name     | Type     | Description |
+| -------- | -------- | ----------- |
+| `limit`  | `number` | (optional)  |
+| `offset` | `number` | (optional)  |
+
+**Response**
+
+```ts
+// ListTemplatesResponse
+```
+
+### `client.templates.create`
+
+**`POST /v1/templates`**
+
+Upload template
+
+Create a stable `tmpl_…` resource and its first immutable content revision from a reusable `fileId`. Public SDK helpers `create(file)` and `createFromFileId(fileId)` upload through the Files API when needed, then send this JSON body. Generated clients send `{ fileId }` JSON only. The HTTP route still accepts a multipart `file` for CLI/internal use; that path is not generated into the public SDKs.
+
+**Example**
+
+```ts
+await client.templates.create(file, { name: 'Contract' });
+await client.templates.createFromFileId('file_abcdefghijklmnopqrstu', { name: 'Contract' });
+```
+
+**Request body**
+
+```ts
+// TemplateFileReferenceRequest
+```
+
+**Response**
+
+```ts
+// CreatedTemplate
+```
+
+### `client.templates.get`
+
+**`GET /v1/templates/:id`**
+
+Inspect template
+
+Get template metadata, checksum, discovered tokens, grammar capabilities, and current immutable revision. Storage keys are never exposed.
+
+**Path parameters**
+
+| Name | Type     | Description                    |
+| ---- | -------- | ------------------------------ |
+| `id` | `string` | Logical template id (tmpl\_…). |
+
+**Response**
+
+```ts
+// Template
+```
+
+### `client.templates.replace`
+
+**`PUT /v1/templates/:id`**
+
+Create template revision
+
+Append an immutable revision and advance the logical template pointer from a reusable `fileId`. Public SDK helpers `replace(file)` and `replaceFromFileId(fileId)` upload through the Files API when needed, then send this JSON body. Generated clients send `{ fileId }` JSON only. The HTTP route still accepts a multipart `file` for CLI/internal use; that path is not generated into the public SDKs.
+
+**Example**
+
+```ts
+await client.templates.replace('tmpl_…', file);
+await client.templates.replaceFromFileId('tmpl_…', 'file_abcdefghijklmnopqrstu');
+```
+
+**Path parameters**
+
+| Name | Type     | Description                    |
+| ---- | -------- | ------------------------------ |
+| `id` | `string` | Logical template id (tmpl\_…). |
+
+**Request body**
+
+```ts
+// TemplateReplaceRequest
+```
+
+**Response**
+
+```ts
+// Template
+```
+
+### `client.templates.delete`
+
+**`DELETE /v1/templates/:id`**
+
+Delete template
+
+Delete the mutable logical template. Immutable revisions are retained so workflows pinned with `templateRevisionId` continue to execute; unpinned workflows can no longer resolve the deleted `tmpl_…` id.
+
+**Path parameters**
+
+| Name | Type     | Description                    |
+| ---- | -------- | ------------------------------ |
+| `id` | `string` | Logical template id (tmpl\_…). |
+
+**Response**
+
+```ts
+// DeleteTemplateResponse
+```
+
+### `client.templates.download`
+
+**`GET /v1/templates/:id/content`**
+
+Download template content
+
+Download current bytes while the logical template exists, or a specific immutable revision using `revisionId`. Pinned revision downloads remain available after logical template deletion. Large objects may 302 to a short-lived signed storage URL.
+
+**Path parameters**
+
+| Name | Type     | Description                    |
+| ---- | -------- | ------------------------------ |
+| `id` | `string` | Logical template id (tmpl\_…). |
+
+**Query parameters**
+
+| Name         | Type     | Description                                                              |
+| ------------ | -------- | ------------------------------------------------------------------------ |
+| `revisionId` | `string` | (optional)Immutable revision id (tmpr\_…). Omit for the current content. |
+
+**Response**
+
+```ts
+// Blob
 ```
 
 ## Errors

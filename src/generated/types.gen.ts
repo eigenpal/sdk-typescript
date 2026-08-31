@@ -389,6 +389,31 @@ export type RunReviewExpectedFileUpdateRequest = {
     name: string;
 };
 
+export type TemplateFileReferenceRequest = {
+    /**
+     * Reusable file id produced by the direct file upload flow. It is consumed as upload transport, not exposed as template identity.
+     */
+    fileId: string;
+    name?: string;
+    description?: string;
+    /**
+     * When true, the create response includes a one-time cleanupProof for unpublished CLI staging. Normal uploads omit this.
+     */
+    staged?: boolean;
+};
+
+export type TemplateReplaceRequest = {
+    /**
+     * Reusable file id produced by the direct file upload flow. It is consumed as upload transport, not exposed as template identity.
+     */
+    fileId: string;
+};
+
+export type TemplateStagingRequest = {
+    proof: string;
+    action: 'cleanup' | 'finalize';
+};
+
 export type AuthCheckResponse = {
     ok: true;
     tenantId: string;
@@ -1025,6 +1050,47 @@ export type AbortFileUploadResponse = {
     aborted: true;
 };
 
+export type ListModelsResponse = {
+    data: Array<PublicModel>;
+    total: number;
+};
+
+export type PublicModel = {
+    id: string;
+    kind: 'llm' | 'ocr';
+    provider: string;
+    label: string;
+    capabilities: Array<'text' | 'vision' | 'ocr'>;
+    configured: boolean;
+    available: boolean;
+    /**
+     * Configuration state only: `configured` means credentials are present in this environment; `unconfigured` means the catalog entry exists but credentials are missing. This list does not probe live providers, so it never reports healthy/degraded/outage. `unknown` is reserved and is not emitted by this endpoint.
+     */
+    health: 'configured' | 'unconfigured' | 'unknown';
+    defaultFor: Array<'text' | 'vision' | 'ocr'>;
+    /**
+     * `local` means on-prem / no cloud provider egress (`local: true` or tesseract). `hosted` means the provider is a cloud API. Endpoints are never returned.
+     */
+    location: 'local' | 'hosted';
+    limits?: PublicModelLimits;
+    /**
+     * Static Eigenpal credit rates when known without a live vendor catalog. Omitted for OpenParser OCR and for LLMs (token prices are not part of this catalog).
+     */
+    cost?: PublicModelCost;
+    aliases: Array<string>;
+    tags: Array<string>;
+};
+
+export type PublicModelLimits = {
+    requestTimeoutSeconds?: number;
+    maxConcurrentRequests?: number;
+};
+
+export type PublicModelCost = {
+    creditsPerPage?: number;
+    unit: 'credits';
+};
+
 export type RunsListResponse = {
     runs: Array<RunListItem>;
     nextCursor: string | null;
@@ -1589,6 +1655,94 @@ export type RunTraceEvent = {
 
 export type RunUsageResponse = {
     usage: RunUsage | null;
+};
+
+export type ListTemplatesResponse = {
+    items: Array<Template>;
+    total: number;
+};
+
+export type Template = {
+    /**
+     * Stable logical template id (tmpl_…).
+     */
+    id: string;
+    name: string;
+    description?: string | null;
+    filename: string;
+    format: 'docx' | 'xlsx';
+    mimeType: string;
+    size?: number | null;
+    sha256?: string | null;
+    tokens: Array<{
+        name: string;
+        path?: Array<string>;
+        kind?: 'variable' | 'loop';
+        type?: 'string' | 'number' | 'date' | 'boolean' | 'array' | 'object';
+        required?: boolean;
+        description?: string;
+    }>;
+    grammar: {
+        syntax: string;
+        tokenDiscovery: boolean;
+        capabilities: Array<string>;
+    };
+    currentRevision?: TemplateRevision | null;
+    createdAt: string;
+    updatedAt?: string | null;
+};
+
+export type TemplateRevision = {
+    /**
+     * Immutable template revision id (tmpr_…).
+     */
+    id: string;
+    number: number;
+    sha256: string;
+    createdAt: string;
+};
+
+export type CreatedTemplate = {
+    /**
+     * Stable logical template id (tmpl_…).
+     */
+    id: string;
+    name: string;
+    description?: string | null;
+    filename: string;
+    format: 'docx' | 'xlsx';
+    mimeType: string;
+    size?: number | null;
+    sha256?: string | null;
+    tokens: Array<{
+        name: string;
+        path?: Array<string>;
+        kind?: 'variable' | 'loop';
+        type?: 'string' | 'number' | 'date' | 'boolean' | 'array' | 'object';
+        required?: boolean;
+        description?: string;
+    }>;
+    grammar: {
+        syntax: string;
+        tokenDiscovery: boolean;
+        capabilities: Array<string>;
+    };
+    currentRevision?: TemplateRevision | null;
+    createdAt: string;
+    updatedAt?: string | null;
+    /**
+     * One-time proof to finalize or hard-clean this unpublished staged template. Returned only on staged create, never on GET or list.
+     */
+    cleanupProof?: string;
+};
+
+export type DeleteTemplateResponse = {
+    deleted: boolean;
+};
+
+export type TemplateStagingResponse = {
+    cleaned?: boolean;
+    finalized?: boolean;
 };
 
 export type AuthCheckData = {
@@ -4236,6 +4390,60 @@ export type FilesUploadsCompleteResponses = {
 
 export type FilesUploadsCompleteResponse = FilesUploadsCompleteResponses[keyof FilesUploadsCompleteResponses];
 
+export type ModelsListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Return only models that support this capability (`text`, `vision`, or `ocr`).
+         */
+        capability?: 'text' | 'vision' | 'ocr';
+    };
+    url: '/v1/models';
+};
+
+export type ModelsListErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type ModelsListError = ModelsListErrors[keyof ModelsListErrors];
+
+export type ModelsListResponses = {
+    /**
+     * Configured models
+     */
+    200: ListModelsResponse;
+};
+
+export type ModelsListResponse = ModelsListResponses[keyof ModelsListResponses];
+
 export type RunsListData = {
     body?: never;
     path?: never;
@@ -5456,3 +5664,391 @@ export type RunsUsageGetResponses = {
 };
 
 export type RunsUsageGetResponse = RunsUsageGetResponses[keyof RunsUsageGetResponses];
+
+export type TemplatesListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        limit?: number;
+        offset?: number;
+    };
+    url: '/v1/templates';
+};
+
+export type TemplatesListErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type TemplatesListError = TemplatesListErrors[keyof TemplatesListErrors];
+
+export type TemplatesListResponses = {
+    /**
+     * Template resources
+     */
+    200: ListTemplatesResponse;
+};
+
+export type TemplatesListResponse = TemplatesListResponses[keyof TemplatesListResponses];
+
+export type TemplatesCreateData = {
+    body: TemplateFileReferenceRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/templates';
+};
+
+export type TemplatesCreateErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    422: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type TemplatesCreateError = TemplatesCreateErrors[keyof TemplatesCreateErrors];
+
+export type TemplatesCreateResponses = {
+    /**
+     * Created template
+     */
+    201: CreatedTemplate;
+};
+
+export type TemplatesCreateResponse = TemplatesCreateResponses[keyof TemplatesCreateResponses];
+
+export type TemplatesDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Logical template id (tmpl_…).
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/templates/{id}';
+};
+
+export type TemplatesDeleteErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type TemplatesDeleteError = TemplatesDeleteErrors[keyof TemplatesDeleteErrors];
+
+export type TemplatesDeleteResponses = {
+    /**
+     * Template deleted
+     */
+    200: DeleteTemplateResponse;
+};
+
+export type TemplatesDeleteResponse = TemplatesDeleteResponses[keyof TemplatesDeleteResponses];
+
+export type TemplatesGetData = {
+    body?: never;
+    path: {
+        /**
+         * Logical template id (tmpl_…).
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/templates/{id}';
+};
+
+export type TemplatesGetErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type TemplatesGetError = TemplatesGetErrors[keyof TemplatesGetErrors];
+
+export type TemplatesGetResponses = {
+    /**
+     * Template inspection
+     */
+    200: Template;
+};
+
+export type TemplatesGetResponse = TemplatesGetResponses[keyof TemplatesGetResponses];
+
+export type TemplatesReplaceData = {
+    body: TemplateReplaceRequest;
+    path: {
+        /**
+         * Logical template id (tmpl_…).
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/templates/{id}';
+};
+
+export type TemplatesReplaceErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    422: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type TemplatesReplaceError = TemplatesReplaceErrors[keyof TemplatesReplaceErrors];
+
+export type TemplatesReplaceResponses = {
+    /**
+     * Updated template
+     */
+    200: Template;
+};
+
+export type TemplatesReplaceResponse = TemplatesReplaceResponses[keyof TemplatesReplaceResponses];
+
+export type TemplatesContentGetData = {
+    body?: never;
+    path: {
+        /**
+         * Logical template id (tmpl_…).
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * Immutable revision id (tmpr_…). Omit for the current content.
+         */
+        revisionId?: string;
+    };
+    url: '/v1/templates/{id}/content';
+};
+
+export type TemplatesContentGetErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type TemplatesContentGetError = TemplatesContentGetErrors[keyof TemplatesContentGetErrors];
+
+export type TemplatesContentGetResponses = {
+    /**
+     * Template file bytes (DOCX or XLSX).
+     */
+    200: Blob | File;
+};
+
+export type TemplatesContentGetResponse = TemplatesContentGetResponses[keyof TemplatesContentGetResponses];
+
+export type TemplatesStagingData = {
+    body: TemplateStagingRequest;
+    path: {
+        /**
+         * Logical template id (tmpl_…).
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/templates/{id}/staging';
+};
+
+export type TemplatesStagingErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Conflict. The resource is in a state that forbids the request.
+     */
+    409: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type TemplatesStagingError = TemplatesStagingErrors[keyof TemplatesStagingErrors];
+
+export type TemplatesStagingResponses = {
+    /**
+     * Staging action applied
+     */
+    200: TemplateStagingResponse;
+};
+
+export type TemplatesStagingResponse = TemplatesStagingResponses[keyof TemplatesStagingResponses];
