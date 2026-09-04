@@ -836,6 +836,14 @@ export type ExperimentDetail = {
          * Dataset example name for the run.
          */
         exampleName: string | null;
+        /**
+         * Persisted weighted evaluator score.
+         */
+        evalScore: number | null;
+        /**
+         * Persisted aggregate evaluator verdict.
+         */
+        evalPassed: boolean | null;
         createdAt: string;
         completedAt: string | null;
     }>;
