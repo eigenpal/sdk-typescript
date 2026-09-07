@@ -103,21 +103,28 @@ client
 │   ├── completeUpload
 │   ├── createUpload
 │   └── upload
+├── templates
+│   ├── list
+│   ├── get
+│   ├── create
+│   ├── createFromFileId
+│   ├── replace
+│   ├── replaceFromFileId
+│   ├── download
+│   └── delete
+├── emailServers
+│   ├── list
+│   ├── get
+│   ├── create
+│   ├── delete
+│   ├── update
+│   └── test
 ├── auth
 │   └── check
 ├── experiments
 │   └── resolve
-├── models
-│   └── list
-└── templates
-    ├── list
-    ├── get
-    ├── create
-    ├── createFromFileId
-    ├── replace
-    ├── replaceFromFileId
-    ├── download
-    └── delete
+└── models
+    └── list
 ```
 
 Start runs with `client.run(...)` and create a new run from a previous snapshot with `client.rerun(...)`.
@@ -1292,6 +1299,169 @@ Deletes one corrected artifact file attached to the run review.
 | ---------- | -------- | ------------------------------------------------------------------------------------------------------- |
 | `id`       | `string` | Run id.                                                                                                 |
 | `filename` | `string` | Corrected artifact file name or slash-delimited path, as returned by `GET /runs/{id}/reviews/expected`. |
+
+## Email servers
+
+### `client.emailServers.list`
+
+**`GET /v1/email-servers`**
+
+List email servers
+
+List outbound email servers for the current workspace. Secrets are never returned; each server includes configuration flags instead of credentials.
+
+**Example**
+
+```ts
+const page = await client.emailServers.list({ limit: 20, offset: 0 });
+console.log(page.total, page.data[0]?.transport);
+```
+
+**Query parameters**
+
+| Name     | Type     | Description                                                   |
+| -------- | -------- | ------------------------------------------------------------- |
+| `limit`  | `number` | (optional)Maximum number of email servers to return (1–100).  |
+| `offset` | `number` | (optional)Zero-based offset for paging through email servers. |
+
+**Response**
+
+```ts
+// ListEmailServersResponse
+```
+
+### `client.emailServers.create`
+
+**`POST /v1/email-servers`**
+
+Create email server
+
+Create an outbound email server. Secrets are encrypted at rest and never returned. Names must be unique among live servers in the workspace.
+
+**Example**
+
+```ts
+const server = await client.emailServers.create({
+  name: 'Alerts',
+  transport: 'resend',
+  apiKey: process.env.RESEND_API_KEY!,
+  fromEmail: 'alerts@example.com',
+  fromName: 'EigenPal',
+});
+// Secrets are never returned — look for configuration flags instead.
+console.log(server.id, server.apiKeyConfigured);
+```
+
+**Request body**
+
+```ts
+// CreateEmailServerRequest
+```
+
+**Response**
+
+```ts
+// EmailServer
+```
+
+### `client.emailServers.get`
+
+**`GET /v1/email-servers/:id`**
+
+Get email server
+
+Inspect a stored outbound email server. Cross-tenant and deleted ids are indistinguishable from missing. Secrets are never returned.
+
+**Path parameters**
+
+| Name | Type     | Description                |
+| ---- | -------- | -------------------------- |
+| `id` | `string` | Email server id (`ems_…`). |
+
+**Response**
+
+```ts
+// EmailServer
+```
+
+### `client.emailServers.update`
+
+**`PATCH /v1/email-servers/:id`**
+
+Update email server
+
+Rename, enable/disable, or replace transport configuration. Omitted secrets are retained only when the existing transport is compatible and, for SMTP, the host and username are unchanged. Changing transport or SMTP destination requires a complete valid target; a new password or explicit auth clearing is required when host or username changes.
+
+**Path parameters**
+
+| Name | Type     | Description                |
+| ---- | -------- | -------------------------- |
+| `id` | `string` | Email server id (`ems_…`). |
+
+**Request body**
+
+```ts
+// UpdateEmailServerRequest
+```
+
+**Response**
+
+```ts
+// EmailServer
+```
+
+### `client.emailServers.delete`
+
+**`DELETE /v1/email-servers/:id`**
+
+Delete email server
+
+Soft-delete an outbound email server. Deleted ids are indistinguishable from missing.
+
+**Path parameters**
+
+| Name | Type     | Description                |
+| ---- | -------- | -------------------------- |
+| `id` | `string` | Email server id (`ems_…`). |
+
+**Response**
+
+```ts
+// DeleteEmailServerResponse
+```
+
+### `client.emailServers.test`
+
+**`POST /v1/email-servers/:id/test`**
+
+Test email server
+
+Send a concise connectivity email through the selected stored server. Disabled servers conflict. Provider failures are returned as a generic outcome and never include credentials or the test recipient.
+
+**Example**
+
+```ts
+const result = await client.emailServers.test('ems_…', { to: 'ops@example.com' });
+if (result.ok) console.log(result.messageId);
+```
+
+**Path parameters**
+
+| Name | Type     | Description                |
+| ---- | -------- | -------------------------- |
+| `id` | `string` | Email server id (`ems_…`). |
+
+**Request body**
+
+```ts
+// TestEmailServerRequest
+```
+
+**Response**
+
+```ts
+// TestEmailServerResponse
+```
 
 ## Files
 

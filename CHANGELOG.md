@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.16.0
+
+### Minor Changes
+
+- 4464686: TypeScript and Python SDKs now manage organization email servers: list, create, inspect, update, delete, and send a connectivity test. Stored credentials are never returned.
+
 ## 0.13.1
 
 ### Patch Changes

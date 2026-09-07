@@ -15,6 +15,7 @@ import {
 import { DEFAULT_MULTIPART_MAX_BYTES, keysRequiringPreUpload } from './lib/upload-limits';
 import { AuthResource } from './resources/auth';
 import { AutomationsResource } from './resources/automations';
+import { EmailServersResource } from './resources/email-servers';
 import { FilesResource } from './resources/files';
 import { ModelsResource } from './resources/models';
 import { RunsResource } from './resources/runs';
@@ -151,6 +152,8 @@ export class EigenpalClient {
   public readonly files: FilesResource;
   /** Tenant-scoped DOCX/XLSX templates with immutable content revisions. */
   public readonly templates: TemplatesResource;
+  /** Outbound email servers for workflow Email actions. Secrets are never returned. */
+  public readonly emailServers: EmailServersResource;
 
   /** Underlying hey-api client. Use `getRawClient()` for advanced cases. */
   private readonly client: Client;
@@ -199,6 +202,7 @@ export class EigenpalClient {
     this.runs = new RunsResource(this.client, this._request.bind(this));
     this.files = new FilesResource(this.client, this._request.bind(this));
     this.templates = new TemplatesResource(this.client, this._request.bind(this), this.files);
+    this.emailServers = new EmailServersResource(this.client, this._request.bind(this));
   }
 
   /** Expose the underlying hey-api client for advanced use (custom interceptors, etc.). */

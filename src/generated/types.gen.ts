@@ -192,6 +192,55 @@ export type RestoreAutomationVersionRequest = {
     message?: string;
 };
 
+export type CreateEmailServerRequest = {
+    name: string;
+    enabled?: boolean;
+    transport: 'resend';
+    apiKey: string;
+    fromEmail: string;
+    fromName: string;
+} | {
+    name: string;
+    enabled?: boolean;
+    transport: 'smtp';
+    host: string;
+    port?: number;
+    security?: 'starttls' | 'tls' | 'none';
+    username?: string;
+    password?: string;
+    caPem?: string;
+    fromEmail: string;
+    fromName: string;
+};
+
+export type UpdateEmailServerRequest = {
+    name?: string;
+    enabled?: boolean;
+    transport: 'resend';
+    apiKey?: string;
+    fromEmail: string;
+    fromName: string;
+} | {
+    name?: string;
+    enabled?: boolean;
+    transport: 'smtp';
+    host: string;
+    port: number;
+    security: 'starttls' | 'tls' | 'none';
+    username?: string | null;
+    password?: string;
+    caPem?: string | null;
+    fromEmail: string;
+    fromName: string;
+} | {
+    name?: string;
+    enabled?: boolean;
+};
+
+export type TestEmailServerRequest = {
+    to: string;
+};
+
 export type CreateFileMultipartRequest = {
     /**
      * Binary file field
@@ -1015,6 +1064,62 @@ export type AutomationVersion = {
     createdAt?: string;
 };
 
+export type ListEmailServersResponse = {
+    data: Array<EmailServer>;
+    total: number;
+    limit: number;
+    offset: number;
+};
+
+export type EmailServer = ({
+    transport: 'resend';
+} & PublicResendEmailServer) | ({
+    transport: 'smtp';
+} & PublicSmtpEmailServer);
+
+export type PublicResendEmailServer = {
+    id: string;
+    name: string;
+    enabled: boolean;
+    createdAt: string;
+    updatedAt: string;
+    transport: 'resend';
+    fromEmail: string;
+    fromName: string;
+    apiKeyConfigured: true;
+};
+
+export type PublicSmtpEmailServer = {
+    id: string;
+    name: string;
+    enabled: boolean;
+    createdAt: string;
+    updatedAt: string;
+    transport: 'smtp';
+    fromEmail: string;
+    fromName: string;
+    host: string;
+    port: number;
+    security: 'starttls' | 'tls' | 'none';
+    username: string | null;
+    passwordConfigured: boolean;
+    caPemConfigured: boolean;
+};
+
+export type DeleteEmailServerResponse = {
+    deleted: true;
+    id: string;
+};
+
+export type TestEmailServerResponse = {
+    ok: true;
+    transport: 'resend' | 'smtp';
+    messageId: string;
+} | {
+    ok: false;
+    error: string;
+};
+
 export type ExperimentRef = {
     id: string;
     automationId: string;
@@ -1087,6 +1192,10 @@ export type PublicModel = {
     cost?: PublicModelCost;
     aliases: Array<string>;
     tags: Array<string>;
+    /**
+     * Optional picker rank. Higher is more capable. Omitted on catalog rows that do not set it. Does not change role defaults.
+     */
+    capabilityRank?: number;
 };
 
 export type PublicModelLimits = {
@@ -3986,6 +4095,341 @@ export type AutomationsVersionsRestoreResponses = {
 };
 
 export type AutomationsVersionsRestoreResponse = AutomationsVersionsRestoreResponses[keyof AutomationsVersionsRestoreResponses];
+
+export type EmailServersListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Maximum number of email servers to return (1–100).
+         */
+        limit?: number;
+        /**
+         * Zero-based offset for paging through email servers.
+         */
+        offset?: number;
+    };
+    url: '/v1/email-servers';
+};
+
+export type EmailServersListErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type EmailServersListError = EmailServersListErrors[keyof EmailServersListErrors];
+
+export type EmailServersListResponses = {
+    /**
+     * Page of email servers
+     */
+    200: ListEmailServersResponse;
+};
+
+export type EmailServersListResponse = EmailServersListResponses[keyof EmailServersListResponses];
+
+export type EmailServersCreateData = {
+    body: CreateEmailServerRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/email-servers';
+};
+
+export type EmailServersCreateErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Conflict. The resource is in a state that forbids the request.
+     */
+    409: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type EmailServersCreateError = EmailServersCreateErrors[keyof EmailServersCreateErrors];
+
+export type EmailServersCreateResponses = {
+    /**
+     * Created email server
+     */
+    201: EmailServer;
+};
+
+export type EmailServersCreateResponse = EmailServersCreateResponses[keyof EmailServersCreateResponses];
+
+export type EmailServersDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Email server id (`ems_…`).
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/email-servers/{id}';
+};
+
+export type EmailServersDeleteErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type EmailServersDeleteError = EmailServersDeleteErrors[keyof EmailServersDeleteErrors];
+
+export type EmailServersDeleteResponses = {
+    /**
+     * Email server deleted
+     */
+    200: DeleteEmailServerResponse;
+};
+
+export type EmailServersDeleteResponse = EmailServersDeleteResponses[keyof EmailServersDeleteResponses];
+
+export type EmailServersGetData = {
+    body?: never;
+    path: {
+        /**
+         * Email server id (`ems_…`).
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/email-servers/{id}';
+};
+
+export type EmailServersGetErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type EmailServersGetError = EmailServersGetErrors[keyof EmailServersGetErrors];
+
+export type EmailServersGetResponses = {
+    /**
+     * Email server
+     */
+    200: EmailServer;
+};
+
+export type EmailServersGetResponse = EmailServersGetResponses[keyof EmailServersGetResponses];
+
+export type EmailServersUpdateData = {
+    body: UpdateEmailServerRequest;
+    path: {
+        /**
+         * Email server id (`ems_…`).
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/email-servers/{id}';
+};
+
+export type EmailServersUpdateErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Conflict. The resource is in a state that forbids the request.
+     */
+    409: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type EmailServersUpdateError = EmailServersUpdateErrors[keyof EmailServersUpdateErrors];
+
+export type EmailServersUpdateResponses = {
+    /**
+     * Updated email server
+     */
+    200: EmailServer;
+};
+
+export type EmailServersUpdateResponse = EmailServersUpdateResponses[keyof EmailServersUpdateResponses];
+
+export type EmailServersTestData = {
+    body: TestEmailServerRequest;
+    path: {
+        /**
+         * Email server id (`ems_…`).
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/email-servers/{id}/test';
+};
+
+export type EmailServersTestErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Conflict. The resource is in a state that forbids the request.
+     */
+    409: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type EmailServersTestError = EmailServersTestErrors[keyof EmailServersTestErrors];
+
+export type EmailServersTestResponses = {
+    /**
+     * Test send result
+     */
+    200: TestEmailServerResponse;
+};
+
+export type EmailServersTestResponse = EmailServersTestResponses[keyof EmailServersTestResponses];
 
 export type ExperimentsResolveData = {
     body?: never;

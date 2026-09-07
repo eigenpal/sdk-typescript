@@ -41,6 +41,7 @@ export {
 
 export { toFile } from './lib/files';
 export type { FileDescriptor, FileInput, NodeReadableStream } from './lib/files';
+export type { ListEmailServersOptions } from './resources/email-servers';
 export type { ListRunsOptions, RunExpand, RunExpandSection } from './resources/runs';
 
 // Re-export the canonical generated types so users can type their own
@@ -55,12 +56,18 @@ export type {
   AutomationTriggersResponse,
   AutomationVersion,
   CreateAutomationVersionRequest,
+  CreateEmailServerRequest,
+  DeleteEmailServerResponse,
+  EmailServer,
   ExecutionStatus,
   File,
+  ListEmailServersResponse,
   ListModelsResponse,
   PublicModel,
   PublicModelCost,
   PublicModelLimits,
+  PublicResendEmailServer,
+  PublicSmtpEmailServer,
   RestoreAutomationVersionRequest,
   Run,
   RunAccepted,
@@ -87,4 +94,7 @@ export type {
   RunsTraceGetResponse,
   Template,
   TemplateRevision,
+  TestEmailServerRequest,
+  TestEmailServerResponse,
+  UpdateEmailServerRequest,
 } from './generated/types.gen';
