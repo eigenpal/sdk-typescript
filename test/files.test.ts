@@ -1,6 +1,64 @@
 import { describe, expect, test } from 'bun:test';
 import { Readable } from 'node:stream';
 import { EigenpalClient, toFile } from '../src';
+import { isNodeReadableStream } from '../src/lib/fetch-body';
+import {
+  partIsAuthoritativelyComplete,
+  shouldAbortMultipartUploadSession,
+  shouldAbortPresignedPutUploadSession,
+} from '../src/lib/upload-presigned-multipart';
+
+type StoragePartPutMock = {
+  uploaded: Set<number>;
+  partPuts: number[];
+  partBytes: Map<number, number>;
+};
+
+async function consumeFetchPutBody(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<{ url: string; bytes: number }> {
+  const url = String(input instanceof Request ? input.url : input);
+  const body = init?.body ?? (input instanceof Request ? input.body : null);
+  if (body != null && isNodeReadableStream(body)) {
+    let bytes = 0;
+    for await (const chunk of body as AsyncIterable<Buffer | Uint8Array | string>) {
+      bytes += typeof chunk === 'string' ? Buffer.byteLength(chunk) : chunk.length;
+    }
+    return { url, bytes };
+  }
+  if (typeof Blob !== 'undefined' && body instanceof Blob) {
+    return { url, bytes: body.size };
+  }
+  if (body instanceof ArrayBuffer || ArrayBuffer.isView(body)) {
+    return { url, bytes: body.byteLength };
+  }
+  const request = input instanceof Request ? input : new Request(input, init);
+  return {
+    url: request.url,
+    bytes: request.body ? (await request.arrayBuffer()).byteLength : 0,
+  };
+}
+
+function mockStoragePartPut(state: StoragePartPutMock): typeof globalThis.fetch {
+  return (async (input, init) => {
+    const { url, bytes } = await consumeFetchPutBody(input, init);
+    if (!url.startsWith('https://storage.example/part-')) {
+      throw new Error(`Unexpected storage request: ${url}`);
+    }
+    const partNumber = Number(url.slice('https://storage.example/part-'.length));
+    state.partPuts.push(partNumber);
+    state.uploaded.add(partNumber);
+    state.partBytes.set(partNumber, bytes);
+    return new Response(null, { status: 200 });
+  }) as typeof fetch;
+}
+
+async function consumeStoragePut(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const { url } = await consumeFetchPutBody(input, init);
+  expect(url).toBe('https://storage.example/pending');
+  return new Response(null, { status: 200 });
+}
 
 /**
  * Tests for multipart file upload — exercises the `-F`-style path the SDK
@@ -44,12 +102,29 @@ async function captureRequest(): Promise<{
 }
 
 describe('multipart file upload', () => {
+  test('aborts leftover MPU state only before parts are authoritative', () => {
+    expect(shouldAbortMultipartUploadSession({ partsReady: false })).toBe(true);
+    expect(shouldAbortMultipartUploadSession({ partsReady: true })).toBe(false);
+  });
+
+  test('aborts leftover presigned-PUT state only before storage PUT succeeds', () => {
+    expect(shouldAbortPresignedPutUploadSession({ putReady: false })).toBe(true);
+    expect(shouldAbortPresignedPutUploadSession({ putReady: true })).toBe(false);
+  });
+
+  test('treats a listed part with missing size as incomplete', () => {
+    expect(partIsAuthoritativelyComplete([{ partNumber: 1, etag: '"e1"' }], 1, 4)).toBe(false);
+    expect(partIsAuthoritativelyComplete([{ partNumber: 1, size: 4, etag: '"e1"' }], 1, 4)).toBe(
+      true
+    );
+  });
+
   test('client.files.upload sends bytes directly without leaking API auth', async () => {
     const originalFetch = globalThis.fetch;
     let storageAuthorization: string | null = null;
     globalThis.fetch = (async (input, init) => {
       storageAuthorization = new Headers(init?.headers).get('authorization');
-      expect(String(input)).toBe('https://storage.example/pending');
+      await consumeStoragePut(input, init);
       return new Response(null, { status: 200 });
     }) as typeof fetch;
     try {
@@ -104,6 +179,7 @@ describe('multipart file upload', () => {
     globalThis.fetch = (async () => {
       throw new TypeError('network failed');
     }) as typeof fetch;
+    let abortCalled = false;
     let abortSignal: AbortSignal | undefined;
     try {
       const client = new EigenpalClient({
@@ -127,6 +203,7 @@ describe('multipart file upload', () => {
             request.url.endsWith('/v1/files/uploads/fup_failed_put') &&
             request.method === 'DELETE'
           ) {
+            abortCalled = true;
             abortSignal = request.signal;
             return Response.json({ aborted: true });
           }
@@ -137,17 +214,21 @@ describe('multipart file upload', () => {
       await expect(client.files.upload(new File(['hello'], 'input.txt'))).rejects.toThrow(
         'network failed'
       );
+      expect(abortCalled).toBe(true);
       expect(abortSignal?.aborted).toBe(false);
     } finally {
       globalThis.fetch = originalFetch;
     }
   });
 
-  test('uses independent cleanup after completeUpload is aborted or its response is lost', async () => {
+  test('does not abort after complete fails once storage PUT succeeded', async () => {
     const originalFetch = globalThis.fetch;
-    globalThis.fetch = (async () => new Response(null, { status: 200 })) as typeof fetch;
+    globalThis.fetch = (async (input, init) => {
+      await consumeFetchPutBody(input, init);
+      return new Response(null, { status: 200 });
+    }) as typeof fetch;
     const controller = new AbortController();
-    let cleanupSignal: AbortSignal | undefined;
+    let abortCalled = false;
     try {
       const client = new EigenpalClient({
         apiKey: 'eg_test',
@@ -174,7 +255,7 @@ describe('multipart file upload', () => {
             request.url.endsWith('/v1/files/uploads/fup_lost_complete') &&
             request.method === 'DELETE'
           ) {
-            cleanupSignal = request.signal;
+            abortCalled = true;
             return Response.json({ aborted: true });
           }
           throw new Error(`Unexpected API request: ${request.url}`);
@@ -183,9 +264,9 @@ describe('multipart file upload', () => {
 
       await expect(
         client.files.upload(new File(['hello'], 'input.txt'), { signal: controller.signal })
-      ).rejects.toThrow();
+      ).rejects.toThrow(/stored for fup_lost_complete.*retry complete/);
       expect(controller.signal.aborted).toBe(true);
-      expect(cleanupSignal?.aborted).toBe(false);
+      expect(abortCalled).toBe(false);
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -663,5 +744,354 @@ describe('multipart file upload', () => {
     await expect(client.files.download('file_pdf')).rejects.toThrow(
       'Expected a binary response from the API'
     );
+  });
+
+  test('presigned-multipart slices a Blob and completes without client ETags', async () => {
+    const storage = {
+      uploaded: new Set<number>(),
+      partPuts: [] as number[],
+      partBytes: new Map<number, number>(),
+    };
+    const slices: Array<{ start: number; size: number }> = [];
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mockStoragePartPut(storage);
+    try {
+      const client = new EigenpalClient({
+        apiKey: 'eg_test',
+        baseUrl: 'http://localhost:3000',
+        maxRetries: 0,
+        fetch: async (input, init) => {
+          const request = input instanceof Request ? input : new Request(input.toString(), init);
+          const url = request.url;
+          if (url.endsWith('/v1/files/uploads') && request.method === 'POST') {
+            return Response.json({
+              transport: 'presigned-multipart',
+              uploadId: 'fup_mpu',
+              fileId: 'file_mpu',
+              partSizeBytes: 5,
+              partCount: 3,
+              partsUrl: '/v1/files/uploads/fup_mpu/parts',
+              completeUrl: '/v1/files/uploads/fup_mpu/complete',
+              expiresAt: '2026-08-04T10:00:00.000Z',
+              maxFileSizeBytes: 100 * 1024 * 1024,
+            });
+          }
+          if (url.endsWith('/v1/files/uploads/fup_mpu/parts') && request.method === 'GET') {
+            return Response.json({
+              parts: [...storage.uploaded].map((partNumber) => ({
+                partNumber,
+                size: partNumber === 3 ? 2 : 5,
+                etag: `"e${partNumber}"`,
+              })),
+            });
+          }
+          if (url.endsWith('/v1/files/uploads/fup_mpu/parts') && request.method === 'POST') {
+            const body = JSON.parse(await request.text()) as { partNumber: number };
+            return Response.json({
+              url: `https://storage.example/part-${body.partNumber}`,
+              headers: {},
+              partSizeBytes: body.partNumber === 3 ? 2 : 5,
+            });
+          }
+          if (url.endsWith('/v1/files/uploads/fup_mpu/complete')) {
+            expect(await request.text()).toBe('{}');
+            return Response.json({ id: 'file_mpu', filename: 'doc.bin', size: 12 });
+          }
+          throw new Error(`Unexpected API request: ${url}`);
+        },
+      });
+
+      const file = new File([new Uint8Array(12).fill(9)], 'doc.bin');
+      const originalSlice = file.slice.bind(file);
+      file.slice = ((start?: number, end?: number, type?: string) => {
+        slices.push({ start: start ?? 0, size: (end ?? file.size) - (start ?? 0) });
+        return originalSlice(start, end, type);
+      }) as typeof file.slice;
+
+      const result = await client.files.upload(file);
+      expect(result.id).toBe('file_mpu');
+      expect(slices.sort((a, b) => a.start - b.start)).toEqual([
+        { start: 0, size: 5 },
+        { start: 5, size: 5 },
+        { start: 10, size: 2 },
+      ]);
+      expect(storage.partBytes.get(1)).toBe(5);
+      expect(storage.partBytes.get(2)).toBe(5);
+      expect(storage.partBytes.get(3)).toBe(2);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  test('path uploads skip already-listed parts and do not drain the file', async () => {
+    const { mkdtemp, writeFile, rm } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = await mkdtemp(join(tmpdir(), 'sdk-mpu-'));
+    const filePath = join(dir, 'doc.bin');
+    await writeFile(filePath, Buffer.from('abcdefghijkl'));
+    const storage = {
+      uploaded: new Set<number>([1, 2]),
+      partPuts: [] as number[],
+      partBytes: new Map<number, number>(),
+    };
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mockStoragePartPut(storage);
+    try {
+      const client = new EigenpalClient({
+        apiKey: 'eg_test',
+        baseUrl: 'http://localhost:3000',
+        maxRetries: 0,
+        fetch: async (input, init) => {
+          const request = input instanceof Request ? input : new Request(input.toString(), init);
+          const url = request.url;
+          if (url.endsWith('/v1/files/uploads')) {
+            return Response.json({
+              transport: 'presigned-multipart',
+              uploadId: 'fup_path',
+              fileId: 'file_path',
+              partSizeBytes: 5,
+              partCount: 3,
+              partsUrl: '/v1/files/uploads/fup_path/parts',
+              completeUrl: '/v1/files/uploads/fup_path/complete',
+              expiresAt: '2026-08-04T10:00:00.000Z',
+              maxFileSizeBytes: 100 * 1024 * 1024,
+            });
+          }
+          if (url.endsWith('/parts') && request.method === 'GET') {
+            return Response.json({
+              parts: [...storage.uploaded].map((partNumber) => ({
+                partNumber,
+                size: partNumber === 3 ? 2 : 5,
+                etag: `"e${partNumber}"`,
+              })),
+            });
+          }
+          if (url.endsWith('/parts') && request.method === 'POST') {
+            const body = JSON.parse(await request.text()) as { partNumber: number };
+            return Response.json({
+              url: `https://storage.example/part-${body.partNumber}`,
+              headers: { 'content-length': '2' },
+              partSizeBytes: 2,
+            });
+          }
+          if (url.endsWith('/complete')) {
+            return Response.json({ id: 'file_path', filename: 'doc.bin', size: 12 });
+          }
+          throw new Error(`Unexpected API request: ${url}`);
+        },
+      });
+
+      const result = await client.files.upload({ path: filePath, filename: 'doc.bin' });
+      expect(result.id).toBe('file_path');
+      expect(storage.partPuts).toEqual([3]);
+      expect(storage.partBytes.get(3)).toBe(2);
+      expect(storage.uploaded).toEqual(new Set([1, 2, 3]));
+    } finally {
+      globalThis.fetch = originalFetch;
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('rejects a one-shot stream that cannot be multipart-resumed', async () => {
+    const { Readable } = await import('node:stream');
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      maxRetries: 0,
+      fetch: async () => {
+        throw new Error('should not negotiate');
+      },
+    });
+    const stream = Readable.from([new Uint8Array([1, 2, 3])]);
+    await expect(client.files.upload(stream as never)).rejects.toThrow(/one-shot stream/);
+  });
+
+  test('does not abort after complete fails once every part is stored', async () => {
+    const storage = {
+      uploaded: new Set<number>(),
+      partPuts: [] as number[],
+      partBytes: new Map<number, number>(),
+    };
+    let abortCalled = false;
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mockStoragePartPut(storage);
+    try {
+      const client = new EigenpalClient({
+        apiKey: 'eg_test',
+        baseUrl: 'http://localhost:3000',
+        maxRetries: 0,
+        fetch: async (input, init) => {
+          const request = input instanceof Request ? input : new Request(input.toString(), init);
+          const url = request.url;
+          if (url.endsWith('/v1/files/uploads') && request.method === 'POST') {
+            return Response.json({
+              transport: 'presigned-multipart',
+              uploadId: 'fup_complete_fail',
+              fileId: 'file_complete_fail',
+              partSizeBytes: 4,
+              partCount: 1,
+              partsUrl: '/v1/files/uploads/fup_complete_fail/parts',
+              completeUrl: '/v1/files/uploads/fup_complete_fail/complete',
+              expiresAt: '2026-08-04T10:00:00.000Z',
+              maxFileSizeBytes: 100 * 1024 * 1024,
+            });
+          }
+          if (url.endsWith('/parts') && request.method === 'GET') {
+            return Response.json({
+              parts: [...storage.uploaded].map((partNumber) => ({
+                partNumber,
+                size: 4,
+                etag: `"e${partNumber}"`,
+              })),
+            });
+          }
+          if (url.endsWith('/parts') && request.method === 'POST') {
+            return Response.json({
+              url: 'https://storage.example/part-1',
+              headers: {},
+              partSizeBytes: 4,
+            });
+          }
+          if (url.endsWith('/complete')) {
+            return Response.json(
+              {
+                issues: [{ field: 'uploadId', message: 'Upload cannot complete: promoting' }],
+                requestId: 'req_complete_fail',
+              },
+              { status: 409 }
+            );
+          }
+          if (url.endsWith('/v1/files/uploads/fup_complete_fail') && request.method === 'DELETE') {
+            abortCalled = true;
+            return Response.json({ aborted: true });
+          }
+          throw new Error(`Unexpected API request: ${url}`);
+        },
+      });
+
+      await expect(client.files.upload(new File(['note'], 'note.txt'))).rejects.toThrow(
+        /remain stored for fup_complete_fail.*retry complete/
+      );
+      expect(abortCalled).toBe(false);
+      expect(storage.uploaded.has(1)).toBe(true);
+      expect(storage.partBytes.get(1)).toBe(4);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  test('aborts a multipart session after an unrecoverable part failure', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async (input, init) => {
+      await consumeFetchPutBody(input, init);
+      return new Response(null, { status: 403 });
+    }) as typeof fetch;
+    let abortCalled = false;
+    try {
+      const client = new EigenpalClient({
+        apiKey: 'eg_test',
+        baseUrl: 'http://localhost:3000',
+        maxRetries: 0,
+        fetch: async (input, init) => {
+          const request = input instanceof Request ? input : new Request(input.toString(), init);
+          const url = request.url;
+          if (url.endsWith('/v1/files/uploads') && request.method === 'POST') {
+            return Response.json({
+              transport: 'presigned-multipart',
+              uploadId: 'fup_part_fail',
+              fileId: 'file_part_fail',
+              partSizeBytes: 4,
+              partCount: 1,
+              partsUrl: '/v1/files/uploads/fup_part_fail/parts',
+              completeUrl: '/v1/files/uploads/fup_part_fail/complete',
+              expiresAt: '2026-08-04T10:00:00.000Z',
+              maxFileSizeBytes: 100 * 1024 * 1024,
+            });
+          }
+          if (url.endsWith('/parts') && request.method === 'GET') {
+            return Response.json({ parts: [] });
+          }
+          if (url.endsWith('/parts') && request.method === 'POST') {
+            return Response.json({
+              url: 'https://storage.example/forbidden',
+              headers: {},
+              partSizeBytes: 4,
+            });
+          }
+          if (url.endsWith('/v1/files/uploads/fup_part_fail') && request.method === 'DELETE') {
+            abortCalled = true;
+            return Response.json({ aborted: true });
+          }
+          throw new Error(`Unexpected API request: ${url}`);
+        },
+      });
+
+      await expect(client.files.upload(new File(['note'], 'note.txt'))).rejects.toThrow(
+        /Storage part upload failed \(403\)/
+      );
+      expect(abortCalled).toBe(true);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  test('re-uploads a listed part when ListParts omits size', async () => {
+    const storage = {
+      uploaded: new Set<number>(),
+      partPuts: [] as number[],
+      partBytes: new Map<number, number>(),
+    };
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mockStoragePartPut(storage);
+    try {
+      const client = new EigenpalClient({
+        apiKey: 'eg_test',
+        baseUrl: 'http://localhost:3000',
+        maxRetries: 0,
+        fetch: async (input, init) => {
+          const request = input instanceof Request ? input : new Request(input.toString(), init);
+          const url = request.url;
+          if (url.endsWith('/v1/files/uploads')) {
+            return Response.json({
+              transport: 'presigned-multipart',
+              uploadId: 'fup_nosize',
+              fileId: 'file_nosize',
+              partSizeBytes: 4,
+              partCount: 1,
+              partsUrl: '/v1/files/uploads/fup_nosize/parts',
+              completeUrl: '/v1/files/uploads/fup_nosize/complete',
+              expiresAt: '2026-08-04T10:00:00.000Z',
+              maxFileSizeBytes: 100 * 1024 * 1024,
+            });
+          }
+          if (url.endsWith('/parts') && request.method === 'GET') {
+            return Response.json({
+              parts: storage.uploaded.has(1)
+                ? [{ partNumber: 1, size: 4, etag: '"e1"' }]
+                : [{ partNumber: 1, etag: '"e1"' }],
+            });
+          }
+          if (url.endsWith('/parts') && request.method === 'POST') {
+            return Response.json({
+              url: 'https://storage.example/part-1',
+              headers: {},
+              partSizeBytes: 4,
+            });
+          }
+          if (url.endsWith('/complete')) {
+            return Response.json({ id: 'file_nosize', filename: 'note.txt', size: 4 });
+          }
+          throw new Error(`Unexpected API request: ${url}`);
+        },
+      });
+
+      const result = await client.files.upload(new File(['note'], 'note.txt'));
+      expect(result.id).toBe('file_nosize');
+      expect(storage.partPuts).toEqual([1]);
+      expect(storage.partBytes.get(1)).toBe(4);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });

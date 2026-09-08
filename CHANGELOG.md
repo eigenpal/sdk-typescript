@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.16.4
+
+### Minor Changes
+
+- 1c48a4a: The TypeScript and Python SDKs now upload large files through resumable multipart sessions, streaming from a path or seekable source so callers do not have to load the whole object into memory.
+
 ## 0.16.2
 
 ### Minor Changes

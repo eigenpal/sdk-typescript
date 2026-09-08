@@ -260,6 +260,10 @@ export type CreateFileUploadSessionRequest = {
     idempotencyKey?: string;
 };
 
+export type PresignFileUploadPartRequest = {
+    partNumber: number;
+};
+
 /**
  * Run envelope. Declare provenance with the `X-Eigenpal-Trigger` header (`api` or `cli`). Legacy 0.5.12 body shapes remain accepted.
  */
@@ -1153,14 +1157,66 @@ export type PresignedFileUploadSession = {
     maxFileSizeBytes: number;
 };
 
+export type PresignedMultipartFileUploadSession = {
+    transport: 'presigned-multipart';
+    uploadId: string;
+    fileId: string;
+    partSizeBytes: number;
+    partCount: number;
+    partsUrl: string;
+    completeUrl: string;
+    expiresAt: string;
+    maxFileSizeBytes: number;
+};
+
 export type MultipartFileUploadFallback = {
     transport: 'multipart';
     url: string;
     maxFileSizeBytes: number;
 };
 
+export type FileUploadSession = {
+    uploadId: string;
+    fileId: string;
+    transport: 'presigned-put' | 'presigned-multipart';
+    status: string;
+    expiresAt: string;
+    partSizeBytes?: number | null;
+    partCount?: number | null;
+    parts?: Array<{
+        partNumber: number;
+        size?: number;
+        etag: string;
+    }>;
+};
+
 export type AbortFileUploadResponse = {
     aborted: true;
+};
+
+export type ListFileUploadPartsResponse = {
+    transport: 'presigned-multipart';
+    uploadId: string;
+    fileId: string;
+    partSizeBytes: number;
+    partCount: number;
+    expiresAt: string;
+    parts: Array<{
+        partNumber: number;
+        size?: number;
+        etag: string;
+    }>;
+};
+
+export type PresignFileUploadPartResponse = {
+    transport: 'presigned-multipart';
+    partNumber: number;
+    url: string;
+    headers: {
+        [key: string]: string;
+    };
+    expiresAt: string;
+    partSizeBytes: number;
 };
 
 export type HumanReviewListResponse = {
@@ -4895,7 +4951,7 @@ export type FilesUploadsCreateResponses = {
     /**
      * Negotiated upload transport
      */
-    200: PresignedFileUploadSession | MultipartFileUploadFallback;
+    200: PresignedFileUploadSession | PresignedMultipartFileUploadSession | MultipartFileUploadFallback;
 };
 
 export type FilesUploadsCreateResponse = FilesUploadsCreateResponses[keyof FilesUploadsCreateResponses];
@@ -4951,6 +5007,57 @@ export type FilesUploadsAbortResponses = {
 
 export type FilesUploadsAbortResponse = FilesUploadsAbortResponses[keyof FilesUploadsAbortResponses];
 
+export type FilesUploadsGetData = {
+    body?: never;
+    path: {
+        uploadId: string;
+    };
+    query?: never;
+    url: '/v1/files/uploads/{uploadId}';
+};
+
+export type FilesUploadsGetErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type FilesUploadsGetError = FilesUploadsGetErrors[keyof FilesUploadsGetErrors];
+
+export type FilesUploadsGetResponses = {
+    /**
+     * Upload session
+     */
+    200: FileUploadSession;
+};
+
+export type FilesUploadsGetResponse = FilesUploadsGetResponses[keyof FilesUploadsGetResponses];
+
 export type FilesUploadsCompleteData = {
     body?: never;
     path: {
@@ -5001,6 +5108,108 @@ export type FilesUploadsCompleteResponses = {
 };
 
 export type FilesUploadsCompleteResponse = FilesUploadsCompleteResponses[keyof FilesUploadsCompleteResponses];
+
+export type FilesUploadsPartsListData = {
+    body?: never;
+    path: {
+        uploadId: string;
+    };
+    query?: never;
+    url: '/v1/files/uploads/{uploadId}/parts';
+};
+
+export type FilesUploadsPartsListErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type FilesUploadsPartsListError = FilesUploadsPartsListErrors[keyof FilesUploadsPartsListErrors];
+
+export type FilesUploadsPartsListResponses = {
+    /**
+     * Uploaded parts
+     */
+    200: ListFileUploadPartsResponse;
+};
+
+export type FilesUploadsPartsListResponse = FilesUploadsPartsListResponses[keyof FilesUploadsPartsListResponses];
+
+export type FilesUploadsPartsPresignData = {
+    body: PresignFileUploadPartRequest;
+    path: {
+        uploadId: string;
+    };
+    query?: never;
+    url: '/v1/files/uploads/{uploadId}/parts';
+};
+
+export type FilesUploadsPartsPresignErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type FilesUploadsPartsPresignError = FilesUploadsPartsPresignErrors[keyof FilesUploadsPartsPresignErrors];
+
+export type FilesUploadsPartsPresignResponses = {
+    /**
+     * Signed part upload
+     */
+    200: PresignFileUploadPartResponse;
+};
+
+export type FilesUploadsPartsPresignResponse = FilesUploadsPartsPresignResponses[keyof FilesUploadsPartsPresignResponses];
 
 export type HumanReviewsListData = {
     body?: never;

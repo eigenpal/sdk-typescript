@@ -40,7 +40,13 @@ export {
 } from './errors';
 
 export { toFile } from './lib/files';
-export type { FileDescriptor, FileInput, NodeReadableStream } from './lib/files';
+export type {
+  FileDescriptor,
+  FileInput,
+  NodeReadableStream,
+  PathFileInput,
+  StreamFactoryFileInput,
+} from './lib/files';
 export type { ListEmailServersOptions } from './resources/email-servers';
 export type { ListRunsOptions, RunExpand, RunExpandSection } from './resources/runs';
 

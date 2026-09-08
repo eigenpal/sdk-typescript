@@ -109,6 +109,9 @@ client
 │   ├── abortUpload
 │   ├── completeUpload
 │   ├── createUpload
+│   ├── getUpload
+│   ├── listUploadParts
+│   ├── presignUploadPart
 │   └── upload
 ├── templates
 │   ├── list
@@ -1512,7 +1515,7 @@ Get metadata for a reusable uploaded file.
 
 Delete file
 
-Delete a reusable uploaded file. Historical run and dataset snapshots are separate artifacts.
+Delete a reusable uploaded file. Past runs that referenced it stay readable until those runs are deleted.
 
 **Path parameters**
 
@@ -1546,7 +1549,7 @@ Download bytes for a reusable uploaded file. Direct-enabled deployments redirect
 
 Prepare file upload
 
-Negotiate multipart when the file fits the deployment body limit (or direct storage is disabled), otherwise return a short-lived signed storage PUT. The response transport is authoritative; clients must not guess from file size alone.
+Negotiate HTTP multipart for small bodies, a short-lived signed PUT under the single-object ceiling, or storage-direct multipart (presigned-multipart) for larger files when storage supports MPU. The response transport is authoritative; clients must not guess from file size alone.
 
 **Request body**
 
@@ -1557,7 +1560,27 @@ Negotiate multipart when the file fits the deployment body limit (or direct stor
 **Response**
 
 ```ts
-// PresignedFileUploadSession | MultipartFileUploadFallback
+// PresignedFileUploadSession | PresignedMultipartFileUploadSession | MultipartFileUploadFallback
+```
+
+### `client.files.getUpload`
+
+**`GET /v1/files/uploads/:uploadId`**
+
+Get file upload session
+
+Return session status for resume. Multipart sessions include authoritative uploaded parts from storage, not client-reported ETags.
+
+**Path parameters**
+
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| `uploadId` | `string` |             |
+
+**Response**
+
+```ts
+// FileUploadSession
 ```
 
 ### `client.files.abortUpload`
@@ -1566,7 +1589,7 @@ Negotiate multipart when the file fits the deployment body limit (or direct stor
 
 Abort file upload
 
-Abort a pending storage-direct upload and remove its pending object.
+Abort a pending storage-direct upload. Multipart sessions call AbortMultipartUpload; pending PUT objects are deleted. Completed canonical files are never deleted.
 
 **Path parameters**
 
@@ -1598,6 +1621,52 @@ Verify a storage-direct pending object and promote it into a reusable file. Safe
 
 ```ts
 // File
+```
+
+### `client.files.listUploadParts`
+
+**`GET /v1/files/uploads/:uploadId/parts`**
+
+List uploaded multipart parts
+
+List authoritative uploaded parts from storage for resume. Do not trust client-only ETags.
+
+**Path parameters**
+
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| `uploadId` | `string` |             |
+
+**Response**
+
+```ts
+// ListFileUploadPartsResponse
+```
+
+### `client.files.presignUploadPart`
+
+**`POST /v1/files/uploads/:uploadId/parts`**
+
+Presign one multipart upload part
+
+Mint a short-lived signed UploadPart URL for one validated part. Part URLs are not issued at session create.
+
+**Path parameters**
+
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| `uploadId` | `string` |             |
+
+**Request body**
+
+```ts
+// PresignFileUploadPartRequest
+```
+
+**Response**
+
+```ts
+// PresignFileUploadPartResponse
 ```
 
 ## Human reviews

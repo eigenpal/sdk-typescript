@@ -10,7 +10,12 @@ import {
   buildRunMultipart,
   hasFileInput,
   isFileInput,
+  isPathFileInput,
+  isReadStream,
   resolveFileBlob,
+  statUploadSize,
+  type FileInput,
+  type PathFileInput,
 } from './lib/files';
 import { DEFAULT_MULTIPART_MAX_BYTES, keysRequiringPreUpload } from './lib/upload-limits';
 import { AuthResource } from './resources/auth';
@@ -273,22 +278,51 @@ export class EigenpalClient {
   private async prepareRunFileInputs(input: RunInput, signal?: AbortSignal): Promise<RunInput> {
     if (!hasFileInput(input)) return input;
 
-    const resolved: Array<{ key: string; blob: Blob; filename: string }> = [];
+    const resolved: Array<{ key: string; file: FileInput; filename: string; size: number }> = [];
     for (const [key, value] of Object.entries(input)) {
       if (!isFileInput(value)) continue;
+      if (isPathFileInput(value)) {
+        try {
+          const meta = await statUploadSize(value);
+          resolved.push({
+            key,
+            file: value,
+            filename: meta.filename,
+            size: meta.size,
+          });
+          continue;
+        } catch {
+          // Fake or unreadable stream paths still drain, matching prior SDK behavior.
+        }
+      }
+      if (isReadStream(value) && typeof value.path === 'string') {
+        try {
+          const meta = await statUploadSize(value);
+          const pathInput: PathFileInput = { path: value.path };
+          resolved.push({
+            key,
+            file: pathInput,
+            filename: meta.filename,
+            size: meta.size,
+          });
+          continue;
+        } catch {
+          // Fake or unreadable stream paths still drain, matching prior SDK behavior.
+        }
+      }
       const { blob, filename } = await resolveFileBlob(value);
-      resolved.push({ key, blob, filename });
+      resolved.push({ key, file: blob, filename, size: blob.size });
     }
 
     const preUploadKeys = keysRequiringPreUpload(
-      resolved.map(({ key, blob }) => ({ key, size: blob.size })),
+      resolved.map(({ key, size }) => ({ key, size })),
       this.multipartMaxBytes
     );
 
     const next: RunInput = { ...input };
-    for (const { key, blob, filename } of resolved) {
+    for (const { key, file, filename } of resolved) {
       if (preUploadKeys.has(key)) {
-        const uploaded = await this.files.upload(blob, {
+        const uploaded = await this.files.upload(file, {
           filename,
           signal,
           purpose: 'run-input',
@@ -297,10 +331,14 @@ export class EigenpalClient {
         continue;
       }
       // Prefer a concrete Blob/File so drained streams can still be multiparted.
-      next[key] =
-        typeof File !== 'undefined'
-          ? new File([blob], filename, { type: blob.type || 'application/octet-stream' })
-          : blob;
+      if (typeof Blob !== 'undefined' && file instanceof Blob) {
+        next[key] =
+          typeof File !== 'undefined'
+            ? new File([file], filename, { type: file.type || 'application/octet-stream' })
+            : file;
+        continue;
+      }
+      next[key] = file;
     }
     return next;
   }

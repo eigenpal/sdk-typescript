@@ -52,8 +52,32 @@ export interface FileDescriptor {
 }
 
 /**
+ * Disk path that can be stat'd and re-opened per part for resumable multipart.
+ */
+export interface PathFileInput {
+  path: string;
+  filename?: string;
+  mimeType?: string;
+}
+
+/**
+ * Replayable byte-range factory for Node streams that are not a disk path.
+ * `open` must return a fresh body for `[start, start+length)` on every call.
+ */
+export interface StreamFactoryFileInput {
+  size: number;
+  filename: string;
+  mimeType?: string;
+  open: (
+    start: number,
+    length: number
+  ) => Blob | Uint8Array | ReadableStream | NodeJS.ReadableStream;
+}
+
+/**
  * A Node readable stream — typically `fs.createReadStream('contract.pdf')`.
- * The SDK drains it and infers the upload filename from `path`.
+ * Streams with a `path` are uploaded from disk without draining. A one-shot
+ * stream without a path cannot be multipart-resumed.
  */
 export interface NodeReadableStream extends AsyncIterable<unknown> {
   /** Source path; used to infer the upload filename. */
@@ -61,7 +85,12 @@ export interface NodeReadableStream extends AsyncIterable<unknown> {
 }
 
 /** Any value the SDK accepts as a "file" workflow input. */
-export type FileInput = Blob | FileDescriptor | NodeReadableStream;
+export type FileInput =
+  | Blob
+  | FileDescriptor
+  | PathFileInput
+  | StreamFactoryFileInput
+  | NodeReadableStream;
 
 /**
  * Attach a filename (and optional MIME type) to raw bytes. The escape hatch
@@ -83,7 +112,7 @@ export function toFile(
 }
 
 /** Detect a Node readable stream (`fs.createReadStream`, etc.). */
-function isReadStream(value: unknown): value is NodeReadableStream {
+export function isReadStream(value: unknown): value is NodeReadableStream {
   if (value === null || typeof value !== 'object') return false;
   const v = value as Record<PropertyKey, unknown>;
   return (
@@ -93,7 +122,7 @@ function isReadStream(value: unknown): value is NodeReadableStream {
 }
 
 /** Detect an explicit `{ content, filename }` descriptor. */
-function isFileDescriptor(value: unknown): value is FileDescriptor {
+export function isFileDescriptor(value: unknown): value is FileDescriptor {
   if (value === null || typeof value !== 'object') return false;
   const v = value as { content?: unknown; filename?: unknown };
   return (
@@ -105,9 +134,27 @@ function isFileDescriptor(value: unknown): value is FileDescriptor {
   );
 }
 
+export function isPathFileInput(value: unknown): value is PathFileInput {
+  if (value === null || typeof value !== 'object' || isReadStream(value)) return false;
+  const v = value as { path?: unknown; open?: unknown };
+  return typeof v.path === 'string' && typeof v.open !== 'function';
+}
+
+export function isStreamFactoryFileInput(value: unknown): value is StreamFactoryFileInput {
+  if (value === null || typeof value !== 'object') return false;
+  const v = value as { open?: unknown; size?: unknown; filename?: unknown };
+  return (
+    typeof v.open === 'function' &&
+    typeof v.filename === 'string' &&
+    typeof v.size === 'number' &&
+    Number.isFinite(v.size)
+  );
+}
+
 export function isFileInput(value: unknown): value is FileInput {
   if (typeof Blob !== 'undefined' && value instanceof Blob) return true;
   if (isReadStream(value)) return true;
+  if (isPathFileInput(value) || isStreamFactoryFileInput(value)) return true;
   return isFileDescriptor(value);
 }
 
@@ -128,9 +175,9 @@ function basename(path: string): string {
 /**
  * Resolve a `FileInput` to a `{ blob, filename }` pair for `FormData.append`.
  *
- * Streams are drained to bytes *here* — eagerly, before the request is sent —
- * so the body can be replayed if the SDK retries the request. (A consumed
- * stream cannot be re-read; a Blob can.)
+ * One-shot streams without a path are drained here so the body can be replayed
+ * on HTTP retries. Disk paths and stream factories stay unbuffered until the
+ * caller asks for bytes (small multipart leftovers).
  */
 export async function resolveFileBlob(file: FileInput): Promise<{ blob: Blob; filename: string }> {
   // `File` extends `Blob`, so this branch covers both.
@@ -138,7 +185,38 @@ export async function resolveFileBlob(file: FileInput): Promise<{ blob: Blob; fi
     return { blob: file, filename: (file as File).name || 'file' };
   }
 
-  // Node readable stream — drain it into a Blob now.
+  if (isPathFileInput(file) || (isReadStream(file) && typeof file.path === 'string')) {
+    const filePath = isPathFileInput(file) ? file.path : file.path!;
+    const filename = (isPathFileInput(file) ? file.filename : undefined) ?? basename(filePath);
+    if (await pathIsFile(filePath)) {
+      const { readFile } = await import('node:fs/promises');
+      const bytes = await readFile(filePath);
+      const type = (isPathFileInput(file) ? file.mimeType : undefined) ?? guessMimeType(filename);
+      return { blob: new Blob([bytes as BlobPart], { type }), filename };
+    }
+    if (isPathFileInput(file)) {
+      throw new Error(`Upload path is not a file: ${filePath}`);
+    }
+    // Named stream whose path is not readable — drain the in-memory stream.
+  }
+
+  if (isStreamFactoryFileInput(file)) {
+    const body = file.open(0, file.size);
+    if (typeof Blob !== 'undefined' && body instanceof Blob) {
+      return { blob: body, filename: file.filename };
+    }
+    if (body instanceof Uint8Array) {
+      return {
+        blob: new Blob([body as BlobPart], { type: file.mimeType ?? guessMimeType(file.filename) }),
+        filename: file.filename,
+      };
+    }
+    throw new Error(
+      'Stream factory returned a non-Blob body; pass a path or Blob for small multipart leftovers'
+    );
+  }
+
+  // Node readable stream without a path — drain it into a Blob now.
   if (isReadStream(file)) {
     const filename = typeof file.path === 'string' ? basename(file.path) : 'file';
     const parts: BlobPart[] = [];
@@ -159,6 +237,74 @@ export async function resolveFileBlob(file: FileInput): Promise<{ blob: Blob; fi
   const blob =
     desc.content.type === type ? desc.content : desc.content.slice(0, desc.content.size, type);
   return { blob, filename: desc.filename };
+}
+
+export async function statUploadSize(
+  file: FileInput
+): Promise<{ size: number; filename: string; contentType: string }> {
+  if (typeof Blob !== 'undefined' && file instanceof Blob) {
+    return {
+      size: file.size,
+      filename: (file as File).name || 'file',
+      contentType: file.type || DEFAULT_MIME,
+    };
+  }
+  if (isPathFileInput(file) || (isReadStream(file) && typeof file.path === 'string')) {
+    const filePath = isPathFileInput(file) ? file.path : file.path!;
+    const filename = (isPathFileInput(file) ? file.filename : undefined) ?? basename(filePath);
+    if (await pathIsFile(filePath)) {
+      const { stat } = await import('node:fs/promises');
+      const info = await stat(filePath);
+      return {
+        size: info.size,
+        filename,
+        contentType: (isPathFileInput(file) ? file.mimeType : undefined) ?? guessMimeType(filename),
+      };
+    }
+    if (isPathFileInput(file)) {
+      throw new Error(`Upload path is not a file: ${filePath}`);
+    }
+  }
+  if (isStreamFactoryFileInput(file)) {
+    return {
+      size: file.size,
+      filename: file.filename,
+      contentType: file.mimeType ?? guessMimeType(file.filename),
+    };
+  }
+  if (isFileDescriptor(file)) {
+    const size =
+      file.content instanceof Blob
+        ? file.content.size
+        : file.content instanceof ArrayBuffer
+          ? file.content.byteLength
+          : file.content.byteLength;
+    return {
+      size,
+      filename: file.filename,
+      contentType: file.mimeType ?? guessMimeType(file.filename),
+    };
+  }
+  throw new Error(
+    'Cannot determine size of a non-replayable stream. Pass a file path, Blob, or a stream factory with size.'
+  );
+}
+
+export function isReplayableUploadSource(file: FileInput | Uint8Array | ArrayBuffer): boolean {
+  if (file instanceof Uint8Array || file instanceof ArrayBuffer) return true;
+  if (typeof Blob !== 'undefined' && file instanceof Blob) return true;
+  if (isPathFileInput(file) || isStreamFactoryFileInput(file) || isFileDescriptor(file))
+    return true;
+  return isReadStream(file) && typeof file.path === 'string';
+}
+
+async function pathIsFile(filePath: string): Promise<boolean> {
+  try {
+    const { stat } = await import('node:fs/promises');
+    return (await stat(filePath)).isFile();
+  } catch {
+    return false;
+  }
 }
 
 export interface MultipartParts {
