@@ -1163,6 +1163,144 @@ export type AbortFileUploadResponse = {
     aborted: true;
 };
 
+export type HumanReviewListResponse = {
+    tasks: Array<{
+        id: string;
+        executionId: string;
+        automationId: string;
+        automationName: string;
+        sourceKind: 'workflow_step' | 'agent_tool';
+        sourceLabel: string;
+        status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+        requiredCount: number;
+        confirmedCount: number;
+        version: number;
+        createdAt: string;
+        updatedAt: string;
+    }>;
+    nextCursor: string | null;
+};
+
+export type HumanReviewTaskResponse = {
+    task: HumanReviewTaskDetail;
+};
+
+export type HumanReviewTaskDetail = {
+    id: string;
+    executionId: string;
+    automationId: string;
+    automationName: string;
+    sourceKind: 'workflow_step' | 'agent_tool';
+    sourceLabel: string;
+    status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+    requiredCount: number;
+    confirmedCount: number;
+    version: number;
+    createdAt: string;
+    updatedAt: string;
+    files: Array<{
+        fileId: string;
+        filename: string;
+        mimeType?: string;
+        size?: number;
+        fieldName?: string;
+        artifactPath: string;
+        /**
+         * run_input for authorized run input files; attachment for extra current-run files. Omitted on historical tasks and inferred at read time.
+         */
+        role?: 'run_input' | 'attachment';
+    }>;
+    /**
+     * Non-file trigger input derived at read time. Null when every field is a file or external source id. omitted_too_large when the projection exceeds the review data byte limit.
+     */
+    input: {
+        status: 'available';
+        data: {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    } | {
+        status: 'omitted_too_large';
+    } | null;
+    machineData: {
+        [key: string]: unknown;
+    } | Array<unknown>;
+    draftData: {
+        [key: string]: unknown;
+    } | Array<unknown>;
+    schema: {
+        [key: string]: unknown;
+    } | null;
+    fieldMetadata: {
+        [key: string]: {
+            /**
+             * Producer-supplied confidence: 0–1 numeric (legacy) or categorical low|medium|high from ai.extract grounding. Not calibrated by Eigenpal.
+             */
+            confidence?: number | 'low' | 'medium' | 'high' | string;
+            /**
+             * Short label shown in the review UI
+             */
+            label?: string;
+            /**
+             * Longer reviewer guidance for this field
+             */
+            description?: string;
+            /**
+             * Legacy per-field override kept for existing tasks. Prefer selection.fields.review.
+             */
+            review?: 'auto' | 'always' | 'never';
+            /**
+             * Opaque display metadata preserved for the review UI
+             */
+            display?: {
+                [key: string]: unknown;
+            };
+        };
+    };
+    requiredPaths: Array<string>;
+    selectionReasons: {
+        [key: string]: 'always' | 'explicit' | 'low_confidence' | 'missing_confidence' | 'all' | 'reviewer_edit' | 'threshold_met' | 'never' | 'excluded' | 'unmatched' | 'missing_confidence_skip';
+    };
+    decisions: Array<{
+        id: string;
+        path: string;
+        originalValue: string | number | boolean | null;
+        currentValue: string | number | boolean | null;
+        required: boolean;
+        reason: 'always' | 'explicit' | 'low_confidence' | 'missing_confidence' | 'all' | 'reviewer_edit' | 'threshold_met' | 'never' | 'excluded' | 'unmatched' | 'missing_confidence_skip';
+        confirmedBy: string | null;
+        confirmedAt: string | null;
+        version: number;
+    }>;
+    instructions: string | null;
+    completedBy: string | null;
+    completedAt: string | null;
+    outcomeReason: string | null;
+    /**
+     * Optional lineage@1 document resolved from the extract sidecar. Omitted when missing or unreadable. Validate with @openparser/lineage.
+     */
+    lineage?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Optional ParsedDocument resolved from the extract sidecar. Omitted when missing or unreadable. Validate with @openparser/schema.
+     */
+    parsedDocument?: {
+        [key: string]: unknown;
+    };
+};
+
+export type HumanReviewApproveResponse = {
+    task: HumanReviewTaskDetail;
+};
+
+export type HumanReviewFieldResponse = {
+    task: HumanReviewTaskDetail;
+};
+
+export type HumanReviewRejectResponse = {
+    task: HumanReviewTaskDetail;
+};
+
 export type ListModelsResponse = {
     data: Array<PublicModel>;
     total: number;
@@ -1346,6 +1484,10 @@ export type RunExecutionMeta = {
      * Lightweight review state for run list rows.
      */
     review?: RunReviewSummary | null;
+    /**
+     * Pending in-flight human review when the run is waiting on a reviewer.
+     */
+    humanReview?: RunHumanReviewSummary | null;
 };
 
 export type ExecutionStatus = 'created' | 'pending' | 'running' | 'waiting' | 'finalizing' | 'completed' | 'failed' | 'cancelled' | 'rejected';
@@ -1379,6 +1521,16 @@ export type RunReviewSummary = {
      * Number of field/file corrections.
      */
     correctionCount: number;
+};
+
+export type RunHumanReviewSummary = {
+    taskId: string;
+    sourceKind: 'workflow_step' | 'agent_tool';
+    sourceLabel: string;
+    status: 'pending';
+    requiredCount: number;
+    confirmedCount: number;
+    version: number;
 };
 
 export type Run = {
@@ -1513,6 +1665,10 @@ export type WorkflowRunExecution = {
     retry: RunExecutionRetry;
     review?: RunReview | null;
     /**
+     * Pending in-flight human review when the run is waiting on a reviewer.
+     */
+    humanReview?: RunHumanReviewSummary | null;
+    /**
      * Per-step executions of the workflow run (`expand=execution`).
      */
     steps: Array<unknown>;
@@ -1594,6 +1750,10 @@ export type AgentRunExecution = {
     batchId: string | null;
     retry: RunExecutionRetry;
     review?: RunReview | null;
+    /**
+     * Pending in-flight human review when the run is waiting on a reviewer.
+     */
+    humanReview?: RunHumanReviewSummary | null;
     files: {
         /**
          * Output artifacts the agent produced.
@@ -4841,6 +5001,344 @@ export type FilesUploadsCompleteResponses = {
 };
 
 export type FilesUploadsCompleteResponse = FilesUploadsCompleteResponses[keyof FilesUploadsCompleteResponses];
+
+export type HumanReviewsListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        automationId?: string;
+        waitingBefore?: string;
+        cursor?: string;
+        limit?: number;
+    };
+    url: '/v1/human-reviews';
+};
+
+export type HumanReviewsListErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type HumanReviewsListError = HumanReviewsListErrors[keyof HumanReviewsListErrors];
+
+export type HumanReviewsListResponses = {
+    /**
+     * Pending review tasks
+     */
+    200: HumanReviewListResponse;
+};
+
+export type HumanReviewsListResponse = HumanReviewsListResponses[keyof HumanReviewsListResponses];
+
+export type HumanReviewsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Human review task id
+         */
+        taskId: string;
+    };
+    query?: never;
+    url: '/v1/human-reviews/{taskId}';
+};
+
+export type HumanReviewsGetErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type HumanReviewsGetError = HumanReviewsGetErrors[keyof HumanReviewsGetErrors];
+
+export type HumanReviewsGetResponses = {
+    /**
+     * Human review task detail
+     */
+    200: HumanReviewTaskResponse;
+};
+
+export type HumanReviewsGetResponse = HumanReviewsGetResponses[keyof HumanReviewsGetResponses];
+
+export type HumanReviewsApproveData = {
+    body: {
+        expectedVersion: number;
+    };
+    path: {
+        /**
+         * Human review task id
+         */
+        taskId: string;
+    };
+    query?: never;
+    url: '/v1/human-reviews/{taskId}/approve';
+};
+
+export type HumanReviewsApproveErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type HumanReviewsApproveError = HumanReviewsApproveErrors[keyof HumanReviewsApproveErrors];
+
+export type HumanReviewsApproveResponses = {
+    /**
+     * Approved task
+     */
+    200: HumanReviewApproveResponse;
+};
+
+export type HumanReviewsApproveResponse = HumanReviewsApproveResponses[keyof HumanReviewsApproveResponses];
+
+export type HumanReviewsConfirmFieldData = {
+    body: {
+        expectedVersion: number;
+        idempotencyKey: string;
+        path: string;
+        value: string | number | boolean | null;
+        confirmed?: boolean;
+    };
+    path: {
+        /**
+         * Human review task id
+         */
+        taskId: string;
+    };
+    query?: never;
+    url: '/v1/human-reviews/{taskId}/fields';
+};
+
+export type HumanReviewsConfirmFieldErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type HumanReviewsConfirmFieldError = HumanReviewsConfirmFieldErrors[keyof HumanReviewsConfirmFieldErrors];
+
+export type HumanReviewsConfirmFieldResponses = {
+    /**
+     * Updated task after field confirmation
+     */
+    200: HumanReviewFieldResponse;
+};
+
+export type HumanReviewsConfirmFieldResponse = HumanReviewsConfirmFieldResponses[keyof HumanReviewsConfirmFieldResponses];
+
+export type HumanReviewsFilesContentGetData = {
+    body?: never;
+    path: {
+        /**
+         * Human review task id
+         */
+        taskId: string;
+        /**
+         * File id listed on the review task
+         */
+        fileId: string;
+    };
+    query?: never;
+    url: '/v1/human-reviews/{taskId}/files/{fileId}/content';
+};
+
+export type HumanReviewsFilesContentGetErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type HumanReviewsFilesContentGetError = HumanReviewsFilesContentGetErrors[keyof HumanReviewsFilesContentGetErrors];
+
+export type HumanReviewsFilesContentGetResponses = {
+    /**
+     * Task file content
+     */
+    200: unknown;
+};
+
+export type HumanReviewsRejectData = {
+    body: {
+        expectedVersion: number;
+        idempotencyKey: string;
+        reason: string;
+    };
+    path: {
+        /**
+         * Human review task id
+         */
+        taskId: string;
+    };
+    query?: never;
+    url: '/v1/human-reviews/{taskId}/reject';
+};
+
+export type HumanReviewsRejectErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type HumanReviewsRejectError = HumanReviewsRejectErrors[keyof HumanReviewsRejectErrors];
+
+export type HumanReviewsRejectResponses = {
+    /**
+     * Rejected task
+     */
+    200: HumanReviewRejectResponse;
+};
+
+export type HumanReviewsRejectResponse = HumanReviewsRejectResponses[keyof HumanReviewsRejectResponses];
 
 export type ModelsListData = {
     body?: never;

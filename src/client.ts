@@ -17,6 +17,7 @@ import { AuthResource } from './resources/auth';
 import { AutomationsResource } from './resources/automations';
 import { EmailServersResource } from './resources/email-servers';
 import { FilesResource } from './resources/files';
+import { HumanReviewsResource } from './resources/human-reviews';
 import { ModelsResource } from './resources/models';
 import { RunsResource } from './resources/runs';
 import { TemplatesResource } from './resources/templates';
@@ -150,6 +151,8 @@ export class EigenpalClient {
   public readonly runs: RunsResource;
   /** Reusable uploaded files that can be referenced by later runs. */
   public readonly files: FilesResource;
+  /** Human review queue tasks created by workflow and agent runs. */
+  public readonly humanReviews: HumanReviewsResource;
   /** Tenant-scoped DOCX/XLSX templates with immutable content revisions. */
   public readonly templates: TemplatesResource;
   /** Outbound email servers for workflow Email actions. Secrets are never returned. */
@@ -201,6 +204,7 @@ export class EigenpalClient {
     this.automations = new AutomationsResource(this.client, this._request.bind(this));
     this.runs = new RunsResource(this.client, this._request.bind(this));
     this.files = new FilesResource(this.client, this._request.bind(this));
+    this.humanReviews = new HumanReviewsResource(this.client, this._request.bind(this));
     this.templates = new TemplatesResource(this.client, this._request.bind(this), this.files);
     this.emailServers = new EmailServersResource(this.client, this._request.bind(this));
   }

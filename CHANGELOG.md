@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.16.2
+
+### Minor Changes
+
+- d46a558: TypeScript and Python SDKs now expose human-review resources for listing and retrieving tasks, confirming corrected fields, downloading attached source files, and approving or rejecting paused runs.
+
 ## 0.16.0
 
 ### Minor Changes
