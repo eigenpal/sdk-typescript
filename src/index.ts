@@ -47,7 +47,9 @@ export type {
   PathFileInput,
   StreamFactoryFileInput,
 } from './lib/files';
+export type { ListAutomationsOptions } from './resources/automations';
 export type { ListEmailServersOptions } from './resources/email-servers';
+export type { ListFoldersOptions } from './resources/folders';
 export type { ListRunsOptions, RunExpand, RunExpandSection } from './resources/runs';
 
 // Re-export the canonical generated types so users can type their own
@@ -63,11 +65,17 @@ export type {
   AutomationVersion,
   CreateAutomationVersionRequest,
   CreateEmailServerRequest,
+  CreateFolderRequest,
+  DeleteAutomationResponse,
   DeleteEmailServerResponse,
+  DeleteFolderResponse,
   EmailServer,
   ExecutionStatus,
   File,
+  Folder,
+  FolderType,
   ListEmailServersResponse,
+  ListFoldersResponse,
   ListModelsResponse,
   PublicModel,
   PublicModelCost,
@@ -102,5 +110,7 @@ export type {
   TemplateRevision,
   TestEmailServerRequest,
   TestEmailServerResponse,
+  UpdateAutomationRequest,
   UpdateEmailServerRequest,
+  UpdateFolderRequest,
 } from './generated/types.gen';

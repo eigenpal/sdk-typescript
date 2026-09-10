@@ -3,6 +3,7 @@ import type { Client } from '../generated/client';
 import {
   automationsDatasetExport,
   automationsDatasetImport,
+  automationsDelete,
   automationsEvaluatorsGet,
   automationsEvaluatorsUpdate,
   automationsExamplesCreate,
@@ -23,19 +24,27 @@ import {
   automationsReviewsHealth,
   automationsSync,
   automationsTriggersGet,
+  automationsUpdate,
   automationsVersionsCreate,
   automationsVersionsList,
   automationsVersionsPromote,
   automationsVersionsRestore,
 } from '../generated/sdk.gen';
 import type {
+  AutomationDetail,
+  AutomationsListData,
   AutomationsReviewsHealthData,
   CreateAutomationVersionRequest,
+  DeleteAutomationResponse,
+  ListAutomationsResponse,
+  UpdateAutomationRequest,
 } from '../generated/types.gen';
 
 type Dispatch = <T>(call: () => Promise<OperationResult<T>>) => Promise<T>;
 type SignalOptions = { signal?: AbortSignal };
 type AnyResponse = any;
+
+export type ListAutomationsOptions = NonNullable<AutomationsListData['query']> & SignalOptions;
 
 export class AutomationsResource {
   public readonly dataset: AutomationDatasetResource;
@@ -55,15 +64,7 @@ export class AutomationsResource {
     this.reviews = new AutomationReviewsResource(client, dispatch);
   }
 
-  async list(
-    options: {
-      search?: string;
-      type?: 'workflow' | 'agent';
-      limit?: number;
-      offset?: number;
-      signal?: AbortSignal;
-    } = {}
-  ): Promise<AnyResponse> {
+  async list(options: ListAutomationsOptions = {}): Promise<ListAutomationsResponse> {
     const { signal, ...query } = options;
     return this.dispatch(() => automationsList({ client: this.client, query, signal }));
   }
@@ -71,6 +72,37 @@ export class AutomationsResource {
   async get(id: string, options: SignalOptions = {}): Promise<AnyResponse> {
     return this.dispatch(() =>
       automationsGet({ client: this.client, path: { id }, signal: options.signal })
+    );
+  }
+
+  /**
+   * Move a YAML workflow between organizing folders. Agent automations have no
+   * folder model and are rejected by the API.
+   */
+  async move(
+    id: string,
+    body: UpdateAutomationRequest,
+    options: SignalOptions = {}
+  ): Promise<AutomationDetail> {
+    return this.dispatch(() =>
+      automationsUpdate({
+        client: this.client,
+        path: { id },
+        body,
+        signal: options.signal,
+      })
+    );
+  }
+
+  /**
+   * Delete a workflow or agent automation using the same cleanup as the dashboard.
+   * Workflows archive the automations registry parent and keep execution history.
+   * Agents delete the implementation, versions, and builder sessions, archive the
+   * registry parent, and best-effort-delete agent storage; unified prior runs remain.
+   */
+  async delete(id: string, options: SignalOptions = {}): Promise<DeleteAutomationResponse> {
+    return this.dispatch(() =>
+      automationsDelete({ client: this.client, path: { id }, signal: options.signal })
     );
   }
 

@@ -22,6 +22,7 @@ import { AuthResource } from './resources/auth';
 import { AutomationsResource } from './resources/automations';
 import { EmailServersResource } from './resources/email-servers';
 import { FilesResource } from './resources/files';
+import { FoldersResource } from './resources/folders';
 import { HumanReviewsResource } from './resources/human-reviews';
 import { ModelsResource } from './resources/models';
 import { RunsResource } from './resources/runs';
@@ -152,6 +153,8 @@ export class EigenpalClient {
   public readonly models: ModelsResource;
   /** Automation metadata across workflows and agents. Start runs with `client.run(...)`. */
   public readonly automations: AutomationsResource;
+  /** Workflow and template folder trees. Nested agent directories in Git are not folders. */
+  public readonly folders: FoldersResource;
   /** Tenant-wide run operations across workflow, agent, manual, and eval runs. */
   public readonly runs: RunsResource;
   /** Reusable uploaded files that can be referenced by later runs. */
@@ -207,6 +210,7 @@ export class EigenpalClient {
     this.auth = new AuthResource(this.client, this._request.bind(this));
     this.models = new ModelsResource(this.client, this._request.bind(this));
     this.automations = new AutomationsResource(this.client, this._request.bind(this));
+    this.folders = new FoldersResource(this.client, this._request.bind(this));
     this.runs = new RunsResource(this.client, this._request.bind(this));
     this.files = new FilesResource(this.client, this._request.bind(this));
     this.humanReviews = new HumanReviewsResource(this.client, this._request.bind(this));

@@ -41,10 +41,25 @@ if (result.finished) {
 Workflows and agents are exposed as automations.
 
 ```ts
-const { data } = await client.automations.list({ search: 'invoice' });
+const { data } = await client.automations.list({ search: 'invoice', folderId: 'fldr_…' });
 const automation = await client.automations.get('workflows.extract-invoice');
-const versions = await client.automations.versions('workflows.extract-invoice');
-const triggers = await client.automations.triggers('workflows.extract-invoice');
+await client.automations.move('workflows.extract-invoice', { folderPath: 'billing/invoices' });
+await client.automations.delete('workflows.extract-invoice');
+```
+
+`list({ folderId: 'null' })` returns unfiled YAML workflows at the tenant root. Agent automations have no folder model.
+
+Workflow delete archives the automations parent and keeps execution history. Agent delete removes the agent implementation and history, matching the dashboard, with best-effort leftover storage cleanup.
+
+## Folders
+
+Workflow and template trees are a first-class resource. Nested agent directories in Git are source organization only.
+
+```ts
+const tree = await client.folders.list({ type: 'workflow', tree: 'true' });
+const folder = await client.folders.create({ name: 'invoices', type: 'workflow' });
+await client.folders.update(folder.id, { name: 'billing' });
+await client.folders.delete(folder.id); // unfiles workflows; does not delete them
 ```
 
 ## Runs
@@ -107,7 +122,7 @@ Every non-2xx response throws a typed subclass of `EigenpalError`:
 
 | Topic                                     | What is in it                                                      |
 | ----------------------------------------- | ------------------------------------------------------------------ |
-| [Automations](./docs/workflows.md)        | List, inspect, versions, triggers.                                 |
+| [Automations](./docs/workflows.md)        | List, inspect, move, delete, versions, triggers, folders.          |
 | [Runs](./docs/executions.md)              | Start, poll, cancel, rerun, usage, steps, events, traces, reviews. |
 | [File inputs](./docs/files.md)            | Multipart upload from File, Blob, Buffer, or path.                 |
 | [Errors](./docs/errors.md)                | Typed exceptions, retries, request ids.                            |

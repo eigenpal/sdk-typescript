@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthCheckData, AuthCheckErrors, AuthCheckResponses, AutomationsDatasetExportData, AutomationsDatasetExportErrors, AutomationsDatasetExportResponses, AutomationsDatasetImportData, AutomationsDatasetImportErrors, AutomationsDatasetImportResponses, AutomationsEvaluatorsGetData, AutomationsEvaluatorsGetErrors, AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsUpdateData, AutomationsEvaluatorsUpdateErrors, AutomationsEvaluatorsUpdateResponses, AutomationsExamplesCreateData, AutomationsExamplesCreateErrors, AutomationsExamplesCreateResponses, AutomationsExamplesDeleteData, AutomationsExamplesDeleteErrors, AutomationsExamplesDeleteResponses, AutomationsExamplesExpectedFileDeleteData, AutomationsExamplesExpectedFileDeleteErrors, AutomationsExamplesExpectedFileDeleteResponses, AutomationsExamplesExpectedFileGetData, AutomationsExamplesExpectedFileGetErrors, AutomationsExamplesExpectedFileGetResponses, AutomationsExamplesExpectedFilesCreateData, AutomationsExamplesExpectedFilesCreateErrors, AutomationsExamplesExpectedFilesCreateResponses, AutomationsExamplesExpectedFilesListData, AutomationsExamplesExpectedFilesListErrors, AutomationsExamplesExpectedFilesListResponses, AutomationsExamplesExpectedFileUpdateData, AutomationsExamplesExpectedFileUpdateErrors, AutomationsExamplesExpectedFileUpdateResponses, AutomationsExamplesGetData, AutomationsExamplesGetErrors, AutomationsExamplesGetResponses, AutomationsExamplesInputFileDeleteData, AutomationsExamplesInputFileDeleteErrors, AutomationsExamplesInputFileDeleteResponses, AutomationsExamplesInputFileGetData, AutomationsExamplesInputFileGetErrors, AutomationsExamplesInputFileGetResponses, AutomationsExamplesInputFilesCreateData, AutomationsExamplesInputFilesCreateErrors, AutomationsExamplesInputFilesCreateResponses, AutomationsExamplesInputFilesListData, AutomationsExamplesInputFilesListErrors, AutomationsExamplesInputFilesListResponses, AutomationsExamplesInputFileUpdateData, AutomationsExamplesInputFileUpdateErrors, AutomationsExamplesInputFileUpdateResponses, AutomationsExamplesListData, AutomationsExamplesListErrors, AutomationsExamplesListResponses, AutomationsExamplesRunData, AutomationsExamplesRunErrors, AutomationsExamplesRunResponses, AutomationsExamplesUpdateData, AutomationsExamplesUpdateErrors, AutomationsExamplesUpdateResponses, AutomationsExperimentsCancelData, AutomationsExperimentsCancelErrors, AutomationsExperimentsCancelResponses, AutomationsExperimentsCreateData, AutomationsExperimentsCreateErrors, AutomationsExperimentsCreateResponses, AutomationsExperimentsCreateStreamData, AutomationsExperimentsCreateStreamErrors, AutomationsExperimentsCreateStreamResponses, AutomationsExperimentsExportAllData, AutomationsExperimentsExportAllErrors, AutomationsExperimentsExportAllResponses, AutomationsExperimentsExportData, AutomationsExperimentsExportErrors, AutomationsExperimentsExportResponses, AutomationsExperimentsGetData, AutomationsExperimentsGetErrors, AutomationsExperimentsGetResponses, AutomationsExperimentsListData, AutomationsExperimentsListErrors, AutomationsExperimentsListResponses, AutomationsGetData, AutomationsGetErrors, AutomationsGetResponses, AutomationsListData, AutomationsListErrors, AutomationsListResponses, AutomationsReviewsHealthData, AutomationsReviewsHealthErrors, AutomationsReviewsHealthResponses, AutomationsSyncData, AutomationsSyncErrors, AutomationsSyncResponses, AutomationsTriggersGetData, AutomationsTriggersGetErrors, AutomationsTriggersGetResponses, AutomationsVersionsCreateData, AutomationsVersionsCreateErrors, AutomationsVersionsCreateResponses, AutomationsVersionsListData, AutomationsVersionsListErrors, AutomationsVersionsListResponses, AutomationsVersionsPromoteData, AutomationsVersionsPromoteErrors, AutomationsVersionsPromoteResponses, AutomationsVersionsRestoreData, AutomationsVersionsRestoreErrors, AutomationsVersionsRestoreResponses, EmailServersCreateData, EmailServersCreateErrors, EmailServersCreateResponses, EmailServersDeleteData, EmailServersDeleteErrors, EmailServersDeleteResponses, EmailServersGetData, EmailServersGetErrors, EmailServersGetResponses, EmailServersListData, EmailServersListErrors, EmailServersListResponses, EmailServersTestData, EmailServersTestErrors, EmailServersTestResponses, EmailServersUpdateData, EmailServersUpdateErrors, EmailServersUpdateResponses, ExperimentsResolveData, ExperimentsResolveErrors, ExperimentsResolveResponses, FilesContentGetData, FilesContentGetErrors, FilesContentGetResponses, FilesCreateData, FilesCreateErrors, FilesCreateResponses, FilesDeleteData, FilesDeleteErrors, FilesDeleteResponses, FilesGetData, FilesGetErrors, FilesGetResponses, FilesUploadsAbortData, FilesUploadsAbortErrors, FilesUploadsAbortResponses, FilesUploadsCompleteData, FilesUploadsCompleteErrors, FilesUploadsCompleteResponses, FilesUploadsCreateData, FilesUploadsCreateErrors, FilesUploadsCreateResponses, FilesUploadsGetData, FilesUploadsGetErrors, FilesUploadsGetResponses, FilesUploadsPartsListData, FilesUploadsPartsListErrors, FilesUploadsPartsListResponses, FilesUploadsPartsPresignData, FilesUploadsPartsPresignErrors, FilesUploadsPartsPresignResponses, HumanReviewsApproveData, HumanReviewsApproveErrors, HumanReviewsApproveResponses, HumanReviewsConfirmFieldData, HumanReviewsConfirmFieldErrors, HumanReviewsConfirmFieldResponses, HumanReviewsFilesContentGetData, HumanReviewsFilesContentGetErrors, HumanReviewsFilesContentGetResponses, HumanReviewsGetData, HumanReviewsGetErrors, HumanReviewsGetResponses, HumanReviewsListData, HumanReviewsListErrors, HumanReviewsListResponses, HumanReviewsRejectData, HumanReviewsRejectErrors, HumanReviewsRejectResponses, ModelsListData, ModelsListErrors, ModelsListResponses, RunsArtifactsGetData, RunsArtifactsGetErrors, RunsArtifactsGetResponses, RunsArtifactsListData, RunsArtifactsListErrors, RunsArtifactsListResponses, RunsCancelData, RunsCancelErrors, RunsCancelResponses, RunsEventsListData, RunsEventsListErrors, RunsEventsListResponses, RunsGetData, RunsGetErrors, RunsGetResponses, RunsListData, RunsListErrors, RunsListResponses, RunsPromoteData, RunsPromoteErrors, RunsPromoteResponses, RunsRerunData, RunsRerunErrors, RunsRerunResponses, RunsReviewsClearData, RunsReviewsClearErrors, RunsReviewsClearResponses, RunsReviewsExpectedCreateData, RunsReviewsExpectedCreateErrors, RunsReviewsExpectedCreateResponses, RunsReviewsExpectedFileDeleteData, RunsReviewsExpectedFileDeleteErrors, RunsReviewsExpectedFileDeleteResponses, RunsReviewsExpectedFileGetData, RunsReviewsExpectedFileGetErrors, RunsReviewsExpectedFileGetResponses, RunsReviewsExpectedFileUpdateData, RunsReviewsExpectedFileUpdateErrors, RunsReviewsExpectedFileUpdateResponses, RunsReviewsExpectedGetData, RunsReviewsExpectedGetErrors, RunsReviewsExpectedGetResponses, RunsReviewsGetData, RunsReviewsGetErrors, RunsReviewsGetResponses, RunsReviewsUpdateData, RunsReviewsUpdateErrors, RunsReviewsUpdateResponses, RunsScoresListData, RunsScoresListErrors, RunsScoresListResponses, RunsStartData, RunsStartErrors, RunsStartResponses, RunsStepsListData, RunsStepsListErrors, RunsStepsListResponses, RunsTraceGetData, RunsTraceGetErrors, RunsTraceGetResponses, RunsUsageGetData, RunsUsageGetErrors, RunsUsageGetResponses, TemplatesContentGetData, TemplatesContentGetErrors, TemplatesContentGetResponses, TemplatesCreateData, TemplatesCreateErrors, TemplatesCreateResponses, TemplatesDeleteData, TemplatesDeleteErrors, TemplatesDeleteResponses, TemplatesGetData, TemplatesGetErrors, TemplatesGetResponses, TemplatesListData, TemplatesListErrors, TemplatesListResponses, TemplatesReplaceData, TemplatesReplaceErrors, TemplatesReplaceResponses, TemplatesStagingData, TemplatesStagingErrors, TemplatesStagingResponses } from './types.gen';
+import type { AuthCheckData, AuthCheckErrors, AuthCheckResponses, AutomationsDatasetExportData, AutomationsDatasetExportErrors, AutomationsDatasetExportResponses, AutomationsDatasetImportData, AutomationsDatasetImportErrors, AutomationsDatasetImportResponses, AutomationsDeleteData, AutomationsDeleteErrors, AutomationsDeleteResponses, AutomationsEvaluatorsGetData, AutomationsEvaluatorsGetErrors, AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsUpdateData, AutomationsEvaluatorsUpdateErrors, AutomationsEvaluatorsUpdateResponses, AutomationsExamplesCreateData, AutomationsExamplesCreateErrors, AutomationsExamplesCreateResponses, AutomationsExamplesDeleteData, AutomationsExamplesDeleteErrors, AutomationsExamplesDeleteResponses, AutomationsExamplesExpectedFileDeleteData, AutomationsExamplesExpectedFileDeleteErrors, AutomationsExamplesExpectedFileDeleteResponses, AutomationsExamplesExpectedFileGetData, AutomationsExamplesExpectedFileGetErrors, AutomationsExamplesExpectedFileGetResponses, AutomationsExamplesExpectedFilesCreateData, AutomationsExamplesExpectedFilesCreateErrors, AutomationsExamplesExpectedFilesCreateResponses, AutomationsExamplesExpectedFilesListData, AutomationsExamplesExpectedFilesListErrors, AutomationsExamplesExpectedFilesListResponses, AutomationsExamplesExpectedFileUpdateData, AutomationsExamplesExpectedFileUpdateErrors, AutomationsExamplesExpectedFileUpdateResponses, AutomationsExamplesGetData, AutomationsExamplesGetErrors, AutomationsExamplesGetResponses, AutomationsExamplesInputFileDeleteData, AutomationsExamplesInputFileDeleteErrors, AutomationsExamplesInputFileDeleteResponses, AutomationsExamplesInputFileGetData, AutomationsExamplesInputFileGetErrors, AutomationsExamplesInputFileGetResponses, AutomationsExamplesInputFilesCreateData, AutomationsExamplesInputFilesCreateErrors, AutomationsExamplesInputFilesCreateResponses, AutomationsExamplesInputFilesListData, AutomationsExamplesInputFilesListErrors, AutomationsExamplesInputFilesListResponses, AutomationsExamplesInputFileUpdateData, AutomationsExamplesInputFileUpdateErrors, AutomationsExamplesInputFileUpdateResponses, AutomationsExamplesListData, AutomationsExamplesListErrors, AutomationsExamplesListResponses, AutomationsExamplesRunData, AutomationsExamplesRunErrors, AutomationsExamplesRunResponses, AutomationsExamplesUpdateData, AutomationsExamplesUpdateErrors, AutomationsExamplesUpdateResponses, AutomationsExperimentsCancelData, AutomationsExperimentsCancelErrors, AutomationsExperimentsCancelResponses, AutomationsExperimentsCreateData, AutomationsExperimentsCreateErrors, AutomationsExperimentsCreateResponses, AutomationsExperimentsCreateStreamData, AutomationsExperimentsCreateStreamErrors, AutomationsExperimentsCreateStreamResponses, AutomationsExperimentsExportAllData, AutomationsExperimentsExportAllErrors, AutomationsExperimentsExportAllResponses, AutomationsExperimentsExportData, AutomationsExperimentsExportErrors, AutomationsExperimentsExportResponses, AutomationsExperimentsGetData, AutomationsExperimentsGetErrors, AutomationsExperimentsGetResponses, AutomationsExperimentsListData, AutomationsExperimentsListErrors, AutomationsExperimentsListResponses, AutomationsGetData, AutomationsGetErrors, AutomationsGetResponses, AutomationsListData, AutomationsListErrors, AutomationsListResponses, AutomationsReviewsHealthData, AutomationsReviewsHealthErrors, AutomationsReviewsHealthResponses, AutomationsSyncData, AutomationsSyncErrors, AutomationsSyncResponses, AutomationsTriggersGetData, AutomationsTriggersGetErrors, AutomationsTriggersGetResponses, AutomationsUpdateData, AutomationsUpdateErrors, AutomationsUpdateResponses, AutomationsVersionsCreateData, AutomationsVersionsCreateErrors, AutomationsVersionsCreateResponses, AutomationsVersionsListData, AutomationsVersionsListErrors, AutomationsVersionsListResponses, AutomationsVersionsPromoteData, AutomationsVersionsPromoteErrors, AutomationsVersionsPromoteResponses, AutomationsVersionsRestoreData, AutomationsVersionsRestoreErrors, AutomationsVersionsRestoreResponses, EmailServersCreateData, EmailServersCreateErrors, EmailServersCreateResponses, EmailServersDeleteData, EmailServersDeleteErrors, EmailServersDeleteResponses, EmailServersGetData, EmailServersGetErrors, EmailServersGetResponses, EmailServersListData, EmailServersListErrors, EmailServersListResponses, EmailServersTestData, EmailServersTestErrors, EmailServersTestResponses, EmailServersUpdateData, EmailServersUpdateErrors, EmailServersUpdateResponses, ExperimentsResolveData, ExperimentsResolveErrors, ExperimentsResolveResponses, FilesContentGetData, FilesContentGetErrors, FilesContentGetResponses, FilesCreateData, FilesCreateErrors, FilesCreateResponses, FilesDeleteData, FilesDeleteErrors, FilesDeleteResponses, FilesGetData, FilesGetErrors, FilesGetResponses, FilesUploadsAbortData, FilesUploadsAbortErrors, FilesUploadsAbortResponses, FilesUploadsCompleteData, FilesUploadsCompleteErrors, FilesUploadsCompleteResponses, FilesUploadsCreateData, FilesUploadsCreateErrors, FilesUploadsCreateResponses, FilesUploadsGetData, FilesUploadsGetErrors, FilesUploadsGetResponses, FilesUploadsPartsListData, FilesUploadsPartsListErrors, FilesUploadsPartsListResponses, FilesUploadsPartsPresignData, FilesUploadsPartsPresignErrors, FilesUploadsPartsPresignResponses, FoldersCreateData, FoldersCreateErrors, FoldersCreateResponses, FoldersDeleteData, FoldersDeleteErrors, FoldersDeleteResponses, FoldersGetData, FoldersGetErrors, FoldersGetResponses, FoldersListData, FoldersListErrors, FoldersListResponses, FoldersUpdateData, FoldersUpdateErrors, FoldersUpdateResponses, HumanReviewsApproveData, HumanReviewsApproveErrors, HumanReviewsApproveResponses, HumanReviewsConfirmFieldData, HumanReviewsConfirmFieldErrors, HumanReviewsConfirmFieldResponses, HumanReviewsFilesContentGetData, HumanReviewsFilesContentGetErrors, HumanReviewsFilesContentGetResponses, HumanReviewsGetData, HumanReviewsGetErrors, HumanReviewsGetResponses, HumanReviewsListData, HumanReviewsListErrors, HumanReviewsListResponses, HumanReviewsRejectData, HumanReviewsRejectErrors, HumanReviewsRejectResponses, ModelsListData, ModelsListErrors, ModelsListResponses, RunsArtifactsGetData, RunsArtifactsGetErrors, RunsArtifactsGetResponses, RunsArtifactsListData, RunsArtifactsListErrors, RunsArtifactsListResponses, RunsCancelData, RunsCancelErrors, RunsCancelResponses, RunsEventsListData, RunsEventsListErrors, RunsEventsListResponses, RunsGetData, RunsGetErrors, RunsGetResponses, RunsListData, RunsListErrors, RunsListResponses, RunsPromoteData, RunsPromoteErrors, RunsPromoteResponses, RunsRerunData, RunsRerunErrors, RunsRerunResponses, RunsReviewsClearData, RunsReviewsClearErrors, RunsReviewsClearResponses, RunsReviewsExpectedCreateData, RunsReviewsExpectedCreateErrors, RunsReviewsExpectedCreateResponses, RunsReviewsExpectedFileDeleteData, RunsReviewsExpectedFileDeleteErrors, RunsReviewsExpectedFileDeleteResponses, RunsReviewsExpectedFileGetData, RunsReviewsExpectedFileGetErrors, RunsReviewsExpectedFileGetResponses, RunsReviewsExpectedFileUpdateData, RunsReviewsExpectedFileUpdateErrors, RunsReviewsExpectedFileUpdateResponses, RunsReviewsExpectedGetData, RunsReviewsExpectedGetErrors, RunsReviewsExpectedGetResponses, RunsReviewsGetData, RunsReviewsGetErrors, RunsReviewsGetResponses, RunsReviewsUpdateData, RunsReviewsUpdateErrors, RunsReviewsUpdateResponses, RunsScoresListData, RunsScoresListErrors, RunsScoresListResponses, RunsStartData, RunsStartErrors, RunsStartResponses, RunsStepsListData, RunsStepsListErrors, RunsStepsListResponses, RunsTraceGetData, RunsTraceGetErrors, RunsTraceGetResponses, RunsUsageGetData, RunsUsageGetErrors, RunsUsageGetResponses, TemplatesContentGetData, TemplatesContentGetErrors, TemplatesContentGetResponses, TemplatesCreateData, TemplatesCreateErrors, TemplatesCreateResponses, TemplatesDeleteData, TemplatesDeleteErrors, TemplatesDeleteResponses, TemplatesGetData, TemplatesGetErrors, TemplatesGetResponses, TemplatesListData, TemplatesListErrors, TemplatesListResponses, TemplatesReplaceData, TemplatesReplaceErrors, TemplatesReplaceResponses, TemplatesStagingData, TemplatesStagingErrors, TemplatesStagingResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -32,11 +32,22 @@ export const authCheck = <ThrowOnError extends boolean = false>(options?: Option
 /**
  * List automations
  *
- * Returns workflows and agents through one runnable automation collection. Use `type` to narrow to workflows or agents, and `search` to find automations by slug, name, or description.
+ * Returns workflows and agents through one runnable automation collection. Use `type` to narrow to workflows or agents, `search` to find automations by slug, name, or description, and `folderId` to list YAML workflows in a folder (`null` for root).
  */
 export const automationsList = <ThrowOnError extends boolean = false>(options?: Options<AutomationsListData, ThrowOnError>) => (options?.client ?? client).get<AutomationsListResponses, AutomationsListErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/automations',
+    ...options
+});
+
+/**
+ * Delete automation
+ *
+ * Delete a workflow or agent automation using the same cleanup as the dashboard. Workflows archive the automations registry parent and keep execution history. Agents delete the agent row, archive the registry parent, and best-effort-delete agent storage. Identifiers match GET.
+ */
+export const automationsDelete = <ThrowOnError extends boolean = false>(options: Options<AutomationsDeleteData, ThrowOnError>) => (options.client ?? client).delete<AutomationsDeleteResponses, AutomationsDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/automations/{id}',
     ...options
 });
 
@@ -49,6 +60,21 @@ export const automationsGet = <ThrowOnError extends boolean = false>(options: Op
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/automations/{id}',
     ...options
+});
+
+/**
+ * Move workflow automation
+ *
+ * Move a YAML workflow between organizing folders. `folderPath` auto-creates missing workflow folders; empty or `/` files the workflow at root. Agent automations have no database folder model and are rejected. Identifiers match GET (workflow id, automation id, or `workflows.<slug>`).
+ */
+export const automationsUpdate = <ThrowOnError extends boolean = false>(options: Options<AutomationsUpdateData, ThrowOnError>) => (options.client ?? client).patch<AutomationsUpdateResponses, AutomationsUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/automations/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**
@@ -681,6 +707,69 @@ export const filesUploadsPartsList = <ThrowOnError extends boolean = false>(opti
 export const filesUploadsPartsPresign = <ThrowOnError extends boolean = false>(options: Options<FilesUploadsPartsPresignData, ThrowOnError>) => (options.client ?? client).post<FilesUploadsPartsPresignResponses, FilesUploadsPartsPresignErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/files/uploads/{uploadId}/parts',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List folders
+ *
+ * List folders in one tree. `type` is required (`workflow` or `template`). Pass `tree=true` for the full nested tree with counts; otherwise list direct children of `parentId` (`null` for root). Deleting a folder later unfiles contained workflows or templates and does not delete them.
+ */
+export const foldersList = <ThrowOnError extends boolean = false>(options: Options<FoldersListData, ThrowOnError>) => (options.client ?? client).get<FoldersListResponses, FoldersListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/folders',
+    ...options
+});
+
+/**
+ * Create folder
+ *
+ * Create a folder in the workflow or template tree. `type` is required. Missing parents 404; a same-named sibling at that location returns 409. Nested agent directories in Git are source organization only and are not folders.
+ */
+export const foldersCreate = <ThrowOnError extends boolean = false>(options: Options<FoldersCreateData, ThrowOnError>) => (options.client ?? client).post<FoldersCreateResponses, FoldersCreateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/folders',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete folder
+ *
+ * Delete a folder and cascade-delete child folders. Workflows and templates in the tree are unfiled, not deleted.
+ */
+export const foldersDelete = <ThrowOnError extends boolean = false>(options: Options<FoldersDeleteData, ThrowOnError>) => (options.client ?? client).delete<FoldersDeleteResponses, FoldersDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/folders/{id}',
+    ...options
+});
+
+/**
+ * Get folder
+ *
+ * Get one workflow or template folder by id.
+ */
+export const foldersGet = <ThrowOnError extends boolean = false>(options: Options<FoldersGetData, ThrowOnError>) => (options.client ?? client).get<FoldersGetResponses, FoldersGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/folders/{id}',
+    ...options
+});
+
+/**
+ * Update folder
+ *
+ * Rename or reparent a folder. Moving a folder onto itself, into a descendant, or into the other tree is rejected. A same-named sibling at the destination returns 409.
+ */
+export const foldersUpdate = <ThrowOnError extends boolean = false>(options: Options<FoldersUpdateData, ThrowOnError>) => (options.client ?? client).patch<FoldersUpdateResponses, FoldersUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/folders/{id}',
     ...options,
     headers: {
         'Content-Type': 'application/json',

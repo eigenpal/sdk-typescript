@@ -4,6 +4,17 @@ export type ClientOptions = {
     baseUrl: 'https://api.eigenpal.com' | (string & {});
 };
 
+export type UpdateAutomationRequest = {
+    /**
+     * Move a YAML workflow into this workflow folder. `null` files it at the tenant root. Ignored for the folder lookup when `folderPath` is also sent, but a string value is still validated before the path is applied.
+     */
+    folderId?: string | null;
+    /**
+     * Slash-separated workflow folder path. Missing folders are created. Empty or `/` means root. When both fields are sent, `folderPath` wins after `folderId` validation.
+     */
+    folderPath?: string;
+};
+
 export type AutomationDatasetImportMultipartRequest = {
     /**
      * Dataset ZIP file
@@ -262,6 +273,34 @@ export type CreateFileUploadSessionRequest = {
 
 export type PresignFileUploadPartRequest = {
     partNumber: number;
+};
+
+export type FolderType = 'workflow' | 'template';
+
+export type CreateFolderRequest = {
+    /**
+     * Folder name. Cannot contain `/`.
+     */
+    name: string;
+    /**
+     * Which folder tree to create in. Required; there is no default.
+     */
+    type: FolderType;
+    /**
+     * Parent folder id. Omit or `null` to create at the tree root.
+     */
+    parentId?: string | null;
+};
+
+export type UpdateFolderRequest = {
+    /**
+     * New folder name. Cannot contain `/`.
+     */
+    name?: string;
+    /**
+     * New parent folder id. `null` moves the folder to the tree root.
+     */
+    parentId?: string | null;
 };
 
 /**
@@ -542,6 +581,14 @@ export type AutomationSummary = {
      * False when the automations registry row exists but the workflow/agent implementation row is missing.
      */
     implementationAvailable?: boolean;
+    /**
+     * Workflow folder id. Null for unfiled workflows, agent automations, and orphan registry rows.
+     */
+    folderId: string | null;
+    /**
+     * Slash-separated workflow folder path from the tenant root, such as `billing/invoices`. Null at root and for agent automations.
+     */
+    folderPath: string | null;
     createdAt: string;
     updatedAt?: string;
 };
@@ -571,6 +618,14 @@ export type AutomationDetail = {
      * False when the automations registry row exists but the workflow/agent implementation row is missing.
      */
     implementationAvailable?: boolean;
+    /**
+     * Workflow folder id. Null for unfiled workflows, agent automations, and orphan registry rows.
+     */
+    folderId: string | null;
+    /**
+     * Slash-separated workflow folder path from the tenant root, such as `billing/invoices`. Null at root and for agent automations.
+     */
+    folderPath: string | null;
     createdAt: string;
     updatedAt?: string;
     inputSchema?: {
@@ -579,6 +634,11 @@ export type AutomationDetail = {
     outputSchema?: {
         [key: string]: unknown;
     } | null;
+};
+
+export type DeleteAutomationResponse = {
+    deleted: true;
+    id: string;
 };
 
 export type DatasetImportResponse = {
@@ -1217,6 +1277,36 @@ export type PresignFileUploadPartResponse = {
     };
     expiresAt: string;
     partSizeBytes: number;
+};
+
+export type ListFoldersResponse = Array<Folder>;
+
+export type Folder = {
+    id: string;
+    parentId: string | null;
+    type: FolderType;
+    name: string;
+    createdAt: string;
+    /**
+     * Direct subfolder count. Present on tree listings.
+     */
+    childCount?: number;
+    /**
+     * Workflows filed directly in this folder. Present on workflow-tree listings.
+     */
+    workflowCount?: number;
+    /**
+     * Up to a handful of item names — subfolders first, then workflows — for a peek at folder contents. Present on workflow-tree listings.
+     */
+    previewItems?: Array<{
+        name: string;
+        kind: 'folder' | 'workflow';
+    }>;
+};
+
+export type DeleteFolderResponse = {
+    deleted: true;
+    id: string;
 };
 
 export type HumanReviewListResponse = {
@@ -2140,6 +2230,10 @@ export type AutomationsListData = {
          */
         type?: 'workflow' | 'agent';
         /**
+         * Filter YAML workflows by folder. A folder id matches that folder; `null` matches unfiled workflows at root. Agent automations have no folders, so this filter excludes them. Cannot be combined with `type=agent`.
+         */
+        folderId?: string;
+        /**
          * Maximum number of automations to return.
          */
         limit?: number;
@@ -2192,6 +2286,60 @@ export type AutomationsListResponses = {
 };
 
 export type AutomationsListResponse = AutomationsListResponses[keyof AutomationsListResponses];
+
+export type AutomationsDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Workflow id, agent id, or typed alias like workflows.slug / agents.slug
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/automations/{id}';
+};
+
+export type AutomationsDeleteErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type AutomationsDeleteError = AutomationsDeleteErrors[keyof AutomationsDeleteErrors];
+
+export type AutomationsDeleteResponses = {
+    /**
+     * Automation deleted
+     */
+    200: DeleteAutomationResponse;
+};
+
+export type AutomationsDeleteResponse = AutomationsDeleteResponses[keyof AutomationsDeleteResponses];
 
 export type AutomationsGetData = {
     body?: never;
@@ -2246,6 +2394,60 @@ export type AutomationsGetResponses = {
 };
 
 export type AutomationsGetResponse = AutomationsGetResponses[keyof AutomationsGetResponses];
+
+export type AutomationsUpdateData = {
+    body: UpdateAutomationRequest;
+    path: {
+        /**
+         * Workflow id, agent id, or typed alias like workflows.slug / agents.slug
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/automations/{id}';
+};
+
+export type AutomationsUpdateErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type AutomationsUpdateError = AutomationsUpdateErrors[keyof AutomationsUpdateErrors];
+
+export type AutomationsUpdateResponses = {
+    /**
+     * Updated automation
+     */
+    200: AutomationDetail;
+};
+
+export type AutomationsUpdateResponse = AutomationsUpdateResponses[keyof AutomationsUpdateResponses];
 
 export type AutomationsDatasetExportData = {
     body?: never;
@@ -5210,6 +5412,287 @@ export type FilesUploadsPartsPresignResponses = {
 };
 
 export type FilesUploadsPartsPresignResponse = FilesUploadsPartsPresignResponses[keyof FilesUploadsPartsPresignResponses];
+
+export type FoldersListData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Folder tree to list. Required; there is no default.
+         */
+        type: FolderType;
+        /**
+         * Limit to direct children of this folder. Pass `null` for root folders only. Ignored when `tree=true`.
+         */
+        parentId?: string;
+        /**
+         * When `true`, return the full tree for `type` with child counts (and workflow previews for workflow trees).
+         */
+        tree?: string;
+    };
+    url: '/v1/folders';
+};
+
+export type FoldersListErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type FoldersListError = FoldersListErrors[keyof FoldersListErrors];
+
+export type FoldersListResponses = {
+    /**
+     * Folders in the requested tree
+     */
+    200: ListFoldersResponse;
+};
+
+export type FoldersListResponse = FoldersListResponses[keyof FoldersListResponses];
+
+export type FoldersCreateData = {
+    body: CreateFolderRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/folders';
+};
+
+export type FoldersCreateErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Conflict. The resource is in a state that forbids the request.
+     */
+    409: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type FoldersCreateError = FoldersCreateErrors[keyof FoldersCreateErrors];
+
+export type FoldersCreateResponses = {
+    /**
+     * Created folder
+     */
+    201: Folder;
+};
+
+export type FoldersCreateResponse = FoldersCreateResponses[keyof FoldersCreateResponses];
+
+export type FoldersDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Folder id (`fldr_…`).
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/folders/{id}';
+};
+
+export type FoldersDeleteErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type FoldersDeleteError = FoldersDeleteErrors[keyof FoldersDeleteErrors];
+
+export type FoldersDeleteResponses = {
+    /**
+     * Folder deleted
+     */
+    200: DeleteFolderResponse;
+};
+
+export type FoldersDeleteResponse = FoldersDeleteResponses[keyof FoldersDeleteResponses];
+
+export type FoldersGetData = {
+    body?: never;
+    path: {
+        /**
+         * Folder id (`fldr_…`).
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/folders/{id}';
+};
+
+export type FoldersGetErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type FoldersGetError = FoldersGetErrors[keyof FoldersGetErrors];
+
+export type FoldersGetResponses = {
+    /**
+     * Folder
+     */
+    200: Folder;
+};
+
+export type FoldersGetResponse = FoldersGetResponses[keyof FoldersGetResponses];
+
+export type FoldersUpdateData = {
+    body: UpdateFolderRequest;
+    path: {
+        /**
+         * Folder id (`fldr_…`).
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/folders/{id}';
+};
+
+export type FoldersUpdateErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Conflict. The resource is in a state that forbids the request.
+     */
+    409: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type FoldersUpdateError = FoldersUpdateErrors[keyof FoldersUpdateErrors];
+
+export type FoldersUpdateResponses = {
+    /**
+     * Updated folder
+     */
+    200: Folder;
+};
+
+export type FoldersUpdateResponse = FoldersUpdateResponses[keyof FoldersUpdateResponses];
 
 export type HumanReviewsListData = {
     body?: never;

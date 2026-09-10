@@ -10,6 +10,7 @@ import {
 } from '../generated/sdk.gen';
 import type {
   HumanReviewsApproveResponse,
+  HumanReviewsConfirmFieldData,
   HumanReviewsConfirmFieldResponse,
   HumanReviewsGetResponse,
   HumanReviewsListData,
@@ -24,6 +25,7 @@ type Dispatch = <T>(
 type SignalOptions = { signal?: AbortSignal };
 
 export type ListHumanReviewsOptions = NonNullable<HumanReviewsListData['query']> & SignalOptions;
+export type ConfirmHumanReviewFieldRequest = HumanReviewsConfirmFieldData['body'];
 
 export class HumanReviewsResource {
   constructor(
@@ -59,12 +61,7 @@ export class HumanReviewsResource {
 
   async confirmField(
     taskId: string,
-    body: {
-      path: string;
-      value: string | number | boolean | null;
-      expectedVersion: number;
-      idempotencyKey: string;
-    },
+    body: ConfirmHumanReviewFieldRequest,
     options: SignalOptions = {}
   ): Promise<HumanReviewsConfirmFieldResponse> {
     return this.dispatch(() =>

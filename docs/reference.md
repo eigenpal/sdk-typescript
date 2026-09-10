@@ -28,6 +28,8 @@ client
 ├── automations
 │   ├── list
 │   ├── get
+│   ├── move
+│   ├── delete
 │   ├── versions
 │   ├── sync
 │   ├── createVersion
@@ -71,6 +73,12 @@ client
 │   ├── reviews
 │   │   └── health
 │   └── triggers
+├── folders
+│   ├── list
+│   ├── get
+│   ├── create
+│   ├── delete
+│   └── update
 ├── runs
 │   ├── list
 │   ├── get
@@ -191,16 +199,17 @@ Return the tenant, user, API key, and scope represented by the current API key.
 
 List automations
 
-Returns workflows and agents through one runnable automation collection. Use `type` to narrow to workflows or agents, and `search` to find automations by slug, name, or description.
+Returns workflows and agents through one runnable automation collection. Use `type` to narrow to workflows or agents, `search` to find automations by slug, name, or description, and `folderId` to list YAML workflows in a folder (`null` for root).
 
 **Query parameters**
 
-| Name     | Type                    | Description                                                  |
-| -------- | ----------------------- | ------------------------------------------------------------ |
-| `search` | `string`                | (optional)Substring match against slug, name, or description |
-| `type`   | `"workflow" \| "agent"` | (optional)Filter by implementation type                      |
-| `limit`  | `number`                | (optional)Maximum number of automations to return.           |
-| `offset` | `number`                | (optional)Zero-based offset for paging through automations.  |
+| Name       | Type                    | Description                                                                                                                                                                                                                  |
+| ---------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `search`   | `string`                | (optional)Substring match against slug, name, or description                                                                                                                                                                 |
+| `type`     | `"workflow" \| "agent"` | (optional)Filter by implementation type                                                                                                                                                                                      |
+| `folderId` | `string`                | (optional)Filter YAML workflows by folder. A folder id matches that folder; `null` matches unfiled workflows at root. Agent automations have no folders, so this filter excludes them. Cannot be combined with `type=agent`. |
+| `limit`    | `number`                | (optional)Maximum number of automations to return.                                                                                                                                                                           |
+| `offset`   | `number`                | (optional)Zero-based offset for paging through automations.                                                                                                                                                                  |
 
 **Response**
 
@@ -226,6 +235,69 @@ Get one runnable workflow or agent automation by id or typed alias.
 
 ```ts
 // AutomationDetail
+```
+
+### `client.automations.move`
+
+**`PATCH /v1/automations/:id`**
+
+Move workflow automation
+
+Move a YAML workflow between organizing folders. `folderPath` auto-creates missing workflow folders; empty or `/` files the workflow at root. Agent automations have no database folder model and are rejected. Identifiers match GET (workflow id, automation id, or `workflows.<slug>`).
+
+**Example**
+
+```ts
+await client.automations.move('workflows.extract-invoice', {
+  folderPath: 'billing/invoices',
+});
+await client.automations.move('workflows.extract-invoice', { folderId: null });
+```
+
+**Path parameters**
+
+| Name | Type     | Description                                                             |
+| ---- | -------- | ----------------------------------------------------------------------- |
+| `id` | `string` | Workflow id, agent id, or typed alias like workflows.slug / agents.slug |
+
+**Request body**
+
+```ts
+// UpdateAutomationRequest
+```
+
+**Response**
+
+```ts
+// AutomationDetail
+```
+
+### `client.automations.delete`
+
+**`DELETE /v1/automations/:id`**
+
+Delete automation
+
+Delete a workflow or agent automation using the same cleanup as the dashboard. Workflows archive the automations registry parent and keep execution history. Agents delete the agent row, archive the registry parent, and best-effort-delete agent storage. Identifiers match GET.
+
+**Example**
+
+```ts
+// Workflows archive the automations parent and keep run history.
+// Agents remove the agent implementation/history and best-effort-clean storage.
+await client.automations.delete('workflows.extract-invoice');
+```
+
+**Path parameters**
+
+| Name | Type     | Description                                                             |
+| ---- | -------- | ----------------------------------------------------------------------- |
+| `id` | `string` | Workflow id, agent id, or typed alias like workflows.slug / agents.slug |
+
+**Response**
+
+```ts
+// DeleteAutomationResponse
 ```
 
 ### `client.automations.sync`
@@ -1667,6 +1739,132 @@ Mint a short-lived signed UploadPart URL for one validated part. Part URLs are n
 
 ```ts
 // PresignFileUploadPartResponse
+```
+
+## Folders
+
+### `client.folders.list`
+
+**`GET /v1/folders`**
+
+List folders
+
+List folders in one tree. `type` is required (`workflow` or `template`). Pass `tree=true` for the full nested tree with counts; otherwise list direct children of `parentId` (`null` for root). Deleting a folder later unfiles contained workflows or templates and does not delete them.
+
+**Example**
+
+```ts
+const folders = await client.folders.list({ type: 'workflow', tree: 'true' });
+```
+
+**Query parameters**
+
+| Name       | Type         | Description                                                                                                          |
+| ---------- | ------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `type`     | `FolderType` | Folder tree to list. Required; there is no default.                                                                  |
+| `parentId` | `string`     | (optional)Limit to direct children of this folder. Pass `null` for root folders only. Ignored when `tree=true`.      |
+| `tree`     | `string`     | (optional)When `true`, return the full tree for `type` with child counts (and workflow previews for workflow trees). |
+
+**Response**
+
+```ts
+// ListFoldersResponse
+```
+
+### `client.folders.create`
+
+**`POST /v1/folders`**
+
+Create folder
+
+Create a folder in the workflow or template tree. `type` is required. Missing parents 404; a same-named sibling at that location returns 409. Nested agent directories in Git are source organization only and are not folders.
+
+**Example**
+
+```ts
+const folder = await client.folders.create({
+  name: 'invoices',
+  type: 'workflow',
+  parentId: 'fldr_…',
+});
+```
+
+**Request body**
+
+```ts
+// CreateFolderRequest
+```
+
+**Response**
+
+```ts
+// Folder
+```
+
+### `client.folders.get`
+
+**`GET /v1/folders/:id`**
+
+Get folder
+
+Get one workflow or template folder by id.
+
+**Path parameters**
+
+| Name | Type     | Description           |
+| ---- | -------- | --------------------- |
+| `id` | `string` | Folder id (`fldr_…`). |
+
+**Response**
+
+```ts
+// Folder
+```
+
+### `client.folders.update`
+
+**`PATCH /v1/folders/:id`**
+
+Update folder
+
+Rename or reparent a folder. Moving a folder onto itself, into a descendant, or into the other tree is rejected. A same-named sibling at the destination returns 409.
+
+**Path parameters**
+
+| Name | Type     | Description           |
+| ---- | -------- | --------------------- |
+| `id` | `string` | Folder id (`fldr_…`). |
+
+**Request body**
+
+```ts
+// UpdateFolderRequest
+```
+
+**Response**
+
+```ts
+// Folder
+```
+
+### `client.folders.delete`
+
+**`DELETE /v1/folders/:id`**
+
+Delete folder
+
+Delete a folder and cascade-delete child folders. Workflows and templates in the tree are unfiled, not deleted.
+
+**Path parameters**
+
+| Name | Type     | Description           |
+| ---- | -------- | --------------------- |
+| `id` | `string` | Folder id (`fldr_…`). |
+
+**Response**
+
+```ts
+// DeleteFolderResponse
 ```
 
 ## Human reviews

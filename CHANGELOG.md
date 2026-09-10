@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.16.9
+
+### Minor Changes
+
+- cd71a31: The TypeScript and Python SDKs now expose automation move and delete methods plus first-class folder management. Integrations can organize workflows, filter automation lists by folder, manage the complete folder lifecycle, and withdraw human-review field confirmations without dropping down to raw HTTP requests.
+
 ## 0.16.7
 
 ### Patch Changes
