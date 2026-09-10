@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.16.7
+
+### Patch Changes
+
+- 35375db: TypeScript SDK file helpers now infer the correct media types for `.xlsm` workbooks and `.msg` Outlook messages.
+
 ## 0.16.4
 
 ### Minor Changes

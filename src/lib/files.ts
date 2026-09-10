@@ -30,8 +30,10 @@ const MIME_BY_EXT: Record<string, string> = {
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   xls: 'application/vnd.ms-excel',
   xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  xlsm: 'application/vnd.ms-excel.sheet.macroenabled.12',
   ppt: 'application/vnd.ms-powerpoint',
   pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  msg: 'application/vnd.ms-outlook',
 };
 
 /** Guess a MIME type from a filename extension; falls back to octet-stream. */

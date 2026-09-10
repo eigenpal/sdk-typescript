@@ -102,6 +102,13 @@ async function captureRequest(): Promise<{
 }
 
 describe('multipart file upload', () => {
+  test('infers MIME types for macro workbooks and Outlook messages', () => {
+    expect(toFile(new Uint8Array(), 'model.xlsm').mimeType).toBe(
+      'application/vnd.ms-excel.sheet.macroenabled.12'
+    );
+    expect(toFile(new Uint8Array(), 'message.msg').mimeType).toBe('application/vnd.ms-outlook');
+  });
+
   test('aborts leftover MPU state only before parts are authoritative', () => {
     expect(shouldAbortMultipartUploadSession({ partsReady: false })).toBe(true);
     expect(shouldAbortMultipartUploadSession({ partsReady: true })).toBe(false);
