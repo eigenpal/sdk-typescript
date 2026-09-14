@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.16.12
+
+### Minor Changes
+
+- ff1b8c9: The TypeScript and Python SDKs now include `GET /api/v1/runs/{id}/steps/{stepExecutionId}` so you can load one step’s full input and output after listing slim run steps.
+
 ## 0.16.9
 
 ### Minor Changes

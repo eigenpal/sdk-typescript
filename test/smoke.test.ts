@@ -206,6 +206,7 @@ describe('EigenpalClient public SDK', () => {
           },
           { status: 200, body: { usage: null } },
           { status: 200, body: { steps: [] } },
+          { status: 200, body: { id: 'ste_123' } },
           { status: 200, body: { events: [] } },
           { status: 200, body: { artifacts: [] } },
           { status: 200, body: { review: null } },
@@ -249,6 +250,7 @@ describe('EigenpalClient public SDK', () => {
     await client.runs.get('run_123', { expand: ['usage', 'execution'] });
     await client.runs.usage('run_123');
     await client.runs.steps('run_123');
+    await client.runs.getStep('run_123', 'ste_123');
     await client.runs.events('run_123');
     await client.runs.artifacts.list('run_123');
     await client.runs.reviews.get('run_123');
@@ -276,6 +278,7 @@ describe('EigenpalClient public SDK', () => {
     expect(paths).toContain('/v1/runs/run_123');
     expect(paths).toContain('/v1/runs/run_123/usage');
     expect(paths).toContain('/v1/runs/run_123/steps');
+    expect(paths).toContain('/v1/runs/run_123/steps/ste_123');
     expect(paths).toContain('/v1/runs/run_123/events');
     expect(paths).toContain('/v1/runs/run_123/artifacts');
     expect(paths).toContain('/v1/runs/run_123/reviews');

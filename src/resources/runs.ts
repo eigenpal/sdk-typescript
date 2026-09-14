@@ -18,6 +18,7 @@ import {
   runsReviewsGet,
   runsReviewsUpdate,
   runsScoresList,
+  runsStepsGet,
   runsStepsList,
   runsTraceGet,
   runsUsageGet,
@@ -39,6 +40,7 @@ import type {
   RunsReviewsGetResponse,
   RunsReviewsUpdateResponse,
   RunsScoresListResponse,
+  RunsStepsGetResponse,
   RunsStepsListResponse,
   RunsTraceGetResponse,
   RunsUsageGetResponse,
@@ -135,6 +137,20 @@ export class RunsResource {
   async steps(runId: string, options: SignalOptions = {}): Promise<RunsStepsListResponse> {
     return this.dispatch(() =>
       runsStepsList({ client: this.client, path: { id: runId }, signal: options.signal })
+    );
+  }
+
+  async getStep(
+    runId: string,
+    stepExecutionId: string,
+    options: SignalOptions = {}
+  ): Promise<RunsStepsGetResponse> {
+    return this.dispatch(() =>
+      runsStepsGet({
+        client: this.client,
+        path: { id: runId, stepExecutionId },
+        signal: options.signal,
+      })
     );
   }
 

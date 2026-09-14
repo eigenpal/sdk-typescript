@@ -1815,7 +1815,7 @@ export type WorkflowRunExecution = {
      */
     humanReview?: RunHumanReviewSummary | null;
     /**
-     * Per-step executions of the workflow run (`expand=execution`).
+     * Slim per-step rows (`id`, name, type, status, timing, order, capped error excerpt). Full `input`/`output` live on `GET /api/v1/runs/{id}/steps/{stepExecutionId}`.
      */
     steps: Array<unknown>;
     /**
@@ -2032,7 +2032,10 @@ export type RunScoresResponse = {
 
 export type RunStepsResponse = {
     steps: Array<unknown>;
+    total: number;
 };
+
+export type RunStepDetailResponse = unknown;
 
 export type RunTraceResponse = {
     /**
@@ -7198,6 +7201,64 @@ export type RunsStepsListResponses = {
 };
 
 export type RunsStepsListResponse = RunsStepsListResponses[keyof RunsStepsListResponses];
+
+export type RunsStepsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Run id
+         */
+        id: string;
+        /**
+         * Step execution id
+         */
+        stepExecutionId: string;
+    };
+    query?: never;
+    url: '/v1/runs/{id}/steps/{stepExecutionId}';
+};
+
+export type RunsStepsGetErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type RunsStepsGetError = RunsStepsGetErrors[keyof RunsStepsGetErrors];
+
+export type RunsStepsGetResponses = {
+    /**
+     * Full step execution
+     */
+    200: RunStepDetailResponse;
+};
+
+export type RunsStepsGetResponse = RunsStepsGetResponses[keyof RunsStepsGetResponses];
 
 export type RunsTraceGetData = {
     body?: never;
