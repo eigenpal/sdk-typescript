@@ -15,6 +15,70 @@ export type UpdateAutomationRequest = {
     folderPath?: string;
 };
 
+export type CreateDatasetReviewRequest = {
+    title: string;
+    /**
+     * Note shown to the reviewer for the whole request.
+     */
+    instructions?: string | null;
+    /**
+     * Expected-output paths to highlight. Other fields stay normal unless listed in ignoredFields.
+     */
+    focusFields?: Array<DatasetReviewFocusField>;
+    /**
+     * Expected-output paths reviewers can skip. Shown muted as not required. Prefixes apply to nested leaves.
+     */
+    ignoredFields?: Array<string>;
+    /**
+     * Optional per-example and per-field notes seeded as commented events at create time.
+     */
+    itemNotes?: Array<DatasetReviewCreateItemNote>;
+    exampleNames: Array<string>;
+    status?: 'draft' | 'open' | 'paused';
+};
+
+export type DatasetReviewFocusField = {
+    /**
+     * Dotted expected-output path the reviewer should inspect, e.g. vendor.iban.
+     */
+    path: string;
+    /**
+     * Optional reason this field needs attention.
+     */
+    reason?: string | null;
+};
+
+export type DatasetReviewCreateItemNote = {
+    exampleName: string;
+    comment?: string | null;
+    fields?: Array<DatasetReviewItemFieldNote>;
+};
+
+export type DatasetReviewItemFieldNote = {
+    path: string;
+    comment: string;
+};
+
+export type UpdateDatasetReviewRequest = {
+    title?: string;
+    instructions?: string | null;
+    focusFields?: Array<DatasetReviewFocusField>;
+    ignoredFields?: Array<string>;
+    status?: 'draft' | 'open' | 'paused' | 'closed';
+};
+
+export type UpdateDatasetReviewItem = {
+    action: 'approve' | 'edit' | 'reject' | 'reopen' | 'comment' | 'field-decision';
+    expected?: unknown;
+    comment?: string | null;
+    fieldPath?: string | null;
+    decision?: 'approved' | 'rejected' | null;
+    /**
+     * ISO timestamp of the item `updatedAt` the client last observed. Required for optimistic concurrency.
+     */
+    expectedUpdatedAt: string;
+};
+
 export type AutomationDatasetImportMultipartRequest = {
     /**
      * Dataset ZIP file
@@ -639,6 +703,123 @@ export type AutomationDetail = {
 export type DeleteAutomationResponse = {
     deleted: true;
     id: string;
+};
+
+export type DatasetReviewRequestList = {
+    data: Array<DatasetReviewRequest>;
+    total: number;
+    limit: number;
+    offset: number;
+};
+
+export type DatasetReviewRequest = {
+    id: string;
+    automationId: string;
+    title: string;
+    instructions: string | null;
+    focusFields: Array<DatasetReviewFocusFieldOutput>;
+    ignoredFields: Array<string>;
+    status: 'draft' | 'open' | 'paused' | 'closed';
+    exampleNames: Array<string>;
+    progress: DatasetReviewProgress;
+    createdBy: string | null;
+    createdAt: string;
+    closedAt: string | null;
+};
+
+export type DatasetReviewProgress = {
+    total: number;
+    pending: number;
+    approved: number;
+    edited: number;
+    rejected: number;
+    /**
+     * Count of examples still pending a decision.
+     */
+    remaining: number;
+    /**
+     * True when every example has been approved, edited, or rejected. Close the request when review is finished; dataset write-back is always manual.
+     */
+    complete: boolean;
+};
+
+export type DatasetReviewDetail = {
+    id: string;
+    automationId: string;
+    title: string;
+    instructions: string | null;
+    focusFields: Array<DatasetReviewFocusFieldOutput>;
+    ignoredFields: Array<string>;
+    status: 'draft' | 'open' | 'paused' | 'closed';
+    exampleNames: Array<string>;
+    progress: DatasetReviewProgress;
+    createdBy: string | null;
+    createdAt: string;
+    closedAt: string | null;
+    items: Array<DatasetReviewItem>;
+    events?: Array<DatasetReviewEvent>;
+};
+
+export type DatasetReviewItem = {
+    id: string;
+    reviewId: string;
+    exampleName: string;
+    snapshotInputJson: {
+        [key: string]: unknown;
+    } | null;
+    snapshotExpectedJson: unknown | null;
+    snapshotManifest: {
+        expectedFiles: Array<{
+            name: string;
+        }>;
+        metadata: {
+            [key: string]: unknown;
+        } | null;
+        inputFileHashes?: Array<{
+            path: string;
+            sha256: string;
+        }>;
+    };
+    status: 'pending' | 'approved' | 'edited' | 'rejected';
+    currentExpectedJson: unknown | null;
+    fieldDecisions: {
+        [key: string]: DatasetReviewFieldDecision;
+    };
+    /**
+     * True when live dataset input-file bytes no longer match the hashes captured at request creation.
+     */
+    inputDrifted: boolean;
+    updatedBy: string | null;
+    updatedAt: string;
+};
+
+export type DatasetReviewFieldDecision = {
+    decision: 'approved' | 'rejected';
+    comment?: string | null;
+    reviewerId: string;
+    updatedAt: string;
+};
+
+export type DatasetReviewEvent = {
+    id: string;
+    reviewId: string;
+    itemId: string | null;
+    actorUserId: string | null;
+    action: 'created' | 'approved' | 'edited' | 'rejected' | 'reopened' | 'commented' | 'field-decision';
+    diffSummary: unknown | null;
+    createdAt: string;
+};
+
+export type DatasetReviewEventList = {
+    events: Array<DatasetReviewEvent>;
+};
+
+export type DatasetReviewItemList = {
+    items: Array<DatasetReviewItem>;
+};
+
+export type DatasetReviewItemResponse = {
+    item: DatasetReviewItem;
 };
 
 export type DatasetImportResponse = {
@@ -2171,6 +2352,17 @@ export type TemplateStagingResponse = {
     finalized?: boolean;
 };
 
+export type DatasetReviewFocusFieldOutput = {
+    /**
+     * Dotted expected-output path the reviewer should inspect, e.g. vendor.iban.
+     */
+    path: string;
+    /**
+     * Optional reason this field needs attention.
+     */
+    reason?: string | null;
+};
+
 export type AuthCheckData = {
     body?: never;
     path?: never;
@@ -2451,6 +2643,486 @@ export type AutomationsUpdateResponses = {
 };
 
 export type AutomationsUpdateResponse = AutomationsUpdateResponses[keyof AutomationsUpdateResponses];
+
+export type AutomationsDatasetReviewRequestsListData = {
+    body?: never;
+    path: {
+        /**
+         * Automation id or typed alias, such as `workflows.slug` or `agents.slug`.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * Optional comma-separated review statuses to filter by.
+         */
+        status?: string;
+        limit?: number;
+        offset?: number;
+    };
+    url: '/v1/automations/{id}/dataset-review-requests';
+};
+
+export type AutomationsDatasetReviewRequestsListErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type AutomationsDatasetReviewRequestsListError = AutomationsDatasetReviewRequestsListErrors[keyof AutomationsDatasetReviewRequestsListErrors];
+
+export type AutomationsDatasetReviewRequestsListResponses = {
+    /**
+     * Page of dataset review requests.
+     */
+    200: DatasetReviewRequestList;
+};
+
+export type AutomationsDatasetReviewRequestsListResponse = AutomationsDatasetReviewRequestsListResponses[keyof AutomationsDatasetReviewRequestsListResponses];
+
+export type AutomationsDatasetReviewRequestsCreateData = {
+    body: CreateDatasetReviewRequest;
+    path: {
+        /**
+         * Automation id or typed alias, such as `workflows.slug` or `agents.slug`.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/v1/automations/{id}/dataset-review-requests';
+};
+
+export type AutomationsDatasetReviewRequestsCreateErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type AutomationsDatasetReviewRequestsCreateError = AutomationsDatasetReviewRequestsCreateErrors[keyof AutomationsDatasetReviewRequestsCreateErrors];
+
+export type AutomationsDatasetReviewRequestsCreateResponses = {
+    /**
+     * Created dataset review request.
+     */
+    201: DatasetReviewDetail;
+};
+
+export type AutomationsDatasetReviewRequestsCreateResponse = AutomationsDatasetReviewRequestsCreateResponses[keyof AutomationsDatasetReviewRequestsCreateResponses];
+
+export type AutomationsDatasetReviewRequestsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Automation id or typed alias.
+         */
+        id: string;
+        /**
+         * Dataset review request id.
+         */
+        reviewId: string;
+    };
+    query?: never;
+    url: '/v1/automations/{id}/dataset-review-requests/{reviewId}';
+};
+
+export type AutomationsDatasetReviewRequestsGetErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type AutomationsDatasetReviewRequestsGetError = AutomationsDatasetReviewRequestsGetErrors[keyof AutomationsDatasetReviewRequestsGetErrors];
+
+export type AutomationsDatasetReviewRequestsGetResponses = {
+    /**
+     * Dataset review request.
+     */
+    200: DatasetReviewDetail;
+};
+
+export type AutomationsDatasetReviewRequestsGetResponse = AutomationsDatasetReviewRequestsGetResponses[keyof AutomationsDatasetReviewRequestsGetResponses];
+
+export type AutomationsDatasetReviewRequestsUpdateData = {
+    body: UpdateDatasetReviewRequest;
+    path: {
+        /**
+         * Automation id or typed alias.
+         */
+        id: string;
+        /**
+         * Dataset review request id.
+         */
+        reviewId: string;
+    };
+    query?: never;
+    url: '/v1/automations/{id}/dataset-review-requests/{reviewId}';
+};
+
+export type AutomationsDatasetReviewRequestsUpdateErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type AutomationsDatasetReviewRequestsUpdateError = AutomationsDatasetReviewRequestsUpdateErrors[keyof AutomationsDatasetReviewRequestsUpdateErrors];
+
+export type AutomationsDatasetReviewRequestsUpdateResponses = {
+    /**
+     * Updated dataset review request.
+     */
+    200: DatasetReviewDetail;
+};
+
+export type AutomationsDatasetReviewRequestsUpdateResponse = AutomationsDatasetReviewRequestsUpdateResponses[keyof AutomationsDatasetReviewRequestsUpdateResponses];
+
+export type AutomationsDatasetReviewRequestsListEventsData = {
+    body?: never;
+    path: {
+        /**
+         * Automation id or typed alias.
+         */
+        id: string;
+        /**
+         * Dataset review request id.
+         */
+        reviewId: string;
+    };
+    query?: never;
+    url: '/v1/automations/{id}/dataset-review-requests/{reviewId}/events';
+};
+
+export type AutomationsDatasetReviewRequestsListEventsErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type AutomationsDatasetReviewRequestsListEventsError = AutomationsDatasetReviewRequestsListEventsErrors[keyof AutomationsDatasetReviewRequestsListEventsErrors];
+
+export type AutomationsDatasetReviewRequestsListEventsResponses = {
+    /**
+     * Review events.
+     */
+    200: DatasetReviewEventList;
+};
+
+export type AutomationsDatasetReviewRequestsListEventsResponse = AutomationsDatasetReviewRequestsListEventsResponses[keyof AutomationsDatasetReviewRequestsListEventsResponses];
+
+export type AutomationsDatasetReviewRequestsListItemsData = {
+    body?: never;
+    path: {
+        /**
+         * Automation id or typed alias.
+         */
+        id: string;
+        /**
+         * Dataset review request id.
+         */
+        reviewId: string;
+    };
+    query?: {
+        /**
+         * Optional comma-separated item statuses to filter by.
+         */
+        status?: string;
+    };
+    url: '/v1/automations/{id}/dataset-review-requests/{reviewId}/items';
+};
+
+export type AutomationsDatasetReviewRequestsListItemsErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type AutomationsDatasetReviewRequestsListItemsError = AutomationsDatasetReviewRequestsListItemsErrors[keyof AutomationsDatasetReviewRequestsListItemsErrors];
+
+export type AutomationsDatasetReviewRequestsListItemsResponses = {
+    /**
+     * Review items.
+     */
+    200: DatasetReviewItemList;
+};
+
+export type AutomationsDatasetReviewRequestsListItemsResponse = AutomationsDatasetReviewRequestsListItemsResponses[keyof AutomationsDatasetReviewRequestsListItemsResponses];
+
+export type AutomationsDatasetReviewRequestsUpdateItemData = {
+    body: UpdateDatasetReviewItem;
+    path: {
+        /**
+         * Automation id or typed alias.
+         */
+        id: string;
+        /**
+         * Dataset review request id.
+         */
+        reviewId: string;
+        /**
+         * Dataset review item id.
+         */
+        itemId: string;
+    };
+    query?: never;
+    url: '/v1/automations/{id}/dataset-review-requests/{reviewId}/items/{itemId}';
+};
+
+export type AutomationsDatasetReviewRequestsUpdateItemErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type AutomationsDatasetReviewRequestsUpdateItemError = AutomationsDatasetReviewRequestsUpdateItemErrors[keyof AutomationsDatasetReviewRequestsUpdateItemErrors];
+
+export type AutomationsDatasetReviewRequestsUpdateItemResponses = {
+    /**
+     * Updated review item.
+     */
+    200: DatasetReviewItemResponse;
+};
+
+export type AutomationsDatasetReviewRequestsUpdateItemResponse = AutomationsDatasetReviewRequestsUpdateItemResponses[keyof AutomationsDatasetReviewRequestsUpdateItemResponses];
+
+export type AutomationsDatasetReviewRequestsItemFileGetData = {
+    body?: never;
+    path: {
+        /**
+         * Automation id or typed alias.
+         */
+        id: string;
+        /**
+         * Dataset review request id.
+         */
+        reviewId: string;
+        /**
+         * Dataset review item id.
+         */
+        itemId: string;
+        /**
+         * Slash-delimited path under the example input folder referenced by the item snapshot.
+         */
+        path: string;
+    };
+    query?: never;
+    url: '/v1/automations/{id}/dataset-review-requests/{reviewId}/items/{itemId}/files/{path}';
+};
+
+export type AutomationsDatasetReviewRequestsItemFileGetErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+};
+
+export type AutomationsDatasetReviewRequestsItemFileGetError = AutomationsDatasetReviewRequestsItemFileGetErrors[keyof AutomationsDatasetReviewRequestsItemFileGetErrors];
+
+export type AutomationsDatasetReviewRequestsItemFileGetResponses = {
+    /**
+     * Input file bytes for a review item.
+     */
+    200: Blob | File;
+};
+
+export type AutomationsDatasetReviewRequestsItemFileGetResponse = AutomationsDatasetReviewRequestsItemFileGetResponses[keyof AutomationsDatasetReviewRequestsItemFileGetResponses];
 
 export type AutomationsDatasetExportData = {
     body?: never;

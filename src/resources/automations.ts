@@ -1,4 +1,4 @@
-import type { OperationResult } from '../client';
+import type { OperationResult, RequestDispatchOptions } from '../client';
 import type { Client } from '../generated/client';
 import {
   automationsDatasetExport,
@@ -40,7 +40,10 @@ import type {
   UpdateAutomationRequest,
 } from '../generated/types.gen';
 
-type Dispatch = <T>(call: () => Promise<OperationResult<T>>) => Promise<T>;
+type Dispatch = <T>(
+  call: () => Promise<OperationResult<T>>,
+  options?: RequestDispatchOptions
+) => Promise<T>;
 type SignalOptions = { signal?: AbortSignal };
 type AnyResponse = any;
 
@@ -48,6 +51,7 @@ export type ListAutomationsOptions = NonNullable<AutomationsListData['query']> &
 
 export class AutomationsResource {
   public readonly dataset: AutomationDatasetResource;
+  public readonly datasetReviewRequests: AutomationDatasetReviewRequestsResource;
   public readonly examples: AutomationExamplesResource;
   public readonly evaluators: AutomationEvaluatorsResource;
   public readonly experiments: AutomationExperimentsResource;
@@ -58,6 +62,7 @@ export class AutomationsResource {
     private readonly dispatch: Dispatch
   ) {
     this.dataset = new AutomationDatasetResource(client, dispatch);
+    this.datasetReviewRequests = new AutomationDatasetReviewRequestsResource(client, dispatch);
     this.examples = new AutomationExamplesResource(client, dispatch);
     this.evaluators = new AutomationEvaluatorsResource(client, dispatch);
     this.experiments = new AutomationExperimentsResource(client, dispatch);
@@ -469,6 +474,215 @@ export class AutomationExperimentsResource {
           parseAs: 'stream',
           signal: options.signal,
         }) as Promise<OperationResult<ReadableStream<Uint8Array> | null>>
+    );
+  }
+}
+
+type DatasetReviewItemStatus = 'pending' | 'approved' | 'edited' | 'rejected';
+type DatasetReviewItemAction =
+  | 'approve'
+  | 'edit'
+  | 'reject'
+  | 'reopen'
+  | 'comment'
+  | 'field-decision';
+
+function datasetReviewRequestsBaseUrl(automationId: string): string {
+  return `/v1/automations/${automationId}/dataset-review-requests`;
+}
+
+function joinCsv(values: string | readonly string[] | undefined): string | undefined {
+  if (values === undefined) return undefined;
+  if (typeof values === 'string') return values;
+  return values.join(',');
+}
+
+export type ListDatasetReviewRequestsOptions = SignalOptions & {
+  status?: string | readonly string[];
+  limit?: number;
+  offset?: number;
+};
+
+export type DatasetReviewFocusField = {
+  path: string;
+  reason?: string | null;
+};
+
+export type DatasetReviewCreateItemNote = {
+  exampleName: string;
+  comment?: string | null;
+  fields?: Array<{ path: string; comment: string }>;
+};
+
+export type CreateDatasetReviewRequestBody = {
+  title: string;
+  exampleNames: string[];
+  instructions?: string | null;
+  focusFields?: DatasetReviewFocusField[];
+  ignoredFields?: string[];
+  itemNotes?: DatasetReviewCreateItemNote[];
+  status?: 'draft' | 'open' | 'paused';
+};
+
+export type UpdateDatasetReviewRequestBody = {
+  title?: string;
+  instructions?: string | null;
+  focusFields?: DatasetReviewFocusField[];
+  ignoredFields?: string[];
+  status?: 'draft' | 'open' | 'paused' | 'closed';
+};
+
+export type UpdateDatasetReviewItemBody = {
+  action: DatasetReviewItemAction;
+  expected?: unknown;
+  comment?: string | null;
+  fieldPath?: string | null;
+  /** Field decision for `field-decision`; pass `null` to clear. */
+  decision?: 'approved' | 'rejected' | null;
+  expectedUpdatedAt: string;
+};
+
+export class AutomationDatasetReviewRequestsResource {
+  constructor(
+    private readonly client: Client,
+    private readonly dispatch: Dispatch
+  ) {}
+
+  async list(
+    automationId: string,
+    options: ListDatasetReviewRequestsOptions = {}
+  ): Promise<AnyResponse> {
+    const { signal, status, limit, offset } = options;
+    const query = {
+      status: joinCsv(status),
+      limit,
+      offset,
+    };
+    return this.dispatch(
+      () =>
+        this.client.get({
+          url: datasetReviewRequestsBaseUrl(automationId),
+          query,
+          signal,
+        }) as Promise<OperationResult<AnyResponse>>
+    );
+  }
+
+  async create(
+    automationId: string,
+    body: CreateDatasetReviewRequestBody,
+    options: SignalOptions = {}
+  ): Promise<AnyResponse> {
+    return this.dispatch(
+      () =>
+        this.client.post({
+          url: datasetReviewRequestsBaseUrl(automationId),
+          body: body as never,
+          signal: options.signal,
+        }) as Promise<OperationResult<AnyResponse>>
+    );
+  }
+
+  async get(
+    automationId: string,
+    reviewId: string,
+    options: SignalOptions = {}
+  ): Promise<AnyResponse> {
+    return this.dispatch(
+      () =>
+        this.client.get({
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}`,
+          signal: options.signal,
+        }) as Promise<OperationResult<AnyResponse>>
+    );
+  }
+
+  async update(
+    automationId: string,
+    reviewId: string,
+    body: UpdateDatasetReviewRequestBody,
+    options: SignalOptions = {}
+  ): Promise<AnyResponse> {
+    return this.dispatch(
+      () =>
+        this.client.patch({
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}`,
+          body: body as never,
+          signal: options.signal,
+        }) as Promise<OperationResult<AnyResponse>>
+    );
+  }
+
+  async listItems(
+    automationId: string,
+    reviewId: string,
+    options: SignalOptions & { status?: string | readonly DatasetReviewItemStatus[] } = {}
+  ): Promise<AnyResponse> {
+    const { signal, status } = options;
+    return this.dispatch(
+      () =>
+        this.client.get({
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items`,
+          query: { status: joinCsv(status) },
+          signal,
+        }) as Promise<OperationResult<AnyResponse>>
+    );
+  }
+
+  async updateItem(
+    automationId: string,
+    reviewId: string,
+    itemId: string,
+    body: UpdateDatasetReviewItemBody,
+    options: SignalOptions = {}
+  ): Promise<AnyResponse> {
+    return this.dispatch(
+      () =>
+        this.client.patch({
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items/${itemId}`,
+          body: body as never,
+          signal: options.signal,
+        }) as Promise<OperationResult<AnyResponse>>
+    );
+  }
+
+  async getItemFile(
+    automationId: string,
+    reviewId: string,
+    itemId: string,
+    path: string,
+    options: SignalOptions = {}
+  ): Promise<Blob> {
+    // Encode per segment: the path comes from snapshot manifests and may
+    // contain spaces or unicode; encoding the whole string would escape the
+    // separators the route needs to split on.
+    const relative = path
+      .replace(/^\/+/, '')
+      .split('/')
+      .map((segment) => encodeURIComponent(segment))
+      .join('/');
+    return this.dispatch(
+      () =>
+        this.client.get({
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items/${itemId}/files/${relative}`,
+          parseAs: 'blob',
+          signal: options.signal,
+        }) as Promise<OperationResult<Blob>>,
+      { responseKind: 'binary' }
+    );
+  }
+
+  async events(
+    automationId: string,
+    reviewId: string,
+    options: SignalOptions = {}
+  ): Promise<AnyResponse> {
+    return this.dispatch(
+      () =>
+        this.client.get({
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/events`,
+          signal: options.signal,
+        }) as Promise<OperationResult<AnyResponse>>
     );
   }
 }

@@ -36,6 +36,15 @@ client
 │   ├── dataset
 │   │   ├── export
 │   │   └── import
+│   ├── datasetReviewRequests
+│   │   ├── list
+│   │   ├── get
+│   │   ├── create
+│   │   ├── events
+│   │   ├── getItemFile
+│   │   ├── listItems
+│   │   ├── update
+│   │   └── updateItem
 │   ├── evaluators
 │   │   ├── get
 │   │   └── update
@@ -469,6 +478,207 @@ await client.automations.restoreVersion('workflows.extract-invoice', 'wfh_old', 
 ```
 
 ## Evaluation
+
+### `client.automations.datasetReviewRequests.list`
+
+**`GET /v1/automations/:id/dataset-review-requests`**
+
+List dataset review requests
+
+List dataset review requests for one automation, including per-request progress.
+
+**Path parameters**
+
+| Name | Type     | Description                                                              |
+| ---- | -------- | ------------------------------------------------------------------------ |
+| `id` | `string` | Automation id or typed alias, such as `workflows.slug` or `agents.slug`. |
+
+**Query parameters**
+
+| Name     | Type     | Description                                                      |
+| -------- | -------- | ---------------------------------------------------------------- |
+| `status` | `string` | (optional)Optional comma-separated review statuses to filter by. |
+| `limit`  | `number` | (optional)                                                       |
+| `offset` | `number` | (optional)                                                       |
+
+**Response**
+
+```ts
+// DatasetReviewRequestList
+```
+
+### `client.automations.datasetReviewRequests.create`
+
+**`POST /v1/automations/:id/dataset-review-requests`**
+
+Create dataset review request
+
+Snapshot selected dataset examples into a review request. Include instructions, focusFields to highlight, and ignoredFields for paths reviewers can skip. Optional itemNotes become commented events on those examples.
+
+**Path parameters**
+
+| Name | Type     | Description                                                              |
+| ---- | -------- | ------------------------------------------------------------------------ |
+| `id` | `string` | Automation id or typed alias, such as `workflows.slug` or `agents.slug`. |
+
+**Request body**
+
+```ts
+// CreateDatasetReviewRequest
+```
+
+**Response**
+
+```ts
+// DatasetReviewDetail
+```
+
+### `client.automations.datasetReviewRequests.get`
+
+**`GET /v1/automations/:id/dataset-review-requests/:reviewId`**
+
+Get dataset review request
+
+Fetch one dataset review request with snapshotted items, progress, focus fields, ignored fields, and events.
+
+**Path parameters**
+
+| Name       | Type     | Description                   |
+| ---------- | -------- | ----------------------------- |
+| `id`       | `string` | Automation id or typed alias. |
+| `reviewId` | `string` | Dataset review request id.    |
+
+**Response**
+
+```ts
+// DatasetReviewDetail
+```
+
+### `client.automations.datasetReviewRequests.update`
+
+**`PATCH /v1/automations/:id/dataset-review-requests/:reviewId`**
+
+Update dataset review request
+
+Update review metadata or lifecycle status while the request is draft, open, or paused. Set status to `closed` when review is finished; dataset reconciliation stays manual.
+
+**Path parameters**
+
+| Name       | Type     | Description                   |
+| ---------- | -------- | ----------------------------- |
+| `id`       | `string` | Automation id or typed alias. |
+| `reviewId` | `string` | Dataset review request id.    |
+
+**Request body**
+
+```ts
+// UpdateDatasetReviewRequest
+```
+
+**Response**
+
+```ts
+// DatasetReviewDetail
+```
+
+### `client.automations.datasetReviewRequests.events`
+
+**`GET /v1/automations/:id/dataset-review-requests/:reviewId/events`**
+
+List dataset review events
+
+List audit events for one dataset review request.
+
+**Path parameters**
+
+| Name       | Type     | Description                   |
+| ---------- | -------- | ----------------------------- |
+| `id`       | `string` | Automation id or typed alias. |
+| `reviewId` | `string` | Dataset review request id.    |
+
+**Response**
+
+```ts
+// DatasetReviewEventList
+```
+
+### `client.automations.datasetReviewRequests.listItems`
+
+**`GET /v1/automations/:id/dataset-review-requests/:reviewId/items`**
+
+List dataset review items
+
+List items for one dataset review request, optionally filtered by item status.
+
+**Path parameters**
+
+| Name       | Type     | Description                   |
+| ---------- | -------- | ----------------------------- |
+| `id`       | `string` | Automation id or typed alias. |
+| `reviewId` | `string` | Dataset review request id.    |
+
+**Query parameters**
+
+| Name     | Type     | Description                                                    |
+| -------- | -------- | -------------------------------------------------------------- |
+| `status` | `string` | (optional)Optional comma-separated item statuses to filter by. |
+
+**Response**
+
+```ts
+// DatasetReviewItemList
+```
+
+### `client.automations.datasetReviewRequests.updateItem`
+
+**`PATCH /v1/automations/:id/dataset-review-requests/:reviewId/items/:itemId`**
+
+Update dataset review item
+
+Approve, edit, reject, reopen, comment, or record a field-decision on one review item while the parent request is draft, open, or paused. Pass `expectedUpdatedAt` from the item the client last observed. Pass `fieldPath` with `action: comment` or `action: field-decision`.
+
+**Path parameters**
+
+| Name       | Type     | Description                   |
+| ---------- | -------- | ----------------------------- |
+| `id`       | `string` | Automation id or typed alias. |
+| `reviewId` | `string` | Dataset review request id.    |
+| `itemId`   | `string` | Dataset review item id.       |
+
+**Request body**
+
+```ts
+// UpdateDatasetReviewItem
+```
+
+**Response**
+
+```ts
+// DatasetReviewItemResponse
+```
+
+### `client.automations.datasetReviewRequests.getItemFile`
+
+**`GET /v1/automations/:id/dataset-review-requests/:reviewId/items/:itemId/files/:path`**
+
+Download dataset review item input file
+
+Download one input file belonging to a review item. Authorized by `dataset_review:read` and scoped to files referenced in the item snapshot, so reviewers without workflow read can still preview documents.
+
+**Path parameters**
+
+| Name       | Type     | Description                                                                          |
+| ---------- | -------- | ------------------------------------------------------------------------------------ |
+| `id`       | `string` | Automation id or typed alias.                                                        |
+| `reviewId` | `string` | Dataset review request id.                                                           |
+| `itemId`   | `string` | Dataset review item id.                                                              |
+| `path`     | `string` | Slash-delimited path under the example input folder referenced by the item snapshot. |
+
+**Response**
+
+```ts
+// Blob
+```
 
 ### `client.automations.dataset.export`
 

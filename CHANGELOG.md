@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.20.0
+
+### Minor Changes
+
+- 0ce2092: `client.automations.datasetReviewRequests` (`dataset_review_requests` in Python) covers the full dataset review lifecycle: list and get with `progress`, `focusFields`, `ignoredFields`, `fieldDecisions`, and `inputDrifted`; create with reviewer instructions and per-field notes; update request metadata or close with status; update items including `field-decision` (pass `decision: null` to clear); and the per-user activity trail. Dataset write-back stays manual — there is no lock endpoint.
+
 ## 0.17.5
 
 ### Patch Changes
