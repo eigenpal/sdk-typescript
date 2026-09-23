@@ -233,4 +233,133 @@ describe('dataset review requests resource', () => {
       `/v1/automations/${WORKFLOW_ID}/dataset-review-requests/${REVIEW_ID}/events`
     );
   });
+
+  test('getItemFile defaults to input and supports kind=expected', async () => {
+    const requests: Request[] = [];
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      maxRetries: 0,
+      fetch: (async (input) => {
+        const request = input instanceof Request ? input : new Request(input);
+        requests.push(request.clone());
+        return new Response(new Blob(['bytes']));
+      }) as typeof globalThis.fetch,
+    });
+
+    await client.automations.datasetReviewRequests.getItemFile(
+      WORKFLOW_ID,
+      REVIEW_ID,
+      ITEM_ID,
+      'expected/report final.pdf'
+    );
+    await client.automations.datasetReviewRequests.getItemFile(
+      WORKFLOW_ID,
+      REVIEW_ID,
+      ITEM_ID,
+      'expected/report.pdf',
+      { kind: 'expected' }
+    );
+
+    expect(requests).toHaveLength(2);
+    const inputUrl = new URL(requests[0]!.url);
+    expect(inputUrl.pathname).toBe(
+      `/v1/automations/${WORKFLOW_ID}/dataset-review-requests/${REVIEW_ID}/items/${ITEM_ID}/files/expected/report%20final.pdf`
+    );
+    expect(inputUrl.searchParams.get('kind')).toBeNull();
+    const expectedUrl = new URL(requests[1]!.url);
+    expect(expectedUrl.pathname).toBe(
+      `/v1/automations/${WORKFLOW_ID}/dataset-review-requests/${REVIEW_ID}/items/${ITEM_ID}/files/expected/report.pdf`
+    );
+    expect(expectedUrl.searchParams.get('kind')).toBe('expected');
+  });
+
+  test('recordItemFileDecision patches a file-decision body', async () => {
+    const requests: Request[] = [];
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      maxRetries: 0,
+      fetch: (async (input, init) => {
+        const request = new Request(input, init);
+        requests.push(request.clone());
+        return Response.json({ item: { id: ITEM_ID, status: 'pending', fileDecisions: {} } });
+      }) as typeof globalThis.fetch,
+    });
+
+    await client.automations.datasetReviewRequests.recordItemFileDecision(
+      WORKFLOW_ID,
+      REVIEW_ID,
+      ITEM_ID,
+      {
+        filePath: 'expected/report.pdf',
+        decision: 'approved',
+        comment: 'totals match',
+        expectedUpdatedAt: '2026-01-01T00:00:00.000Z',
+      }
+    );
+    await client.automations.datasetReviewRequests.recordItemFileDecision(
+      WORKFLOW_ID,
+      REVIEW_ID,
+      ITEM_ID,
+      {
+        filePath: 'expected/report.pdf',
+        decision: null,
+        expectedUpdatedAt: '2026-01-01T00:00:01.000Z',
+      }
+    );
+
+    expect(requests[0]!.method).toBe('PATCH');
+    expect(await requests[0]!.clone().json()).toEqual({
+      action: 'file-decision',
+      filePath: 'expected/report.pdf',
+      decision: 'approved',
+      comment: 'totals match',
+      expectedUpdatedAt: '2026-01-01T00:00:00.000Z',
+    });
+    expect(await requests[1]!.clone().json()).toEqual({
+      action: 'file-decision',
+      filePath: 'expected/report.pdf',
+      decision: null,
+      expectedUpdatedAt: '2026-01-01T00:00:01.000Z',
+    });
+  });
+
+  test('editItemFile sends multipart edit-file with corrected path', async () => {
+    const requests: Request[] = [];
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      maxRetries: 0,
+      fetch: (async (input, init) => {
+        const request = new Request(input, init);
+        requests.push(request.clone());
+        return Response.json({ item: { id: ITEM_ID, status: 'edited' } });
+      }) as typeof globalThis.fetch,
+    });
+
+    await client.automations.datasetReviewRequests.editItemFile(
+      WORKFLOW_ID,
+      REVIEW_ID,
+      ITEM_ID,
+      new File(['fixed'], 'report.pdf', { type: 'application/pdf' }),
+      {
+        filePath: 'expected/report.pdf',
+        comment: 'fixed total',
+        expectedUpdatedAt: '2026-01-01T00:00:00.000Z',
+      }
+    );
+
+    expect(requests[0]!.method).toBe('PATCH');
+    const form = await requests[0]!.clone().formData();
+    expect(form.get('action')).toBe('edit-file');
+    expect(form.get('filePath')).toBe('expected/report.pdf');
+    expect(form.get('newPath')).toBeNull();
+    expect(form.get('comment')).toBe('fixed total');
+    expect(form.get('expectedUpdatedAt')).toBe('2026-01-01T00:00:00.000Z');
+    const uploaded = form.get('file');
+    expect(uploaded).toBeInstanceOf(File);
+    expect((uploaded as File).name).toBe('report.pdf');
+    expect(await (uploaded as File).text()).toBe('fixed');
+  });
 });

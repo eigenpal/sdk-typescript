@@ -635,7 +635,7 @@ List items for one dataset review request, optionally filtered by item status.
 
 Update dataset review item
 
-Approve, edit, reject, reopen, comment, or record a field-decision on one review item while the parent request is draft, open, or paused. Pass `expectedUpdatedAt` from the item the client last observed. Pass `fieldPath` with `action: comment` or `action: field-decision`.
+Approve, edit, reject, reopen, comment, or record a field-decision or file-decision on one review item while the parent request is draft, open, or paused. Pass `expectedUpdatedAt` from the item the client last observed. Pass `fieldPath` with `action: comment` or `action: field-decision`, `filePath` with `action: file-decision`. `action: edit-file` is multipart-only: send `file` bytes with `filePath` (correct an existing expected file) or `newPath` (upload a brand-new expected file) plus `expectedUpdatedAt`.
 
 **Path parameters**
 
@@ -661,18 +661,24 @@ Approve, edit, reject, reopen, comment, or record a field-decision on one review
 
 **`GET /v1/automations/:id/dataset-review-requests/:reviewId/items/:itemId/files/:path`**
 
-Download dataset review item input file
+Download dataset review item file
 
-Download one input file belonging to a review item. Authorized by `dataset_review:read` and scoped to files referenced in the item snapshot, so reviewers without workflow read can still preview documents.
+Download one input file (default) or expected-output file (`?kind=expected`) belonging to a review item. Authorized by `dataset_review:read` and scoped to files referenced in the item snapshot, so reviewers without workflow read can still preview documents. Expected files resolve to reviewer-corrected bytes when the item has a file overlay.
 
 **Path parameters**
 
-| Name       | Type     | Description                                                                          |
-| ---------- | -------- | ------------------------------------------------------------------------------------ |
-| `id`       | `string` | Automation id or typed alias.                                                        |
-| `reviewId` | `string` | Dataset review request id.                                                           |
-| `itemId`   | `string` | Dataset review item id.                                                              |
-| `path`     | `string` | Slash-delimited path under the example input folder referenced by the item snapshot. |
+| Name       | Type     | Description                                                                                                                        |
+| ---------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | `string` | Automation id or typed alias.                                                                                                      |
+| `reviewId` | `string` | Dataset review request id.                                                                                                         |
+| `itemId`   | `string` | Dataset review item id.                                                                                                            |
+| `path`     | `string` | Slash-delimited path under the example input folder (default) or expected folder (?kind=expected) referenced by the item snapshot. |
+
+**Query parameters**
+
+| Name   | Type                    | Description                                                                                                                                    |
+| ------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind` | `"input" \| "expected"` | (optional)Which file tree to serve. `expected` resolves to reviewer-corrected bytes when the item has a file overlay, else the snapshot bytes. |
 
 **Response**
 

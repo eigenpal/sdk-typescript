@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.20.3
+
+### Minor Changes
+
+- baddbf0: Expected-output files are covered too: items carry `currentExpectedFiles` (null means pristine snapshot) and `fileDecisions`; `getItemFile` / `get_item_file` accept `kind: 'expected'` to download reviewer-corrected bytes (default stays `input`); `recordItemFileDecision` / `record_item_file_decision` records per-file approve/reject or notes (`decision: null` clears); `editItemFile` / `edit_item_file` uploads corrected bytes for an existing path or a brand-new upload (50MB cap).
+
 ## 0.20.0
 
 ### Minor Changes

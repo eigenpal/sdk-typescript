@@ -485,7 +485,9 @@ type DatasetReviewItemAction =
   | 'reject'
   | 'reopen'
   | 'comment'
-  | 'field-decision';
+  | 'field-decision'
+  | 'file-decision'
+  | 'edit-file';
 
 function datasetReviewRequestsBaseUrl(automationId: string): string {
   return `/v1/automations/${automationId}/dataset-review-requests`;
@@ -537,8 +539,56 @@ export type UpdateDatasetReviewItemBody = {
   expected?: unknown;
   comment?: string | null;
   fieldPath?: string | null;
+  /** Expected-file path for `file-decision`. */
+  filePath?: string | null;
   /** Field decision for `field-decision`; pass `null` to clear. */
   decision?: 'approved' | 'rejected' | null;
+  expectedUpdatedAt: string;
+};
+
+/** One entry of an item's expected-file overlay (`currentExpectedFiles`). */
+export type DatasetReviewExpectedFile = {
+  /** Expected-file path relative to the example `expected/` folder. */
+  path: string;
+  /**
+   * Version id for the current bytes. Empty for snapshot-origin files, which
+   * resolve by path.
+   */
+  fileId: string;
+  filename: string;
+  /**
+   * Whether the current bytes are the snapshotted dataset file, a
+   * reviewer-corrected version, or a brand-new reviewer upload.
+   */
+  origin: 'snapshot' | 'corrected' | 'uploaded';
+};
+
+/** Durable per-expected-file approve/reject, keyed by expected-file path. */
+export type DatasetReviewFileDecision = {
+  decision: 'approved' | 'rejected';
+  comment?: string | null;
+  reviewerId: string;
+  updatedAt: string;
+};
+
+export type RecordDatasetReviewItemFileDecisionBody = {
+  /** Expected-file path the decision applies to. */
+  filePath: string;
+  /**
+   * File decision; pass `null` to clear a recorded decision. A comment
+   * without a decision is a note — allowed only when a decision exists.
+   */
+  decision?: 'approved' | 'rejected' | null;
+  comment?: string | null;
+  expectedUpdatedAt: string;
+};
+
+export type EditDatasetReviewItemFileOptions = SignalOptions & {
+  /** Correct an existing expected file. Exactly one of `filePath` / `newPath`. */
+  filePath?: string;
+  /** Upload a brand-new expected file. Exactly one of `filePath` / `newPath`. */
+  newPath?: string;
+  comment?: string;
   expectedUpdatedAt: string;
 };
 
@@ -651,7 +701,7 @@ export class AutomationDatasetReviewRequestsResource {
     reviewId: string,
     itemId: string,
     path: string,
-    options: SignalOptions = {}
+    options: SignalOptions & { kind?: 'input' | 'expected' } = {}
   ): Promise<Blob> {
     // Encode per segment: the path comes from snapshot manifests and may
     // contain spaces or unicode; encoding the whole string would escape the
@@ -661,14 +711,73 @@ export class AutomationDatasetReviewRequestsResource {
       .split('/')
       .map((segment) => encodeURIComponent(segment))
       .join('/');
+    const { kind, signal } = options;
+    const suffix = kind === 'expected' ? '?kind=expected' : '';
     return this.dispatch(
       () =>
         this.client.get({
-          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items/${itemId}/files/${relative}`,
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items/${itemId}/files/${relative}${suffix}`,
           parseAs: 'blob',
-          signal: options.signal,
+          signal,
         }) as Promise<OperationResult<Blob>>,
       { responseKind: 'binary' }
+    );
+  }
+
+  /**
+   * Record a per-expected-file approve/reject (or a note) on a review item.
+   * Pass `decision: null` to clear a recorded decision; a comment without a
+   * decision is a note and requires an existing decision server-side.
+   */
+  async recordItemFileDecision(
+    automationId: string,
+    reviewId: string,
+    itemId: string,
+    body: RecordDatasetReviewItemFileDecisionBody,
+    options: SignalOptions = {}
+  ): Promise<AnyResponse> {
+    return this.dispatch(
+      () =>
+        this.client.patch({
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items/${itemId}`,
+          body: { action: 'file-decision', ...body } as never,
+          signal: options.signal,
+        }) as Promise<OperationResult<AnyResponse>>
+    );
+  }
+
+  /**
+   * Upload corrected bytes for an existing expected file (`filePath`) or a
+   * brand-new reviewer upload (`newPath`). Multipart-only — mirrors the
+   * dataset import's FormData passthrough. Replaces the item's expected-file
+   * overlay entry and records a `file-edited` event.
+   */
+  async editItemFile(
+    automationId: string,
+    reviewId: string,
+    itemId: string,
+    file: Blob | File,
+    options: EditDatasetReviewItemFileOptions
+  ): Promise<AnyResponse> {
+    const target = options.filePath ?? options.newPath ?? 'file';
+    const fallbackName = target.split('/').pop() || 'file';
+    const filename = file instanceof File && file.name ? file.name : fallbackName;
+    const formData = new FormData();
+    formData.set('action', 'edit-file');
+    formData.set('file', file, filename);
+    if (options.filePath !== undefined) formData.set('filePath', options.filePath);
+    if (options.newPath !== undefined) formData.set('newPath', options.newPath);
+    if (options.comment !== undefined) formData.set('comment', options.comment);
+    formData.set('expectedUpdatedAt', options.expectedUpdatedAt);
+    return this.dispatch(
+      () =>
+        this.client.patch({
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items/${itemId}`,
+          body: formData as never,
+          bodySerializer: null,
+          headers: { 'Content-Type': null },
+          signal: options.signal,
+        }) as Promise<OperationResult<AnyResponse>>
     );
   }
 

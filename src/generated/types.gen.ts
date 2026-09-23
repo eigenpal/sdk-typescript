@@ -68,14 +68,36 @@ export type UpdateDatasetReviewRequest = {
 };
 
 export type UpdateDatasetReviewItem = {
-    action: 'approve' | 'edit' | 'reject' | 'reopen' | 'comment' | 'field-decision';
+    /**
+     * file-decision records a per-expected-file approve/reject (or a note). edit-file uploads corrected bytes and is multipart-only — JSON callers get a 400 pointing at the multipart form.
+     */
+    action: 'approve' | 'edit' | 'reject' | 'reopen' | 'comment' | 'field-decision' | 'file-decision' | 'edit-file';
     expected?: unknown;
     comment?: string | null;
     fieldPath?: string | null;
+    /**
+     * Expected-file path for action file-decision.
+     */
+    filePath?: string | null;
     decision?: 'approved' | 'rejected' | null;
     /**
      * ISO timestamp of the item `updatedAt` the client last observed. Required for optimistic concurrency.
      */
+    expectedUpdatedAt: string;
+};
+
+export type EditDatasetReviewItemFile = {
+    /**
+     * Must be edit-file for the multipart item PATCH form.
+     */
+    action?: 'edit-file';
+    /**
+     * Corrected expected-file bytes (50MB cap).
+     */
+    file?: Blob | File;
+    filePath?: string;
+    newPath?: string;
+    comment?: string | null;
     expectedUpdatedAt: string;
 };
 
@@ -786,6 +808,16 @@ export type DatasetReviewItem = {
         [key: string]: DatasetReviewFieldDecision;
     };
     /**
+     * Overlay of the snapshot manifest expected files. Null means pristine — the reviewer has not corrected or uploaded any file yet.
+     */
+    currentExpectedFiles: Array<DatasetReviewExpectedFile> | null;
+    /**
+     * Durable per-expected-file approve/reject, keyed by expected-file path.
+     */
+    fileDecisions: {
+        [key: string]: DatasetReviewFileDecision;
+    };
+    /**
      * True when live dataset input-file bytes no longer match the hashes captured at request creation.
      */
     inputDrifted: boolean;
@@ -800,12 +832,35 @@ export type DatasetReviewFieldDecision = {
     updatedAt: string;
 };
 
+export type DatasetReviewExpectedFile = {
+    /**
+     * Expected-file path relative to the example expected/ folder.
+     */
+    path: string;
+    /**
+     * Version id for the current bytes. Empty for snapshot-origin files, which resolve by path.
+     */
+    fileId: string;
+    filename: string;
+    /**
+     * Whether the current bytes are the snapshotted dataset file, a reviewer-corrected version, or a brand-new reviewer upload.
+     */
+    origin: 'snapshot' | 'corrected' | 'uploaded';
+};
+
+export type DatasetReviewFileDecision = {
+    decision: 'approved' | 'rejected';
+    comment?: string | null;
+    reviewerId: string;
+    updatedAt: string;
+};
+
 export type DatasetReviewEvent = {
     id: string;
     reviewId: string;
     itemId: string | null;
     actorUserId: string | null;
-    action: 'created' | 'approved' | 'edited' | 'rejected' | 'reopened' | 'commented' | 'field-decision';
+    action: 'created' | 'approved' | 'edited' | 'rejected' | 'reopened' | 'commented' | 'field-decision' | 'file-decision' | 'file-edited';
     diffSummary: unknown | null;
     createdAt: string;
 };
@@ -3122,11 +3177,16 @@ export type AutomationsDatasetReviewRequestsItemFileGetData = {
          */
         itemId: string;
         /**
-         * Slash-delimited path under the example input folder referenced by the item snapshot.
+         * Slash-delimited path under the example input folder (default) or expected folder (?kind=expected) referenced by the item snapshot.
          */
         path: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Which file tree to serve. `expected` resolves to reviewer-corrected bytes when the item has a file overlay, else the snapshot bytes.
+         */
+        kind?: 'input' | 'expected';
+    };
     url: '/v1/automations/{id}/dataset-review-requests/{reviewId}/items/{itemId}/files/{path}';
 };
 
@@ -3169,7 +3229,7 @@ export type AutomationsDatasetReviewRequestsItemFileGetError = AutomationsDatase
 
 export type AutomationsDatasetReviewRequestsItemFileGetResponses = {
     /**
-     * Input file bytes for a review item.
+     * Review item file bytes (input or expected).
      */
     200: Blob | File;
 };
