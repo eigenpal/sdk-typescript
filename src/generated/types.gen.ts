@@ -69,9 +69,9 @@ export type UpdateDatasetReviewRequest = {
 
 export type UpdateDatasetReviewItem = {
     /**
-     * file-decision records a per-expected-file approve/reject (or a note). edit-file uploads corrected bytes and is multipart-only — JSON callers get a 400 pointing at the multipart form.
+     * file-decision records a per-expected-file approve/remove (or a note). edit-file uploads corrected bytes and is multipart-only — JSON callers get a 400 pointing at the multipart form.
      */
-    action: 'approve' | 'edit' | 'reject' | 'reopen' | 'comment' | 'field-decision' | 'file-decision' | 'edit-file';
+    action: 'approve' | 'edit' | 'remove' | 'reopen' | 'comment' | 'field-decision' | 'file-decision' | 'edit-file';
     expected?: unknown;
     comment?: string | null;
     fieldPath?: string | null;
@@ -79,7 +79,7 @@ export type UpdateDatasetReviewItem = {
      * Expected-file path for action file-decision.
      */
     filePath?: string | null;
-    decision?: 'approved' | 'rejected' | null;
+    decision?: 'approved' | 'removed' | null;
     /**
      * ISO timestamp of the item `updatedAt` the client last observed. Required for optimistic concurrency.
      */
@@ -754,13 +754,13 @@ export type DatasetReviewProgress = {
     pending: number;
     approved: number;
     edited: number;
-    rejected: number;
+    removed: number;
     /**
      * Count of examples still pending a decision.
      */
     remaining: number;
     /**
-     * True when every example has been approved, edited, or rejected. Close the request when review is finished; dataset write-back is always manual.
+     * True when every example has been approved, edited, or removed. Close the request when review is finished; dataset write-back is always manual.
      */
     complete: boolean;
 };
@@ -802,7 +802,7 @@ export type DatasetReviewItem = {
             sha256: string;
         }>;
     };
-    status: 'pending' | 'approved' | 'edited' | 'rejected';
+    status: 'pending' | 'approved' | 'edited' | 'removed';
     currentExpectedJson: unknown | null;
     fieldDecisions: {
         [key: string]: DatasetReviewFieldDecision;
@@ -812,7 +812,7 @@ export type DatasetReviewItem = {
      */
     currentExpectedFiles: Array<DatasetReviewExpectedFile> | null;
     /**
-     * Durable per-expected-file approve/reject, keyed by expected-file path.
+     * Durable per-expected-file approve/remove, keyed by expected-file path.
      */
     fileDecisions: {
         [key: string]: DatasetReviewFileDecision;
@@ -826,7 +826,7 @@ export type DatasetReviewItem = {
 };
 
 export type DatasetReviewFieldDecision = {
-    decision: 'approved' | 'rejected';
+    decision: 'approved' | 'removed';
     comment?: string | null;
     reviewerId: string;
     updatedAt: string;
@@ -849,7 +849,7 @@ export type DatasetReviewExpectedFile = {
 };
 
 export type DatasetReviewFileDecision = {
-    decision: 'approved' | 'rejected';
+    decision: 'approved' | 'removed';
     comment?: string | null;
     reviewerId: string;
     updatedAt: string;
@@ -860,7 +860,7 @@ export type DatasetReviewEvent = {
     reviewId: string;
     itemId: string | null;
     actorUserId: string | null;
-    action: 'created' | 'approved' | 'edited' | 'rejected' | 'reopened' | 'commented' | 'field-decision' | 'file-decision' | 'file-edited';
+    action: 'created' | 'approved' | 'edited' | 'removed' | 'reopened' | 'commented' | 'field-decision' | 'file-decision' | 'file-edited';
     diffSummary: unknown | null;
     createdAt: string;
 };

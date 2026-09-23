@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.20.5
+
+### Patch Changes
+
+- faf6d1e: Dataset review SDK types and helpers now expose `removed` instead of `rejected` for item status, progress, field/file decisions, and update actions.
+
 ## 0.20.3
 
 ### Minor Changes

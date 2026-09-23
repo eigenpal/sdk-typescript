@@ -82,7 +82,7 @@ export class AutomationsResource {
 
   /**
    * Move a YAML workflow between organizing folders. Agent automations have no
-   * folder model and are rejected by the API.
+   * folder model and are removed by the API.
    */
   async move(
     id: string,
@@ -478,11 +478,11 @@ export class AutomationExperimentsResource {
   }
 }
 
-type DatasetReviewItemStatus = 'pending' | 'approved' | 'edited' | 'rejected';
+type DatasetReviewItemStatus = 'pending' | 'approved' | 'edited' | 'removed';
 type DatasetReviewItemAction =
   | 'approve'
   | 'edit'
-  | 'reject'
+  | 'remove'
   | 'reopen'
   | 'comment'
   | 'field-decision'
@@ -542,7 +542,7 @@ export type UpdateDatasetReviewItemBody = {
   /** Expected-file path for `file-decision`. */
   filePath?: string | null;
   /** Field decision for `field-decision`; pass `null` to clear. */
-  decision?: 'approved' | 'rejected' | null;
+  decision?: 'approved' | 'removed' | null;
   expectedUpdatedAt: string;
 };
 
@@ -563,9 +563,9 @@ export type DatasetReviewExpectedFile = {
   origin: 'snapshot' | 'corrected' | 'uploaded';
 };
 
-/** Durable per-expected-file approve/reject, keyed by expected-file path. */
+/** Durable per-expected-file approve/remove, keyed by expected-file path. */
 export type DatasetReviewFileDecision = {
-  decision: 'approved' | 'rejected';
+  decision: 'approved' | 'removed';
   comment?: string | null;
   reviewerId: string;
   updatedAt: string;
@@ -578,7 +578,7 @@ export type RecordDatasetReviewItemFileDecisionBody = {
    * File decision; pass `null` to clear a recorded decision. A comment
    * without a decision is a note — allowed only when a decision exists.
    */
-  decision?: 'approved' | 'rejected' | null;
+  decision?: 'approved' | 'removed' | null;
   comment?: string | null;
   expectedUpdatedAt: string;
 };
@@ -725,7 +725,7 @@ export class AutomationDatasetReviewRequestsResource {
   }
 
   /**
-   * Record a per-expected-file approve/reject (or a note) on a review item.
+   * Record a per-expected-file approve/remove (or a note) on a review item.
    * Pass `decision: null` to clear a recorded decision; a comment without a
    * decision is a note and requires an existing decision server-side.
    */

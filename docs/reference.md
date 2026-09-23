@@ -560,7 +560,7 @@ Fetch one dataset review request with snapshotted items, progress, focus fields,
 
 Update dataset review request
 
-Update review metadata or lifecycle status while the request is draft, open, or paused. Set status to `closed` when review is finished; dataset reconciliation stays manual.
+Update review metadata or lifecycle status. Set status to `closed` when review is finished; a closed review accepts only a bare reopen back to `open`. Dataset reconciliation stays manual.
 
 **Path parameters**
 
@@ -635,7 +635,7 @@ List items for one dataset review request, optionally filtered by item status.
 
 Update dataset review item
 
-Approve, edit, reject, reopen, comment, or record a field-decision or file-decision on one review item while the parent request is draft, open, or paused. Pass `expectedUpdatedAt` from the item the client last observed. Pass `fieldPath` with `action: comment` or `action: field-decision`, `filePath` with `action: file-decision`. `action: edit-file` is multipart-only: send `file` bytes with `filePath` (correct an existing expected file) or `newPath` (upload a brand-new expected file) plus `expectedUpdatedAt`.
+Approve, edit, remove, reopen, comment, or record a field-decision or file-decision on one review item while the parent request is draft, open, or paused. Pass `expectedUpdatedAt` from the item the client last observed. Pass `fieldPath` with `action: comment` or `action: field-decision`, `filePath` with `action: file-decision`. `action: edit-file` is multipart-only: send `file` bytes with `filePath` (correct an existing expected file) or `newPath` (upload a brand-new expected file) plus `expectedUpdatedAt`.
 
 **Path parameters**
 

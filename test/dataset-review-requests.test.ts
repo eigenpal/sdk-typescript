@@ -187,7 +187,7 @@ describe('dataset review requests resource', () => {
     await client.automations.datasetReviewRequests.updateItem(WORKFLOW_ID, REVIEW_ID, ITEM_ID, {
       action: 'field-decision',
       fieldPath: 'vendor.iban',
-      decision: 'rejected',
+      decision: 'removed',
       comment: 'OCR mangled',
       expectedUpdatedAt: '2026-01-01T00:00:00.000Z',
     });
@@ -201,7 +201,7 @@ describe('dataset review requests resource', () => {
     expect(await requests[0]!.clone().json()).toEqual({
       action: 'field-decision',
       fieldPath: 'vendor.iban',
-      decision: 'rejected',
+      decision: 'removed',
       comment: 'OCR mangled',
       expectedUpdatedAt: '2026-01-01T00:00:00.000Z',
     });
