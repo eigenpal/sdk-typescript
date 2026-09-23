@@ -2399,6 +2399,10 @@ export type AuthCheckErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AuthCheckError = AuthCheckErrors[keyof AuthCheckErrors];
@@ -2469,6 +2473,10 @@ export type AutomationsListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsListError = AutomationsListErrors[keyof AutomationsListErrors];
@@ -2523,6 +2531,10 @@ export type AutomationsDeleteErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsDeleteError = AutomationsDeleteErrors[keyof AutomationsDeleteErrors];
@@ -2577,6 +2589,10 @@ export type AutomationsGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsGetError = AutomationsGetErrors[keyof AutomationsGetErrors];
@@ -2631,6 +2647,10 @@ export type AutomationsUpdateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsUpdateError = AutomationsUpdateErrors[keyof AutomationsUpdateErrors];
@@ -2692,6 +2712,10 @@ export type AutomationsDatasetReviewRequestsListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsDatasetReviewRequestsListError = AutomationsDatasetReviewRequestsListErrors[keyof AutomationsDatasetReviewRequestsListErrors];
@@ -2746,6 +2770,10 @@ export type AutomationsDatasetReviewRequestsCreateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsDatasetReviewRequestsCreateError = AutomationsDatasetReviewRequestsCreateErrors[keyof AutomationsDatasetReviewRequestsCreateErrors];
@@ -2804,6 +2832,10 @@ export type AutomationsDatasetReviewRequestsGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsDatasetReviewRequestsGetError = AutomationsDatasetReviewRequestsGetErrors[keyof AutomationsDatasetReviewRequestsGetErrors];
@@ -2862,6 +2894,10 @@ export type AutomationsDatasetReviewRequestsUpdateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsDatasetReviewRequestsUpdateError = AutomationsDatasetReviewRequestsUpdateErrors[keyof AutomationsDatasetReviewRequestsUpdateErrors];
@@ -2920,6 +2956,10 @@ export type AutomationsDatasetReviewRequestsListEventsErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsDatasetReviewRequestsListEventsError = AutomationsDatasetReviewRequestsListEventsErrors[keyof AutomationsDatasetReviewRequestsListEventsErrors];
@@ -2983,6 +3023,10 @@ export type AutomationsDatasetReviewRequestsListItemsErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsDatasetReviewRequestsListItemsError = AutomationsDatasetReviewRequestsListItemsErrors[keyof AutomationsDatasetReviewRequestsListItemsErrors];
@@ -3045,6 +3089,10 @@ export type AutomationsDatasetReviewRequestsUpdateItemErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsDatasetReviewRequestsUpdateItemError = AutomationsDatasetReviewRequestsUpdateItemErrors[keyof AutomationsDatasetReviewRequestsUpdateItemErrors];
@@ -3111,6 +3159,10 @@ export type AutomationsDatasetReviewRequestsItemFileGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsDatasetReviewRequestsItemFileGetError = AutomationsDatasetReviewRequestsItemFileGetErrors[keyof AutomationsDatasetReviewRequestsItemFileGetErrors];
@@ -3170,6 +3222,10 @@ export type AutomationsDatasetExportErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsDatasetExportError = AutomationsDatasetExportErrors[keyof AutomationsDatasetExportErrors];
@@ -3224,6 +3280,10 @@ export type AutomationsDatasetImportErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsDatasetImportError = AutomationsDatasetImportErrors[keyof AutomationsDatasetImportErrors];
@@ -3278,6 +3338,10 @@ export type AutomationsEvaluatorsGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsEvaluatorsGetError = AutomationsEvaluatorsGetErrors[keyof AutomationsEvaluatorsGetErrors];
@@ -3332,6 +3396,10 @@ export type AutomationsEvaluatorsUpdateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsEvaluatorsUpdateError = AutomationsEvaluatorsUpdateErrors[keyof AutomationsEvaluatorsUpdateErrors];
@@ -3399,6 +3467,10 @@ export type AutomationsExamplesListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesListError = AutomationsExamplesListErrors[keyof AutomationsExamplesListErrors];
@@ -3453,6 +3525,10 @@ export type AutomationsExamplesCreateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesCreateError = AutomationsExamplesCreateErrors[keyof AutomationsExamplesCreateErrors];
@@ -3511,6 +3587,10 @@ export type AutomationsExamplesDeleteErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesDeleteError = AutomationsExamplesDeleteErrors[keyof AutomationsExamplesDeleteErrors];
@@ -3569,6 +3649,10 @@ export type AutomationsExamplesGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesGetError = AutomationsExamplesGetErrors[keyof AutomationsExamplesGetErrors];
@@ -3627,6 +3711,10 @@ export type AutomationsExamplesUpdateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesUpdateError = AutomationsExamplesUpdateErrors[keyof AutomationsExamplesUpdateErrors];
@@ -3685,6 +3773,10 @@ export type AutomationsExamplesExpectedFilesListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesExpectedFilesListError = AutomationsExamplesExpectedFilesListErrors[keyof AutomationsExamplesExpectedFilesListErrors];
@@ -3743,6 +3835,10 @@ export type AutomationsExamplesExpectedFilesCreateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesExpectedFilesCreateError = AutomationsExamplesExpectedFilesCreateErrors[keyof AutomationsExamplesExpectedFilesCreateErrors];
@@ -3805,6 +3901,10 @@ export type AutomationsExamplesExpectedFileDeleteErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesExpectedFileDeleteError = AutomationsExamplesExpectedFileDeleteErrors[keyof AutomationsExamplesExpectedFileDeleteErrors];
@@ -3865,6 +3965,10 @@ export type AutomationsExamplesExpectedFileGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesExpectedFileGetError = AutomationsExamplesExpectedFileGetErrors[keyof AutomationsExamplesExpectedFileGetErrors];
@@ -3927,6 +4031,10 @@ export type AutomationsExamplesExpectedFileUpdateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesExpectedFileUpdateError = AutomationsExamplesExpectedFileUpdateErrors[keyof AutomationsExamplesExpectedFileUpdateErrors];
@@ -3985,6 +4093,10 @@ export type AutomationsExamplesInputFilesListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesInputFilesListError = AutomationsExamplesInputFilesListErrors[keyof AutomationsExamplesInputFilesListErrors];
@@ -4043,6 +4155,10 @@ export type AutomationsExamplesInputFilesCreateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesInputFilesCreateError = AutomationsExamplesInputFilesCreateErrors[keyof AutomationsExamplesInputFilesCreateErrors];
@@ -4105,6 +4221,10 @@ export type AutomationsExamplesInputFileDeleteErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesInputFileDeleteError = AutomationsExamplesInputFileDeleteErrors[keyof AutomationsExamplesInputFileDeleteErrors];
@@ -4165,6 +4285,10 @@ export type AutomationsExamplesInputFileGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesInputFileGetError = AutomationsExamplesInputFileGetErrors[keyof AutomationsExamplesInputFileGetErrors];
@@ -4227,6 +4351,10 @@ export type AutomationsExamplesInputFileUpdateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesInputFileUpdateError = AutomationsExamplesInputFileUpdateErrors[keyof AutomationsExamplesInputFileUpdateErrors];
@@ -4285,6 +4413,10 @@ export type AutomationsExamplesRunErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExamplesRunError = AutomationsExamplesRunErrors[keyof AutomationsExamplesRunErrors];
@@ -4356,6 +4488,10 @@ export type AutomationsExperimentsListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExperimentsListError = AutomationsExperimentsListErrors[keyof AutomationsExperimentsListErrors];
@@ -4415,6 +4551,10 @@ export type AutomationsExperimentsCreateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExperimentsCreateError = AutomationsExperimentsCreateErrors[keyof AutomationsExperimentsCreateErrors];
@@ -4473,6 +4613,10 @@ export type AutomationsExperimentsGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExperimentsGetError = AutomationsExperimentsGetErrors[keyof AutomationsExperimentsGetErrors];
@@ -4531,6 +4675,10 @@ export type AutomationsExperimentsCancelErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExperimentsCancelError = AutomationsExperimentsCancelErrors[keyof AutomationsExperimentsCancelErrors];
@@ -4586,6 +4734,10 @@ export type AutomationsExperimentsExportErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExperimentsExportError = AutomationsExperimentsExportErrors[keyof AutomationsExperimentsExportErrors];
@@ -4639,6 +4791,10 @@ export type AutomationsExperimentsExportAllErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExperimentsExportAllError = AutomationsExperimentsExportAllErrors[keyof AutomationsExperimentsExportAllErrors];
@@ -4690,6 +4846,10 @@ export type AutomationsExperimentsCreateStreamErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsExperimentsCreateStreamError = AutomationsExperimentsCreateStreamErrors[keyof AutomationsExperimentsCreateStreamErrors];
@@ -4791,6 +4951,10 @@ export type AutomationsReviewsHealthErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsReviewsHealthError = AutomationsReviewsHealthErrors[keyof AutomationsReviewsHealthErrors];
@@ -4845,6 +5009,10 @@ export type AutomationsSyncErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsSyncError = AutomationsSyncErrors[keyof AutomationsSyncErrors];
@@ -4940,6 +5108,10 @@ export type AutomationsTriggersGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsTriggersGetError = AutomationsTriggersGetErrors[keyof AutomationsTriggersGetErrors];
@@ -4994,6 +5166,10 @@ export type AutomationsVersionsListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsVersionsListError = AutomationsVersionsListErrors[keyof AutomationsVersionsListErrors];
@@ -5052,6 +5228,10 @@ export type AutomationsVersionsCreateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsVersionsCreateError = AutomationsVersionsCreateErrors[keyof AutomationsVersionsCreateErrors];
@@ -5114,6 +5294,10 @@ export type AutomationsVersionsPromoteErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsVersionsPromoteError = AutomationsVersionsPromoteErrors[keyof AutomationsVersionsPromoteErrors];
@@ -5176,6 +5360,10 @@ export type AutomationsVersionsRestoreErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type AutomationsVersionsRestoreError = AutomationsVersionsRestoreErrors[keyof AutomationsVersionsRestoreErrors];
@@ -5234,6 +5422,10 @@ export type EmailServersListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type EmailServersListError = EmailServersListErrors[keyof EmailServersListErrors];
@@ -5287,6 +5479,10 @@ export type EmailServersCreateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type EmailServersCreateError = EmailServersCreateErrors[keyof EmailServersCreateErrors];
@@ -5341,6 +5537,10 @@ export type EmailServersDeleteErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type EmailServersDeleteError = EmailServersDeleteErrors[keyof EmailServersDeleteErrors];
@@ -5395,6 +5595,10 @@ export type EmailServersGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type EmailServersGetError = EmailServersGetErrors[keyof EmailServersGetErrors];
@@ -5453,6 +5657,10 @@ export type EmailServersUpdateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type EmailServersUpdateError = EmailServersUpdateErrors[keyof EmailServersUpdateErrors];
@@ -5511,6 +5719,10 @@ export type EmailServersTestErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type EmailServersTestError = EmailServersTestErrors[keyof EmailServersTestErrors];
@@ -5562,6 +5774,10 @@ export type ExperimentsResolveErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type ExperimentsResolveError = ExperimentsResolveErrors[keyof ExperimentsResolveErrors];
@@ -5592,6 +5808,10 @@ export type FilesCreateErrors = {
      */
     401: ApiErrorEnvelope;
     /**
+     * Credit quota exceeded. The organization has spent its allowance; nothing was processed.
+     */
+    402: ApiErrorEnvelope;
+    /**
      * API key lacks required scope
      */
     403: ApiErrorEnvelope;
@@ -5599,6 +5819,10 @@ export type FilesCreateErrors = {
      * Resource not found
      */
     404: ApiErrorEnvelope;
+    /**
+     * The organization is being deleted. Its stored files are being removed, so new work that would write to its storage is refused.
+     */
+    409: ApiErrorEnvelope;
     /**
      * Payload too large. Upload exceeded the per-request size cap.
      */
@@ -5611,6 +5835,10 @@ export type FilesCreateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FilesCreateError = FilesCreateErrors[keyof FilesCreateErrors];
@@ -5665,6 +5893,10 @@ export type FilesDeleteErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FilesDeleteError = FilesDeleteErrors[keyof FilesDeleteErrors];
@@ -5719,6 +5951,10 @@ export type FilesGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FilesGetError = FilesGetErrors[keyof FilesGetErrors];
@@ -5773,6 +6009,10 @@ export type FilesContentGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FilesContentGetError = FilesContentGetErrors[keyof FilesContentGetErrors];
@@ -5801,6 +6041,10 @@ export type FilesUploadsCreateErrors = {
      */
     401: ApiErrorEnvelope;
     /**
+     * Credit quota exceeded. The organization has spent its allowance; nothing was processed.
+     */
+    402: ApiErrorEnvelope;
+    /**
      * API key lacks required scope
      */
     403: ApiErrorEnvelope;
@@ -5808,6 +6052,10 @@ export type FilesUploadsCreateErrors = {
      * Resource not found
      */
     404: ApiErrorEnvelope;
+    /**
+     * The organization is being deleted. Its stored files are being removed, so new work that would write to its storage is refused.
+     */
+    409: ApiErrorEnvelope;
     /**
      * Payload too large. Upload exceeded the per-request size cap.
      */
@@ -5820,6 +6068,10 @@ export type FilesUploadsCreateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FilesUploadsCreateError = FilesUploadsCreateErrors[keyof FilesUploadsCreateErrors];
@@ -5871,6 +6123,10 @@ export type FilesUploadsAbortErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FilesUploadsAbortError = FilesUploadsAbortErrors[keyof FilesUploadsAbortErrors];
@@ -5922,6 +6178,10 @@ export type FilesUploadsGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FilesUploadsGetError = FilesUploadsGetErrors[keyof FilesUploadsGetErrors];
@@ -5962,6 +6222,10 @@ export type FilesUploadsCompleteErrors = {
      */
     404: ApiErrorEnvelope;
     /**
+     * The organization is being deleted. Its stored files are being removed, so new work that would write to its storage is refused.
+     */
+    409: ApiErrorEnvelope;
+    /**
      * Payload too large. Upload exceeded the per-request size cap.
      */
     413: ApiErrorEnvelope;
@@ -5973,6 +6237,10 @@ export type FilesUploadsCompleteErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FilesUploadsCompleteError = FilesUploadsCompleteErrors[keyof FilesUploadsCompleteErrors];
@@ -6024,6 +6292,10 @@ export type FilesUploadsPartsListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FilesUploadsPartsListError = FilesUploadsPartsListErrors[keyof FilesUploadsPartsListErrors];
@@ -6064,6 +6336,10 @@ export type FilesUploadsPartsPresignErrors = {
      */
     404: ApiErrorEnvelope;
     /**
+     * The organization is being deleted. Its stored files are being removed, so new work that would write to its storage is refused.
+     */
+    409: ApiErrorEnvelope;
+    /**
      * Payload too large. Upload exceeded the per-request size cap.
      */
     413: ApiErrorEnvelope;
@@ -6075,6 +6351,10 @@ export type FilesUploadsPartsPresignErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FilesUploadsPartsPresignError = FilesUploadsPartsPresignErrors[keyof FilesUploadsPartsPresignErrors];
@@ -6137,6 +6417,10 @@ export type FoldersListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FoldersListError = FoldersListErrors[keyof FoldersListErrors];
@@ -6190,6 +6474,10 @@ export type FoldersCreateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FoldersCreateError = FoldersCreateErrors[keyof FoldersCreateErrors];
@@ -6244,6 +6532,10 @@ export type FoldersDeleteErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FoldersDeleteError = FoldersDeleteErrors[keyof FoldersDeleteErrors];
@@ -6298,6 +6590,10 @@ export type FoldersGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FoldersGetError = FoldersGetErrors[keyof FoldersGetErrors];
@@ -6356,6 +6652,10 @@ export type FoldersUpdateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type FoldersUpdateError = FoldersUpdateErrors[keyof FoldersUpdateErrors];
@@ -6410,6 +6710,10 @@ export type HumanReviewsListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type HumanReviewsListError = HumanReviewsListErrors[keyof HumanReviewsListErrors];
@@ -6464,6 +6768,10 @@ export type HumanReviewsGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type HumanReviewsGetError = HumanReviewsGetErrors[keyof HumanReviewsGetErrors];
@@ -6520,6 +6828,10 @@ export type HumanReviewsApproveErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type HumanReviewsApproveError = HumanReviewsApproveErrors[keyof HumanReviewsApproveErrors];
@@ -6580,6 +6892,10 @@ export type HumanReviewsConfirmFieldErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type HumanReviewsConfirmFieldError = HumanReviewsConfirmFieldErrors[keyof HumanReviewsConfirmFieldErrors];
@@ -6638,6 +6954,10 @@ export type HumanReviewsFilesContentGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type HumanReviewsFilesContentGetError = HumanReviewsFilesContentGetErrors[keyof HumanReviewsFilesContentGetErrors];
@@ -6694,6 +7014,10 @@ export type HumanReviewsRejectErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type HumanReviewsRejectError = HumanReviewsRejectErrors[keyof HumanReviewsRejectErrors];
@@ -6748,6 +7072,10 @@ export type ModelsListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type ModelsListError = ModelsListErrors[keyof ModelsListErrors];
@@ -6837,6 +7165,10 @@ export type RunsListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsListError = RunsListErrors[keyof RunsListErrors];
@@ -6876,6 +7208,10 @@ export type RunsStartErrors = {
      */
     401: ApiErrorEnvelope;
     /**
+     * Credit quota exceeded (insufficient_credits). The organization has spent its allowance; nothing is started.
+     */
+    402: ApiErrorEnvelope;
+    /**
      * Trigger disabled or insufficient scope. Run start may return api_trigger_disabled when the API trigger is off, or manual_trigger_disabled for dashboard runs on API-only workflows.
      */
     403: ApiErrorEnvelope;
@@ -6895,6 +7231,10 @@ export type RunsStartErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsStartError = RunsStartErrors[keyof RunsStartErrors];
@@ -6962,6 +7302,10 @@ export type RunsGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsGetError = RunsGetErrors[keyof RunsGetErrors];
@@ -7029,6 +7373,10 @@ export type RunsArtifactsListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsArtifactsListError = RunsArtifactsListErrors[keyof RunsArtifactsListErrors];
@@ -7081,6 +7429,10 @@ export type RunsArtifactsGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsArtifactsGetError = RunsArtifactsGetErrors[keyof RunsArtifactsGetErrors];
@@ -7130,6 +7482,10 @@ export type RunsCancelErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsCancelError = RunsCancelErrors[keyof RunsCancelErrors];
@@ -7184,6 +7540,10 @@ export type RunsEventsListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsEventsListError = RunsEventsListErrors[keyof RunsEventsListErrors];
@@ -7227,6 +7587,10 @@ export type RunsPromoteErrors = {
      */
     404: ApiErrorEnvelope;
     /**
+     * The organization is being deleted. Its stored files are being removed, so new work that would write to its storage is refused.
+     */
+    409: ApiErrorEnvelope;
+    /**
      * Payload too large. Upload exceeded the per-request size cap.
      */
     413: ApiErrorEnvelope;
@@ -7238,6 +7602,10 @@ export type RunsPromoteErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsPromoteError = RunsPromoteErrors[keyof RunsPromoteErrors];
@@ -7301,6 +7669,10 @@ export type RunsRerunErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsRerunError = RunsRerunErrors[keyof RunsRerunErrors];
@@ -7363,6 +7735,10 @@ export type RunsReviewsClearErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsReviewsClearError = RunsReviewsClearErrors[keyof RunsReviewsClearErrors];
@@ -7417,6 +7793,10 @@ export type RunsReviewsGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsReviewsGetError = RunsReviewsGetErrors[keyof RunsReviewsGetErrors];
@@ -7471,6 +7851,10 @@ export type RunsReviewsUpdateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsReviewsUpdateError = RunsReviewsUpdateErrors[keyof RunsReviewsUpdateErrors];
@@ -7525,6 +7909,10 @@ export type RunsReviewsExpectedGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsReviewsExpectedGetError = RunsReviewsExpectedGetErrors[keyof RunsReviewsExpectedGetErrors];
@@ -7579,6 +7967,10 @@ export type RunsReviewsExpectedCreateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsReviewsExpectedCreateError = RunsReviewsExpectedCreateErrors[keyof RunsReviewsExpectedCreateErrors];
@@ -7637,6 +8029,10 @@ export type RunsReviewsExpectedFileDeleteErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsReviewsExpectedFileDeleteError = RunsReviewsExpectedFileDeleteErrors[keyof RunsReviewsExpectedFileDeleteErrors];
@@ -7695,6 +8091,10 @@ export type RunsReviewsExpectedFileGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsReviewsExpectedFileGetError = RunsReviewsExpectedFileGetErrors[keyof RunsReviewsExpectedFileGetErrors];
@@ -7753,6 +8153,10 @@ export type RunsReviewsExpectedFileUpdateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsReviewsExpectedFileUpdateError = RunsReviewsExpectedFileUpdateErrors[keyof RunsReviewsExpectedFileUpdateErrors];
@@ -7807,6 +8211,10 @@ export type RunsScoresListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsScoresListError = RunsScoresListErrors[keyof RunsScoresListErrors];
@@ -7861,6 +8269,10 @@ export type RunsStepsListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsStepsListError = RunsStepsListErrors[keyof RunsStepsListErrors];
@@ -7919,6 +8331,10 @@ export type RunsStepsGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsStepsGetError = RunsStepsGetErrors[keyof RunsStepsGetErrors];
@@ -7973,6 +8389,10 @@ export type RunsTraceGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsTraceGetError = RunsTraceGetErrors[keyof RunsTraceGetErrors];
@@ -8027,6 +8447,10 @@ export type RunsUsageGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type RunsUsageGetError = RunsUsageGetErrors[keyof RunsUsageGetErrors];
@@ -8079,6 +8503,10 @@ export type TemplatesListErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type TemplatesListError = TemplatesListErrors[keyof TemplatesListErrors];
@@ -8132,6 +8560,10 @@ export type TemplatesCreateErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type TemplatesCreateError = TemplatesCreateErrors[keyof TemplatesCreateErrors];
@@ -8186,6 +8618,10 @@ export type TemplatesDeleteErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type TemplatesDeleteError = TemplatesDeleteErrors[keyof TemplatesDeleteErrors];
@@ -8240,6 +8676,10 @@ export type TemplatesGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type TemplatesGetError = TemplatesGetErrors[keyof TemplatesGetErrors];
@@ -8298,6 +8738,10 @@ export type TemplatesReplaceErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type TemplatesReplaceError = TemplatesReplaceErrors[keyof TemplatesReplaceErrors];
@@ -8357,6 +8801,10 @@ export type TemplatesContentGetErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type TemplatesContentGetError = TemplatesContentGetErrors[keyof TemplatesContentGetErrors];
@@ -8415,6 +8863,10 @@ export type TemplatesStagingErrors = {
      * Internal server error
      */
     500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
 };
 
 export type TemplatesStagingError = TemplatesStagingErrors[keyof TemplatesStagingErrors];
