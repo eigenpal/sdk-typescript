@@ -64,7 +64,7 @@ export type UpdateDatasetReviewRequest = {
     instructions?: string | null;
     focusFields?: Array<DatasetReviewFocusField>;
     ignoredFields?: Array<string>;
-    status?: 'draft' | 'open' | 'paused' | 'closed';
+    status?: 'draft' | 'open' | 'paused' | 'closed' | 'cancelled';
 };
 
 export type UpdateDatasetReviewItem = {
@@ -741,7 +741,7 @@ export type DatasetReviewRequest = {
     instructions: string | null;
     focusFields: Array<DatasetReviewFocusFieldOutput>;
     ignoredFields: Array<string>;
-    status: 'draft' | 'open' | 'paused' | 'closed';
+    status: 'draft' | 'open' | 'paused' | 'closed' | 'cancelled';
     exampleNames: Array<string>;
     progress: DatasetReviewProgress;
     createdBy: string | null;
@@ -772,7 +772,7 @@ export type DatasetReviewDetail = {
     instructions: string | null;
     focusFields: Array<DatasetReviewFocusFieldOutput>;
     ignoredFields: Array<string>;
-    status: 'draft' | 'open' | 'paused' | 'closed';
+    status: 'draft' | 'open' | 'paused' | 'closed' | 'cancelled';
     exampleNames: Array<string>;
     progress: DatasetReviewProgress;
     createdBy: string | null;
@@ -1378,7 +1378,7 @@ export type DatasetReviewInboxItem = {
     instructions: string | null;
     focusFields: Array<DatasetReviewFocusFieldOutput>;
     ignoredFields: Array<string>;
-    status: 'draft' | 'open' | 'paused' | 'closed';
+    status: 'draft' | 'open' | 'paused' | 'closed' | 'cancelled';
     exampleNames: Array<string>;
     progress: DatasetReviewProgress;
     createdBy: string | null;
