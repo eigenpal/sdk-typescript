@@ -20,6 +20,7 @@ import {
 import { DEFAULT_MULTIPART_MAX_BYTES, keysRequiringPreUpload } from './lib/upload-limits';
 import { AuthResource } from './resources/auth';
 import { AutomationsResource } from './resources/automations';
+import { DatasetReviewRequestsResource } from './resources/dataset-review-requests';
 import { EmailServersResource } from './resources/email-servers';
 import { FilesResource } from './resources/files';
 import { FoldersResource } from './resources/folders';
@@ -153,6 +154,8 @@ export class EigenpalClient {
   public readonly models: ModelsResource;
   /** Automation metadata across workflows and agents. Start runs with `client.run(...)`. */
   public readonly automations: AutomationsResource;
+  /** Tenant-wide dataset review inbox. Reviewer-facing: no workflow access required. */
+  public readonly datasetReviewRequests: DatasetReviewRequestsResource;
   /** Workflow and template folder trees. Nested agent directories in Git are not folders. */
   public readonly folders: FoldersResource;
   /** Tenant-wide run operations across workflow, agent, manual, and eval runs. */
@@ -210,6 +213,10 @@ export class EigenpalClient {
     this.auth = new AuthResource(this.client, this._request.bind(this));
     this.models = new ModelsResource(this.client, this._request.bind(this));
     this.automations = new AutomationsResource(this.client, this._request.bind(this));
+    this.datasetReviewRequests = new DatasetReviewRequestsResource(
+      this.client,
+      this._request.bind(this)
+    );
     this.folders = new FoldersResource(this.client, this._request.bind(this));
     this.runs = new RunsResource(this.client, this._request.bind(this));
     this.files = new FilesResource(this.client, this._request.bind(this));

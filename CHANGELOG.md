@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.20.6
+
+### Patch Changes
+
+- 0119440: Reviews → Datasets: the TypeScript and Python SDKs expose the tenant-wide dataset review inbox as `client.datasetReviewRequests.list()` / `client.dataset_review_requests.list()`, with the same status filter and pagination as the Studio queue.
+
 ## 0.20.5
 
 ### Patch Changes

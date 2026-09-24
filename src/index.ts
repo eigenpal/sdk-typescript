@@ -48,6 +48,7 @@ export type {
   StreamFactoryFileInput,
 } from './lib/files';
 export type { ListAutomationsOptions } from './resources/automations';
+export type { ListDatasetReviewRequestsOptions } from './resources/dataset-review-requests';
 export type { ListEmailServersOptions } from './resources/email-servers';
 export type { ListFoldersOptions } from './resources/folders';
 export type { ListRunsOptions, RunExpand, RunExpandSection } from './resources/runs';

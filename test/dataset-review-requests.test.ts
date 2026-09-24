@@ -363,3 +363,27 @@ describe('dataset review requests resource', () => {
     expect(await (uploaded as File).text()).toBe('fixed');
   });
 });
+
+describe('tenant-wide dataset review inbox resource', () => {
+  test('list hits the inbox endpoint with status filter and pagination', async () => {
+    const requests: Request[] = [];
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      maxRetries: 0,
+      fetch: (async (input) => {
+        const request = input instanceof Request ? input : new Request(input);
+        requests.push(request.clone());
+        return Response.json({ data: [], total: 0, limit: 20, offset: 0 });
+      }) as typeof globalThis.fetch,
+    });
+
+    await client.datasetReviewRequests.list({ status: ['open', 'paused'], limit: 20 });
+
+    expect(requests[0]!.method).toBe('GET');
+    const url = new URL(requests[0]!.url);
+    expect(url.pathname).toBe('/v1/dataset-review-requests');
+    expect(url.searchParams.get('status')).toBe('open,paused');
+    expect(url.searchParams.get('limit')).toBe('20');
+  });
+});

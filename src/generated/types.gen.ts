@@ -1364,6 +1364,32 @@ export type AutomationVersion = {
     createdAt?: string;
 };
 
+export type DatasetReviewInboxList = {
+    data: Array<DatasetReviewInboxItem>;
+    total: number;
+    limit: number;
+    offset: number;
+};
+
+export type DatasetReviewInboxItem = {
+    id: string;
+    automationId: string;
+    title: string;
+    instructions: string | null;
+    focusFields: Array<DatasetReviewFocusFieldOutput>;
+    ignoredFields: Array<string>;
+    status: 'draft' | 'open' | 'paused' | 'closed';
+    exampleNames: Array<string>;
+    progress: DatasetReviewProgress;
+    createdBy: string | null;
+    createdAt: string;
+    closedAt: string | null;
+    /**
+     * Display name for the automation that owns this review request.
+     */
+    automationName: string;
+};
+
 export type ListEmailServersResponse = {
     data: Array<EmailServer>;
     total: number;
@@ -5436,6 +5462,66 @@ export type AutomationsVersionsRestoreResponses = {
 };
 
 export type AutomationsVersionsRestoreResponse = AutomationsVersionsRestoreResponses[keyof AutomationsVersionsRestoreResponses];
+
+export type DatasetReviewRequestsListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Optional comma-separated review statuses to filter by.
+         */
+        status?: string;
+        limit?: number;
+        offset?: number;
+    };
+    url: '/v1/dataset-review-requests';
+};
+
+export type DatasetReviewRequestsListErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
+};
+
+export type DatasetReviewRequestsListError = DatasetReviewRequestsListErrors[keyof DatasetReviewRequestsListErrors];
+
+export type DatasetReviewRequestsListResponses = {
+    /**
+     * Page of dataset review requests across automations.
+     */
+    200: DatasetReviewInboxList;
+};
+
+export type DatasetReviewRequestsListResponse = DatasetReviewRequestsListResponses[keyof DatasetReviewRequestsListResponses];
 
 export type EmailServersListData = {
     body?: never;
