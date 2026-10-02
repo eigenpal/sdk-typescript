@@ -1,6 +1,6 @@
 {
   "name": "@eigenpal/sdk",
-  "version": "0.20.19",
+  "version": "0.20.20",
   "description": "Official TypeScript SDK for the EigenPal API",
   "type": "module",
   "main": "./src/index.ts",
@@ -19,7 +19,6 @@
     "codegen": "openapi-ts -f openapi-ts.config.ts && bun run scripts/postprocess-generated.ts",
     "codegen:check": "bun run codegen && git diff --exit-code src/generated/",
     "build": "tsc",
-    "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "test": "bun test"
   },
