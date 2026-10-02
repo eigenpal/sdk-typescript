@@ -425,3 +425,22 @@ describe('EigenpalClient public SDK', () => {
     expect(url.searchParams.get('include')).toBe('metadata');
   });
 });
+
+test('client.run sends tags separately from workflow input', async () => {
+  const captured: { url: string; method: string; body?: string }[] = [];
+  const client = new EigenpalClient({
+    apiKey: 'eg_test',
+    baseUrl: 'http://localhost:3000',
+    fetch: mockFetch(
+      [{ status: 201, body: { id: 'run_tags', type: 'workflow', finished: false } }],
+      captured
+    ),
+    maxRetries: 0,
+  });
+  await client.run('workflows.test', { id: '123' }, { tags: ['123', 'batch'] });
+  expect(JSON.parse(captured[0]!.body!)).toEqual({
+    target: 'workflows.test',
+    input: { id: '123' },
+    tags: ['123', 'batch'],
+  });
+});

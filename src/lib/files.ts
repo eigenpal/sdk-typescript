@@ -369,12 +369,14 @@ export function buildRunJsonBody(
  */
 export async function buildRunMultipart(args: {
   target: string;
+  tags?: string | string[];
   input?: Record<string, unknown>;
   overrides?: { steps?: Record<string, Record<string, unknown>> };
   metadata?: Record<string, unknown>;
 }): Promise<MultipartParts> {
   const fd = new FormData();
   fd.append('target', args.target);
+  if (args.tags !== undefined) fd.append('tags', JSON.stringify(args.tags));
   const { scalars, fileCount } = await appendFiles(fd, args.input);
   fd.append('input', JSON.stringify(scalars));
   if (args.overrides) {

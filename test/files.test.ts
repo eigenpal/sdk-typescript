@@ -337,7 +337,7 @@ describe('multipart file upload', () => {
     await client.run(
       'workflows.wf_xyz',
       { contract_document: blob, language: 'en' },
-      { metadata: { requestId: 'req_1' } }
+      { metadata: { requestId: 'req_1' }, tags: ['req_1', 'batch'] }
     );
 
     expect(captured[0]?.method).toBe('POST');
@@ -348,6 +348,8 @@ describe('multipart file upload', () => {
     expect(captured[0]?.body).not.toContain('_json');
     expect(captured[0]?.body).toContain('"language":"en"');
     expect(captured[0]?.body).toContain('name="metadata"');
+    expect(captured[0]?.body).toContain('name="tags"');
+    expect(captured[0]?.body).toContain('["req_1","batch"]');
     expect(captured[0]?.body).toContain('"requestId":"req_1"');
     expect(captured[0]?.body).toContain('target');
     expect(captured[0]?.body).toContain('workflows.wf_xyz');

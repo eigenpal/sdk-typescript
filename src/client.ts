@@ -98,6 +98,7 @@ export type RunInput = Record<string, unknown>;
 
 /** Third argument to `client.run()` — transport knobs, not workflow/agent input. */
 export interface RunCallOptions {
+  tags?: string | string[];
   waitForCompletion?: number;
   overrides?: { steps?: Record<string, Record<string, unknown>> };
   metadata?: Record<string, unknown>;
@@ -254,6 +255,7 @@ export class EigenpalClient {
         input: preparedInput,
         overrides: options.overrides,
         metadata: options.metadata,
+        tags: options.tags,
       });
       return this._request<RunStartResponse>(
         () =>
@@ -268,7 +270,10 @@ export class EigenpalClient {
       );
     }
 
-    const body = buildRunJsonBody(pathTarget, preparedInput, options.overrides, options.metadata);
+    const body = {
+      ...buildRunJsonBody(pathTarget, preparedInput, options.overrides, options.metadata),
+      ...(options.tags !== undefined ? { tags: options.tags } : {}),
+    };
     return this._request<RunStartResponse>(
       () =>
         this.client.post({

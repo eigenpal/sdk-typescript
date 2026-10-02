@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.20.21
+
+### Minor Changes
+
+- 7e2ebe0: Pass execution tags when starting workflow or agent runs with the TypeScript and Python SDKs, including runs with file inputs. Filter run history by tag using the runs client.
+
 ## 0.20.9
 
 ### Patch Changes
