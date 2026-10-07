@@ -1,5 +1,12 @@
 # @eigenpal/sdk
 
+## 0.20.27
+
+### Patch Changes
+
+- 3267908: Strengthened Python SDK generation security while preserving Python 3.10 compatibility.
+- 736a6c8: TypeScript SDK file uploads and automation operations now return precise response types, improving autocomplete and compile-time checks.
+
 ## 0.20.21
 
 ### Minor Changes

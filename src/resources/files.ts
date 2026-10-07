@@ -11,6 +11,16 @@ import {
   filesUploadsPartsList,
   filesUploadsPartsPresign,
 } from '../generated/sdk.gen';
+import type {
+  FilesDeleteResponse,
+  FilesGetResponse,
+  FilesUploadsAbortResponse,
+  FilesUploadsCompleteResponse,
+  FilesUploadsCreateResponse,
+  FilesUploadsGetResponse,
+  FilesUploadsPartsListResponse,
+  FilesUploadsPartsPresignResponse,
+} from '../generated/types.gen';
 import {
   byteViewToArrayBuffer,
   destroyUnreadNodeReadable,
@@ -43,7 +53,6 @@ type Dispatch = <T>(
   call: () => Promise<OperationResult<T>>,
   options?: RequestDispatchOptions
 ) => Promise<T>;
-type AnyResponse = any;
 type SignalOptions = { signal?: AbortSignal };
 type UploadOptions = SignalOptions & {
   /** Required only when `file` is a nameless Blob. */
@@ -92,7 +101,10 @@ export class FilesResource {
     private readonly dispatch: Dispatch
   ) {}
 
-  async upload(file: UploadableFile, options: UploadOptions = {}): Promise<AnyResponse> {
+  async upload(
+    file: UploadableFile,
+    options: UploadOptions = {}
+  ): Promise<FilesUploadsCompleteResponse> {
     const source = await resolveUploadableSource(file, options.filename);
     const idempotencyKey = options.idempotencyKey ?? newIdempotencyKey();
     const negotiation = await this.createUpload(
@@ -166,7 +178,7 @@ export class FilesResource {
               url: negotiation.completeUrl,
               body: {} as never,
               signal: options.signal,
-            }) as Promise<OperationResult<AnyResponse>>
+            }) as Promise<OperationResult<FilesUploadsCompleteResponse>>
         );
       } catch (error) {
         if (shouldAbortMultipartUploadSession({ partsReady })) {
@@ -223,13 +235,16 @@ export class FilesResource {
           bodySerializer: null,
           headers: { 'Content-Type': null },
           signal: options.signal,
-        }) as Promise<OperationResult<AnyResponse>>
+        }) as Promise<OperationResult<FilesUploadsCompleteResponse>>
     );
     options.onProgress?.(source.size, source.size);
     return uploaded;
   }
 
-  async createUpload(input: CreateUploadInput, options: SignalOptions = {}): Promise<AnyResponse> {
+  async createUpload(
+    input: CreateUploadInput,
+    options: SignalOptions = {}
+  ): Promise<FilesUploadsCreateResponse> {
     const body = {
       filename: input.filename,
       contentType: input.contentType,
@@ -247,7 +262,10 @@ export class FilesResource {
     );
   }
 
-  async completeUpload(uploadId: string, options: SignalOptions = {}): Promise<AnyResponse> {
+  async completeUpload(
+    uploadId: string,
+    options: SignalOptions = {}
+  ): Promise<FilesUploadsCompleteResponse> {
     return this.dispatch(() =>
       filesUploadsComplete({
         client: this.client,
@@ -257,7 +275,10 @@ export class FilesResource {
     );
   }
 
-  async abortUpload(uploadId: string, options: SignalOptions = {}): Promise<AnyResponse> {
+  async abortUpload(
+    uploadId: string,
+    options: SignalOptions = {}
+  ): Promise<FilesUploadsAbortResponse> {
     return this.dispatch(() =>
       filesUploadsAbort({
         client: this.client,
@@ -267,7 +288,7 @@ export class FilesResource {
     );
   }
 
-  async getUpload(uploadId: string, options: SignalOptions = {}): Promise<AnyResponse> {
+  async getUpload(uploadId: string, options: SignalOptions = {}): Promise<FilesUploadsGetResponse> {
     return this.dispatch(() =>
       filesUploadsGet({
         client: this.client,
@@ -277,7 +298,10 @@ export class FilesResource {
     );
   }
 
-  async listUploadParts(uploadId: string, options: SignalOptions = {}): Promise<AnyResponse> {
+  async listUploadParts(
+    uploadId: string,
+    options: SignalOptions = {}
+  ): Promise<FilesUploadsPartsListResponse> {
     return this.dispatch(() =>
       filesUploadsPartsList({
         client: this.client,
@@ -291,7 +315,7 @@ export class FilesResource {
     uploadId: string,
     partNumber: number,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<FilesUploadsPartsPresignResponse> {
     return this.dispatch(() =>
       filesUploadsPartsPresign({
         client: this.client,
@@ -302,7 +326,7 @@ export class FilesResource {
     );
   }
 
-  async get(fileId: string, options: SignalOptions = {}): Promise<AnyResponse> {
+  async get(fileId: string, options: SignalOptions = {}): Promise<FilesGetResponse> {
     return this.dispatch(() =>
       filesGet({ client: this.client, path: { id: fileId }, signal: options.signal })
     );
@@ -323,7 +347,7 @@ export class FilesResource {
     );
   }
 
-  async delete(fileId: string, options: SignalOptions = {}): Promise<AnyResponse> {
+  async delete(fileId: string, options: SignalOptions = {}): Promise<FilesDeleteResponse> {
     return this.dispatch(() =>
       filesDelete({ client: this.client, path: { id: fileId }, signal: options.signal })
     );

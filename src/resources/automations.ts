@@ -32,8 +32,36 @@ import {
 } from '../generated/sdk.gen';
 import type {
   AutomationDetail,
+  AutomationsDatasetImportResponse,
+  AutomationsDatasetReviewRequestsCreateResponse,
+  AutomationsDatasetReviewRequestsGetResponse,
+  AutomationsDatasetReviewRequestsListEventsResponse,
+  AutomationsDatasetReviewRequestsListItemsResponse,
+  AutomationsDatasetReviewRequestsListResponse,
+  AutomationsDatasetReviewRequestsUpdateItemResponse,
+  AutomationsDatasetReviewRequestsUpdateResponse,
+  AutomationsEvaluatorsGetResponse,
+  AutomationsEvaluatorsUpdateResponse,
+  AutomationsExamplesCreateResponse,
+  AutomationsExamplesDeleteResponse,
+  AutomationsExamplesGetResponse,
+  AutomationsExamplesListResponse,
+  AutomationsExamplesRunResponse,
+  AutomationsExamplesUpdateResponse,
+  AutomationsExperimentsCancelResponse,
+  AutomationsExperimentsCreateResponse,
+  AutomationsExperimentsGetResponse,
+  AutomationsExperimentsListResponse,
+  AutomationsGetResponse,
   AutomationsListData,
   AutomationsReviewsHealthData,
+  AutomationsReviewsHealthResponse,
+  AutomationsSyncResponse,
+  AutomationsTriggersGetResponse,
+  AutomationsVersionsCreateResponse,
+  AutomationsVersionsListResponse,
+  AutomationsVersionsPromoteResponse,
+  AutomationsVersionsRestoreResponse,
   CreateAutomationVersionRequest,
   DeleteAutomationResponse,
   ListAutomationsResponse,
@@ -45,7 +73,6 @@ type Dispatch = <T>(
   options?: RequestDispatchOptions
 ) => Promise<T>;
 type SignalOptions = { signal?: AbortSignal };
-type AnyResponse = any;
 
 export type ListAutomationsOptions = NonNullable<AutomationsListData['query']> & SignalOptions;
 
@@ -74,7 +101,7 @@ export class AutomationsResource {
     return this.dispatch(() => automationsList({ client: this.client, query, signal }));
   }
 
-  async get(id: string, options: SignalOptions = {}): Promise<AnyResponse> {
+  async get(id: string, options: SignalOptions = {}): Promise<AutomationsGetResponse> {
     return this.dispatch(() =>
       automationsGet({ client: this.client, path: { id }, signal: options.signal })
     );
@@ -111,7 +138,10 @@ export class AutomationsResource {
     );
   }
 
-  async versions(id: string, options: SignalOptions = {}): Promise<AnyResponse> {
+  async versions(
+    id: string,
+    options: SignalOptions = {}
+  ): Promise<AutomationsVersionsListResponse> {
     return this.dispatch(() =>
       automationsVersionsList({ client: this.client, path: { id }, signal: options.signal })
     );
@@ -121,7 +151,7 @@ export class AutomationsResource {
     id: string,
     body: CreateAutomationVersionRequest,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsVersionsCreateResponse> {
     return this.dispatch(() =>
       automationsVersionsCreate({
         client: this.client,
@@ -137,7 +167,7 @@ export class AutomationsResource {
     versionId: string,
     body: { message?: string } = {},
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsVersionsRestoreResponse> {
     return this.dispatch(() =>
       automationsVersionsRestore({
         client: this.client,
@@ -152,7 +182,7 @@ export class AutomationsResource {
     id: string,
     versionId: string,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsVersionsPromoteResponse> {
     return this.dispatch(() =>
       automationsVersionsPromote({
         client: this.client,
@@ -162,13 +192,13 @@ export class AutomationsResource {
     );
   }
 
-  async triggers(id: string, options: SignalOptions = {}): Promise<AnyResponse> {
+  async triggers(id: string, options: SignalOptions = {}): Promise<AutomationsTriggersGetResponse> {
     return this.dispatch(() =>
       automationsTriggersGet({ client: this.client, path: { id }, signal: options.signal })
     );
   }
 
-  async sync(id: string, options: SignalOptions = {}): Promise<AnyResponse> {
+  async sync(id: string, options: SignalOptions = {}): Promise<AutomationsSyncResponse> {
     return this.dispatch(() =>
       automationsSync({ client: this.client, path: { id }, signal: options.signal })
     );
@@ -187,7 +217,7 @@ export class AutomationReviewsResource {
   async health(
     automationId: string,
     options: AutomationReviewHealthOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsReviewsHealthResponse> {
     const { signal, ...query } = options;
     return this.dispatch(() =>
       automationsReviewsHealth({
@@ -226,7 +256,7 @@ export class AutomationDatasetResource {
     automationId: string,
     file: Blob | File,
     options: { mode?: 'append' | 'replace'; signal?: AbortSignal } = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsDatasetImportResponse> {
     const formData = new FormData();
     formData.set('file', file);
     formData.set('mode', options.mode ?? 'append');
@@ -257,7 +287,7 @@ export class AutomationExamplesResource {
       include?: 'full' | 'metadata';
       signal?: AbortSignal;
     } = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsExamplesListResponse> {
     const { signal, ...query } = options;
     return this.dispatch(() =>
       automationsExamplesList({ client: this.client, path: { id: automationId }, query, signal })
@@ -268,7 +298,7 @@ export class AutomationExamplesResource {
     automationId: string,
     body: Record<string, unknown>,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsExamplesCreateResponse> {
     return this.dispatch(() =>
       automationsExamplesCreate({
         client: this.client,
@@ -283,7 +313,7 @@ export class AutomationExamplesResource {
     automationId: string,
     exampleId: string,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsExamplesGetResponse> {
     return this.dispatch(() =>
       automationsExamplesGet({
         client: this.client,
@@ -298,7 +328,7 @@ export class AutomationExamplesResource {
     exampleId: string,
     body: Record<string, unknown>,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsExamplesUpdateResponse> {
     return this.dispatch(() =>
       automationsExamplesUpdate({
         client: this.client,
@@ -313,7 +343,7 @@ export class AutomationExamplesResource {
     automationId: string,
     exampleId: string,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsExamplesDeleteResponse> {
     return this.dispatch(() =>
       automationsExamplesDelete({
         client: this.client,
@@ -327,7 +357,7 @@ export class AutomationExamplesResource {
     automationId: string,
     exampleId: string,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsExamplesRunResponse> {
     return this.dispatch(() =>
       automationsExamplesRun({
         client: this.client,
@@ -344,7 +374,10 @@ export class AutomationEvaluatorsResource {
     private readonly dispatch: Dispatch
   ) {}
 
-  async get(automationId: string, options: SignalOptions = {}): Promise<AnyResponse> {
+  async get(
+    automationId: string,
+    options: SignalOptions = {}
+  ): Promise<AutomationsEvaluatorsGetResponse> {
     return this.dispatch(() =>
       automationsEvaluatorsGet({
         client: this.client,
@@ -358,7 +391,7 @@ export class AutomationEvaluatorsResource {
     automationId: string,
     yaml: string,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsEvaluatorsUpdateResponse> {
     return this.dispatch(() =>
       automationsEvaluatorsUpdate({
         client: this.client,
@@ -379,7 +412,7 @@ export class AutomationExperimentsResource {
   async list(
     automationId: string,
     options: { limit?: number; offset?: number; signal?: AbortSignal } = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsExperimentsListResponse> {
     const { signal, ...query } = options;
     return this.dispatch(() =>
       automationsExperimentsList({ client: this.client, path: { id: automationId }, query, signal })
@@ -390,7 +423,7 @@ export class AutomationExperimentsResource {
     automationId: string,
     body: Record<string, unknown> = {},
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsExperimentsCreateResponse> {
     return this.dispatch(() =>
       automationsExperimentsCreate({
         client: this.client,
@@ -405,7 +438,7 @@ export class AutomationExperimentsResource {
     automationId: string,
     experimentId: string,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsExperimentsGetResponse> {
     return this.dispatch(() =>
       automationsExperimentsGet({
         client: this.client,
@@ -419,7 +452,7 @@ export class AutomationExperimentsResource {
     automationId: string,
     experimentId: string,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsExperimentsCancelResponse> {
     return this.dispatch(() =>
       automationsExperimentsCancel({
         client: this.client,
@@ -601,7 +634,7 @@ export class AutomationDatasetReviewRequestsResource {
   async list(
     automationId: string,
     options: ListDatasetReviewRequestsOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsDatasetReviewRequestsListResponse> {
     const { signal, status, limit, offset } = options;
     const query = {
       status: joinCsv(status),
@@ -614,7 +647,7 @@ export class AutomationDatasetReviewRequestsResource {
           url: datasetReviewRequestsBaseUrl(automationId),
           query,
           signal,
-        }) as Promise<OperationResult<AnyResponse>>
+        }) as Promise<OperationResult<AutomationsDatasetReviewRequestsListResponse>>
     );
   }
 
@@ -622,14 +655,14 @@ export class AutomationDatasetReviewRequestsResource {
     automationId: string,
     body: CreateDatasetReviewRequestBody,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsDatasetReviewRequestsCreateResponse> {
     return this.dispatch(
       () =>
         this.client.post({
           url: datasetReviewRequestsBaseUrl(automationId),
           body: body as never,
           signal: options.signal,
-        }) as Promise<OperationResult<AnyResponse>>
+        }) as Promise<OperationResult<AutomationsDatasetReviewRequestsCreateResponse>>
     );
   }
 
@@ -637,13 +670,13 @@ export class AutomationDatasetReviewRequestsResource {
     automationId: string,
     reviewId: string,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsDatasetReviewRequestsGetResponse> {
     return this.dispatch(
       () =>
         this.client.get({
           url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}`,
           signal: options.signal,
-        }) as Promise<OperationResult<AnyResponse>>
+        }) as Promise<OperationResult<AutomationsDatasetReviewRequestsGetResponse>>
     );
   }
 
@@ -652,14 +685,14 @@ export class AutomationDatasetReviewRequestsResource {
     reviewId: string,
     body: UpdateDatasetReviewRequestBody,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsDatasetReviewRequestsUpdateResponse> {
     return this.dispatch(
       () =>
         this.client.patch({
           url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}`,
           body: body as never,
           signal: options.signal,
-        }) as Promise<OperationResult<AnyResponse>>
+        }) as Promise<OperationResult<AutomationsDatasetReviewRequestsUpdateResponse>>
     );
   }
 
@@ -667,7 +700,7 @@ export class AutomationDatasetReviewRequestsResource {
     automationId: string,
     reviewId: string,
     options: SignalOptions & { status?: string | readonly DatasetReviewItemStatus[] } = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsDatasetReviewRequestsListItemsResponse> {
     const { signal, status } = options;
     return this.dispatch(
       () =>
@@ -675,7 +708,7 @@ export class AutomationDatasetReviewRequestsResource {
           url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items`,
           query: { status: joinCsv(status) },
           signal,
-        }) as Promise<OperationResult<AnyResponse>>
+        }) as Promise<OperationResult<AutomationsDatasetReviewRequestsListItemsResponse>>
     );
   }
 
@@ -685,14 +718,14 @@ export class AutomationDatasetReviewRequestsResource {
     itemId: string,
     body: UpdateDatasetReviewItemBody,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsDatasetReviewRequestsUpdateItemResponse> {
     return this.dispatch(
       () =>
         this.client.patch({
           url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items/${itemId}`,
           body: body as never,
           signal: options.signal,
-        }) as Promise<OperationResult<AnyResponse>>
+        }) as Promise<OperationResult<AutomationsDatasetReviewRequestsUpdateItemResponse>>
     );
   }
 
@@ -735,14 +768,14 @@ export class AutomationDatasetReviewRequestsResource {
     itemId: string,
     body: RecordDatasetReviewItemFileDecisionBody,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsDatasetReviewRequestsUpdateItemResponse> {
     return this.dispatch(
       () =>
         this.client.patch({
           url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items/${itemId}`,
           body: { action: 'file-decision', ...body } as never,
           signal: options.signal,
-        }) as Promise<OperationResult<AnyResponse>>
+        }) as Promise<OperationResult<AutomationsDatasetReviewRequestsUpdateItemResponse>>
     );
   }
 
@@ -758,7 +791,7 @@ export class AutomationDatasetReviewRequestsResource {
     itemId: string,
     file: Blob | File,
     options: EditDatasetReviewItemFileOptions
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsDatasetReviewRequestsUpdateItemResponse> {
     const target = options.filePath ?? options.newPath ?? 'file';
     const fallbackName = target.split('/').pop() || 'file';
     const filename = file instanceof File && file.name ? file.name : fallbackName;
@@ -777,7 +810,7 @@ export class AutomationDatasetReviewRequestsResource {
           bodySerializer: null,
           headers: { 'Content-Type': null },
           signal: options.signal,
-        }) as Promise<OperationResult<AnyResponse>>
+        }) as Promise<OperationResult<AutomationsDatasetReviewRequestsUpdateItemResponse>>
     );
   }
 
@@ -785,13 +818,13 @@ export class AutomationDatasetReviewRequestsResource {
     automationId: string,
     reviewId: string,
     options: SignalOptions = {}
-  ): Promise<AnyResponse> {
+  ): Promise<AutomationsDatasetReviewRequestsListEventsResponse> {
     return this.dispatch(
       () =>
         this.client.get({
           url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/events`,
           signal: options.signal,
-        }) as Promise<OperationResult<AnyResponse>>
+        }) as Promise<OperationResult<AutomationsDatasetReviewRequestsListEventsResponse>>
     );
   }
 }

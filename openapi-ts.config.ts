@@ -14,7 +14,7 @@ export default defineConfig({
   input: '../app/openapi/openapi.yaml',
   output: {
     path: './src/generated',
-    lint: false,
+    postProcess: [],
   },
   plugins: [
     {
