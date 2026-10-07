@@ -1759,6 +1759,18 @@ export type PublicModelCost = {
     unit: 'credits';
 };
 
+export type ParsingReadiness = {
+    stepType: 'ai.parse-v2';
+    imageReading: 'configured' | 'unconfigured';
+    providers: {
+        ocr: string | null;
+        vision: string | null;
+    };
+    nativeExtraction: 'requires-worker-probe';
+    liveProbe: false;
+    warnings: Array<string>;
+};
+
 export type RunsListResponse = {
     runs: Array<RunListItem>;
     nextCursor: string | null;
@@ -7241,6 +7253,59 @@ export type ModelsListResponses = {
 };
 
 export type ModelsListResponse = ModelsListResponses[keyof ModelsListResponses];
+
+export type ModelsParserReadinessData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/parsing/readiness';
+};
+
+export type ModelsParserReadinessErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
+};
+
+export type ModelsParserReadinessError = ModelsParserReadinessErrors[keyof ModelsParserReadinessErrors];
+
+export type ModelsParserReadinessResponses = {
+    /**
+     * Parsing configuration readiness
+     */
+    200: ParsingReadiness;
+};
+
+export type ModelsParserReadinessResponse = ModelsParserReadinessResponses[keyof ModelsParserReadinessResponses];
 
 export type RunsListData = {
     body?: never;

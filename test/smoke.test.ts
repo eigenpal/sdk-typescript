@@ -444,3 +444,24 @@ test('client.run sends tags separately from workflow input', async () => {
     tags: ['123', 'batch'],
   });
 });
+
+test('parser readiness resource uses the authenticated public endpoint', async () => {
+  const requests: { url: string; method: string; auth: string | null }[] = [];
+  const body = {
+    stepType: 'ai.parse-v2',
+    imageReading: 'configured',
+    providers: { ocr: null, vision: 'fixture' },
+    nativeExtraction: 'requires-worker-probe',
+    liveProbe: false,
+    warnings: [],
+  };
+  const client = new EigenpalClient({
+    apiKey: 'eg_test_key',
+    baseUrl: 'http://localhost:3000',
+    fetch: mockFetch([{ status: 200, body }], requests),
+    maxRetries: 0,
+  });
+  expect(await client.models.parserReadiness()).toEqual(body);
+  expect(requests[0]?.url).toBe('http://localhost:3000/v1/parsing/readiness');
+  expect(requests[0]?.auth).toBe('Bearer eg_test_key');
+});
