@@ -393,6 +393,9 @@ export type UpdateFolderRequest = {
  * Run envelope. Declare provenance with the `X-Eigenpal-Trigger` header (`api` or `cli`). Legacy 0.5.12 body shapes remain accepted.
  */
 export type RunStartBody = {
+    /**
+     * One exact tag or a list of up to 100 (256 characters each). Tags are returned on the run and in every webhook event as `data.run.tags`, so use them to carry your own correlation IDs.
+     */
     tags?: string | Array<string>;
     /**
      * Automation target without a version suffix, e.g. workflows.invoice or agents.support.
@@ -470,7 +473,7 @@ export type RunStartBody = {
 
 export type RunStartMultipartRequest = {
     /**
-     * JSON string or string array of exact execution tags
+     * JSON string or string array of exact execution tags. Returned in every webhook event as `data.run.tags`.
      */
     tags?: string;
     /**

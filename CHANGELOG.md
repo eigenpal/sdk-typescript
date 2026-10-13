@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.20.42
+
+### Patch Changes
+
+- 4da7de5: The `tags` option when starting a run now documents that tags are returned in every webhook event as `data.run.tags`, for correlating events with your own records.
+
 ## 0.20.41
 
 ### Patch Changes
