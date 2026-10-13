@@ -7324,6 +7324,10 @@ export type RunsListData = {
         batchId?: string;
         exampleId?: string;
         exampleIdContains?: string;
+        /**
+         * Only runs linked to a dataset example (eval and example runs).
+         */
+        hasExample?: 'true';
         from?: string;
         to?: string;
         createdAfter?: string;

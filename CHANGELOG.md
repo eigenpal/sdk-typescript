@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.20.41
+
+### Patch Changes
+
+- c76c348: Listing runs accepts a `hasExample` filter (`has_example` in Python) that returns only runs linked to a dataset example.
+
 ## 0.20.28
 
 ### Minor Changes

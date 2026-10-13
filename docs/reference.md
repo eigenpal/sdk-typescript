@@ -2307,6 +2307,7 @@ List workflow and agent runs with cursor pagination.
 | `batchId`             | `string` | (optional)                                                                                                                    |
 | `exampleId`           | `string` | (optional)                                                                                                                    |
 | `exampleIdContains`   | `string` | (optional)                                                                                                                    |
+| `hasExample`          | `"true"` | (optional)Only runs linked to a dataset example (eval and example runs).                                                      |
 | `from`                | `string` | (optional)                                                                                                                    |
 | `to`                  | `string` | (optional)                                                                                                                    |
 | `createdAfter`        | `string` | (optional)                                                                                                                    |
