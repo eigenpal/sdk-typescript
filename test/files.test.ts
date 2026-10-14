@@ -1103,4 +1103,47 @@ describe('multipart file upload', () => {
       globalThis.fetch = originalFetch;
     }
   });
+
+  test('http-chunked PUTs sequential slices then completes', async () => {
+    const chunkPuts: number[] = [];
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      maxRetries: 0,
+      fetch: async (input, init) => {
+        const request = input instanceof Request ? input : new Request(input.toString(), init);
+        const url = request.url;
+        if (url.endsWith('/v1/files/uploads') && request.method === 'POST') {
+          return Response.json({
+            transport: 'http-chunked',
+            uploadId: 'fup_chunk',
+            fileId: 'file_chunk',
+            chunkSizeBytes: 5,
+            chunkCount: 3,
+            chunksUrl: '/v1/files/uploads/fup_chunk/chunks',
+            completeUrl: '/v1/files/uploads/fup_chunk/complete',
+            expiresAt: '2026-08-04T10:00:00.000Z',
+            maxFileSizeBytes: 100 * 1024 * 1024,
+          });
+        }
+        const chunkMatch = url.match(/\/chunks\/(\d+)$/);
+        if (chunkMatch && request.method === 'PUT') {
+          chunkPuts.push(Number(chunkMatch[1]));
+          return Response.json({
+            accepted: true,
+            chunkIndex: Number(chunkMatch[1]),
+            size: 5,
+          });
+        }
+        if (url.endsWith('/v1/files/uploads/fup_chunk/complete')) {
+          return Response.json({ id: 'file_chunk', filename: 'notes.txt', size: 12 });
+        }
+        throw new Error(`Unexpected API request: ${url}`);
+      },
+    });
+
+    const result = await client.files.upload(new File(['abcdefghijkl'], 'notes.txt'));
+    expect(result.id).toBe('file_chunk');
+    expect(chunkPuts).toEqual([0, 1, 2]);
+  });
 });

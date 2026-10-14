@@ -34,7 +34,7 @@ if (result.finished) {
 }
 ```
 
-`target` is always typed: `workflows.<slug>` or `agents.<slug>`. That keeps workflow and agent slugs unambiguous.
+`target` accepts a bare workflow ID such as `wf_abc`, or a typed target such as `workflows.<id-or-slug>` or `agents.<slug>`. Slugs need the prefix because workflow and agent slugs can overlap.
 
 ## Automations
 

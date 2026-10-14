@@ -1,4 +1,5 @@
 import type { OperationResult, RequestDispatchOptions } from '../client';
+import { EigenpalError } from '../errors';
 import type { Client } from '../generated/client';
 import {
   filesContentGet,
@@ -15,6 +16,7 @@ import type {
   FilesDeleteResponse,
   FilesGetResponse,
   FilesUploadsAbortResponse,
+  FilesUploadsChunksPutResponse,
   FilesUploadsCompleteResponse,
   FilesUploadsCreateResponse,
   FilesUploadsGetResponse,
@@ -38,6 +40,12 @@ import {
   statUploadSize,
   type FileInput,
 } from '../lib/files';
+import {
+  annotateHttpChunkedCompleteFailure,
+  ChunkUploadHttpError,
+  shouldAbortHttpChunkedUploadSession,
+  uploadHttpChunks,
+} from '../lib/upload-app-chunked';
 import {
   annotateMultipartCompleteFailure,
   annotatePresignedPutCompleteFailure,
@@ -188,6 +196,59 @@ export class FilesResource {
           throw error;
         }
         throw annotateMultipartCompleteFailure(negotiation.uploadId, error);
+      }
+    }
+
+    if (negotiation.transport === 'http-chunked') {
+      if (!source.replayable) {
+        throw new Error(
+          'Cannot resume a chunked upload from a one-shot stream. Pass a file path, Blob, or a reusable stream factory.'
+        );
+      }
+      let chunksReady = false;
+      try {
+        await uploadHttpChunks({
+          chunkCount: negotiation.chunkCount,
+          chunkSizeBytes: negotiation.chunkSizeBytes,
+          totalSize: source.size,
+          signal: options.signal,
+          onProgress: options.onProgress,
+          putChunk: async ({ chunkIndex, start, length }) => {
+            const body = await source.openPart(start, length);
+            try {
+              await this.dispatch(
+                () =>
+                  this.client.put({
+                    url: `${negotiation.chunksUrl}/${chunkIndex}`,
+                    body: body as never,
+                    bodySerializer: null,
+                    headers: { 'Content-Type': 'application/octet-stream' },
+                    signal: options.signal,
+                  }) as Promise<OperationResult<FilesUploadsChunksPutResponse>>
+              );
+            } catch (error) {
+              if (error instanceof EigenpalError) throw new ChunkUploadHttpError(error.status);
+              throw error;
+            }
+          },
+        });
+        chunksReady = true;
+        return await this.dispatch(
+          () =>
+            this.client.post({
+              url: negotiation.completeUrl,
+              body: {} as never,
+              signal: options.signal,
+            }) as Promise<OperationResult<FilesUploadsCompleteResponse>>
+        );
+      } catch (error) {
+        if (shouldAbortHttpChunkedUploadSession({ chunksReady })) {
+          await this.abortUpload(negotiation.uploadId, {
+            signal: uploadAbortCleanupSignal(),
+          }).catch(() => undefined);
+          throw error;
+        }
+        throw annotateHttpChunkedCompleteFailure(negotiation.uploadId, error);
       }
     }
 

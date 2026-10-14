@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.20.45
+
+### Minor Changes
+
+- 0be0b92: The TypeScript and Python SDKs now follow the chunked Files upload transport for large on-prem uploads when storage-direct transfer is disabled.
+
 ## 0.20.42
 
 ### Patch Changes

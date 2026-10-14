@@ -1499,6 +1499,18 @@ export type PresignedMultipartFileUploadSession = {
     maxFileSizeBytes: number;
 };
 
+export type HttpChunkedFileUploadSession = {
+    transport: 'http-chunked';
+    uploadId: string;
+    fileId: string;
+    chunkSizeBytes: number;
+    chunkCount: number;
+    chunksUrl: string;
+    completeUrl: string;
+    expiresAt: string;
+    maxFileSizeBytes: number;
+};
+
 export type MultipartFileUploadFallback = {
     transport: 'multipart';
     url: string;
@@ -1508,11 +1520,13 @@ export type MultipartFileUploadFallback = {
 export type FileUploadSession = {
     uploadId: string;
     fileId: string;
-    transport: 'presigned-put' | 'presigned-multipart';
+    transport: 'presigned-put' | 'presigned-multipart' | 'http-chunked';
     status: string;
     expiresAt: string;
     partSizeBytes?: number | null;
     partCount?: number | null;
+    chunkSizeBytes?: number | null;
+    chunkCount?: number | null;
     parts?: Array<{
         partNumber: number;
         size?: number;
@@ -1522,6 +1536,12 @@ export type FileUploadSession = {
 
 export type AbortFileUploadResponse = {
     aborted: true;
+};
+
+export type AcceptHttpChunkedUploadChunkResponse = {
+    accepted: true;
+    chunkIndex: number;
+    size: number;
 };
 
 export type ListFileUploadPartsResponse = {
@@ -1649,7 +1669,7 @@ export type HumanReviewTaskDetail = {
     fieldMetadata: {
         [key: string]: {
             /**
-             * Producer-supplied confidence: 0–1 numeric (legacy) or categorical low|medium|high from ai.extract grounding. Not calibrated by Eigenpal.
+             * Routing confidence: categorical low|medium|high from ai.extract grounding, or legacy 0–1 numeric when authored. Numeric grounding scores from extract land in display.score instead. Not calibrated by Eigenpal.
              */
             confidence?: number | 'low' | 'medium' | 'high' | string;
             /**
@@ -1665,7 +1685,7 @@ export type HumanReviewTaskDetail = {
              */
             review?: 'auto' | 'always' | 'never';
             /**
-             * Opaque display metadata preserved for the review UI
+             * Opaque display metadata preserved for the review UI. When metadataFrom is ai.extract, numeric grounding scores are copied here as display.score; routing confidence stays on confidence as categorical low|medium|high.
              */
             display?: {
                 [key: string]: unknown;
@@ -6248,7 +6268,7 @@ export type FilesUploadsCreateResponses = {
     /**
      * Negotiated upload transport
      */
-    200: PresignedFileUploadSession | PresignedMultipartFileUploadSession | MultipartFileUploadFallback;
+    200: PresignedFileUploadSession | PresignedMultipartFileUploadSession | HttpChunkedFileUploadSession | MultipartFileUploadFallback;
 };
 
 export type FilesUploadsCreateResponse = FilesUploadsCreateResponses[keyof FilesUploadsCreateResponses];
@@ -6362,6 +6382,69 @@ export type FilesUploadsGetResponses = {
 };
 
 export type FilesUploadsGetResponse = FilesUploadsGetResponses[keyof FilesUploadsGetResponses];
+
+export type FilesUploadsChunksPutData = {
+    /**
+     * Raw chunk bytes
+     */
+    body: Blob | File;
+    path: {
+        uploadId: string;
+        chunkIndex: string;
+    };
+    query?: never;
+    url: '/v1/files/uploads/{uploadId}/chunks/{chunkIndex}';
+};
+
+export type FilesUploadsChunksPutErrors = {
+    /**
+     * Validation error. Request shape did not match the spec.
+     */
+    400: ApiErrorEnvelope;
+    /**
+     * Missing or invalid API key
+     */
+    401: ApiErrorEnvelope;
+    /**
+     * API key lacks required scope
+     */
+    403: ApiErrorEnvelope;
+    /**
+     * Resource not found
+     */
+    404: ApiErrorEnvelope;
+    /**
+     * The organization is being deleted. Its stored files are being removed, so new work that would write to its storage is refused.
+     */
+    409: ApiErrorEnvelope;
+    /**
+     * Payload too large. Upload exceeded the per-request size cap.
+     */
+    413: ApiErrorEnvelope;
+    /**
+     * Rate limit exceeded
+     */
+    429: ApiErrorEnvelope;
+    /**
+     * Internal server error
+     */
+    500: ApiErrorEnvelope;
+    /**
+     * Rate-limit accounting is temporarily unavailable. The request was not processed; retry.
+     */
+    503: ApiErrorEnvelope;
+};
+
+export type FilesUploadsChunksPutError = FilesUploadsChunksPutErrors[keyof FilesUploadsChunksPutErrors];
+
+export type FilesUploadsChunksPutResponses = {
+    /**
+     * Chunk accepted
+     */
+    200: AcceptHttpChunkedUploadChunkResponse;
+};
+
+export type FilesUploadsChunksPutResponse = FilesUploadsChunksPutResponses[keyof FilesUploadsChunksPutResponses];
 
 export type FilesUploadsCompleteData = {
     body?: never;

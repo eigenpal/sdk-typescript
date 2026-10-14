@@ -1863,7 +1863,7 @@ Download bytes for a reusable uploaded file. Direct-enabled deployments redirect
 
 Prepare file upload
 
-Negotiate HTTP multipart for small bodies, a short-lived signed PUT under the single-object ceiling, or storage-direct multipart (presigned-multipart) for larger files when storage supports MPU. The response transport is authoritative; clients must not guess from file size alone.
+Negotiate HTTP multipart for small bodies, a short-lived signed PUT under the single-object ceiling, storage-direct multipart (presigned-multipart) for larger files when storage supports MPU, or app-server http-chunked PUTs when direct uploads are disabled. The response transport is authoritative; clients must not guess from file size alone.
 
 **Request body**
 
@@ -1874,7 +1874,7 @@ Negotiate HTTP multipart for small bodies, a short-lived signed PUT under the si
 **Response**
 
 ```ts
-// PresignedFileUploadSession | PresignedMultipartFileUploadSession | MultipartFileUploadFallback
+// PresignedFileUploadSession | PresignedMultipartFileUploadSession | HttpChunkedFileUploadSession | MultipartFileUploadFallback
 ```
 
 ### `client.files.getUpload`
@@ -1903,7 +1903,7 @@ Return session status for resume. Multipart sessions include authoritative uploa
 
 Abort file upload
 
-Abort a pending storage-direct upload. Multipart sessions call AbortMultipartUpload; pending PUT objects are deleted. Completed canonical files are never deleted.
+Abort a pending storage-direct or http-chunked upload. Multipart sessions call AbortMultipartUpload; pending PUT objects and staged chunks are deleted. Completed canonical files are never deleted.
 
 **Path parameters**
 
@@ -1917,13 +1917,34 @@ Abort a pending storage-direct upload. Multipart sessions call AbortMultipartUpl
 // AbortFileUploadResponse
 ```
 
+### `client.files.upload`
+
+**`PUT /v1/files/uploads/:uploadId/chunks/:chunkIndex`**
+
+Upload one file chunk
+
+Accept one raw body for an http-chunked session. Each chunk must match the negotiated size; chunks are accepted in order. Idempotent overwrite of the current index is allowed.
+
+**Path parameters**
+
+| Name         | Type     | Description |
+| ------------ | -------- | ----------- |
+| `uploadId`   | `string` |             |
+| `chunkIndex` | `string` |             |
+
+**Response**
+
+```ts
+// AcceptHttpChunkedUploadChunkResponse
+```
+
 ### `client.files.completeUpload`
 
 **`POST /v1/files/uploads/:uploadId/complete`**
 
 Complete file upload
 
-Verify a storage-direct pending object and promote it into a reusable file. Safe to retry.
+Verify a storage-direct pending object or assemble an http-chunked session into a reusable file. Safe to retry.
 
 **Path parameters**
 
