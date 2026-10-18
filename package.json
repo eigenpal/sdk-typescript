@@ -1,6 +1,6 @@
 {
   "name": "@eigenpal/sdk",
-  "version": "0.20.56",
+  "version": "0.20.57",
   "description": "Official TypeScript SDK for the EigenPal API",
   "type": "module",
   "main": "./src/index.ts",
