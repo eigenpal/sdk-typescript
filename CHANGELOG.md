@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.20.69
+
+### Patch Changes
+
+- a5395aa: The Python SDK now requires an updated certificate trust store that excludes compromised certificate authorities, improving HTTPS connection security.
+
 ## 0.20.45
 
 ### Minor Changes
