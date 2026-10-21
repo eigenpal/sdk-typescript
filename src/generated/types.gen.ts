@@ -900,27 +900,76 @@ export type DatasetImportResponse = {
 };
 
 /**
- * Evaluator YAML and parsed evaluator configuration for an automation.
+ * Workflow evaluator YAML or typed agent evaluator metadata from its pinned requested source commit. Edit agent.ts and release to change agent evaluations.
  */
-export type EvaluatorConfigResponse = {
-    /**
-     * Automation that owns this evaluator config.
-     */
+export type EvaluatorConfigResponse = ({
+    automationType: 'workflow';
+} & WorkflowEvaluatorConfigResponse) | ({
+    automationType: 'agent';
+} & AgentEvaluatorConfigResponse);
+
+export type WorkflowEvaluatorConfigResponse = {
     automationId: string;
-    automationType: AutomationType;
+    automationType: 'workflow';
     /**
-     * Evaluator configuration YAML.
+     * Workflow evaluator configuration YAML.
      */
     yaml: string;
-    config: {
-        /**
-         * Parsed evaluator definitions from the YAML.
-         */
-        evaluators: Array<unknown>;
-        /**
-         * Overall score threshold required for the experiment to pass.
-         */
-        passThreshold: number;
+    config: WorkflowEvaluatorConfig;
+};
+
+export type WorkflowEvaluatorConfig = {
+    evaluators: Array<unknown>;
+    passThreshold: number;
+};
+
+export type AgentEvaluatorConfigResponse = {
+    automationId: string;
+    automationType: 'agent';
+    source: {
+        path: string;
+        ref: string;
+        commit: string;
+    };
+    evaluation: AgentEvaluation | null;
+};
+
+export type AgentEvaluation = {
+    evaluators: {
+        [key: string]: {
+            kind: 'custom';
+        } | {
+            kind: 'exact-diff';
+            options?: {
+                rules?: {
+                    [key: string]: {
+                        ignore?: true;
+                        order?: 'ordered' | 'unordered';
+                        items?: 'at-least' | 'at-most' | 'exactly';
+                        matchBy?: string | Array<string>;
+                        allowExtraFields?: boolean;
+                        numericTolerance?: number;
+                    };
+                };
+                paths?: Array<string>;
+                unorderedPaths?: Array<string>;
+                numericTolerance?: number;
+                allowExtraFields?: boolean;
+            };
+        } | {
+            kind: 'llm-judge';
+            prompt: string;
+            model?: string;
+        };
+    };
+    pass: {
+        kind: 'callback';
+    } | {
+        kind: 'weighted';
+        weights: {
+            [key: string]: number;
+        };
+        threshold: number;
     };
 };
 
@@ -3433,7 +3482,9 @@ export type AutomationsEvaluatorsGetData = {
          */
         id: string;
     };
-    query?: never;
+    query?: {
+        sourceRef?: string;
+    };
     url: '/v1/automations/{id}/evaluators';
 };
 

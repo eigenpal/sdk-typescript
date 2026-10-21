@@ -741,13 +741,19 @@ Import a dataset ZIP archive using the examples/<name>/input and examples/<name>
 
 Get evaluators
 
-Fetch the evaluator configuration for an automation. Evaluators produce automated `score` results, which are separate from human review verdicts.
+Fetch workflow evaluator YAML or agent evaluator metadata compiled from the requested sourceRef (latest release by default). Agent evaluations are defined in agent.ts and captured with each run. Automated scores are separate from human review verdicts.
 
 **Path parameters**
 
 | Name | Type     | Description                   |
 | ---- | -------- | ----------------------------- |
 | `id` | `string` | Automation id or typed alias. |
+
+**Query parameters**
+
+| Name        | Type     | Description |
+| ----------- | -------- | ----------- |
+| `sourceRef` | `string` | (optional)  |
 
 **Response**
 
@@ -761,7 +767,7 @@ Fetch the evaluator configuration for an automation. Evaluators produce automate
 
 Replace evaluators
 
-Replace the evaluator YAML for an automation. The submitted YAML is validated before it becomes the source for future experiment scores.
+Replace evaluator YAML for a workflow. Agents reject YAML updates: define evaluators and a pass rule in agent.ts, then release.
 
 **Path parameters**
 

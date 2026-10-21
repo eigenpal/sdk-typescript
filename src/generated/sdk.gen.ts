@@ -207,7 +207,7 @@ export const automationsDatasetImport = <ThrowOnError extends boolean = false>(o
 /**
  * Get evaluators
  *
- * Fetch the evaluator configuration for an automation. Evaluators produce automated `score` results, which are separate from human review verdicts.
+ * Fetch workflow evaluator YAML or agent evaluator metadata compiled from the requested sourceRef (latest release by default). Agent evaluations are defined in agent.ts and captured with each run. Automated scores are separate from human review verdicts.
  */
 export const automationsEvaluatorsGet = <ThrowOnError extends boolean = false>(options: Options<AutomationsEvaluatorsGetData, ThrowOnError>) => (options.client ?? client).get<AutomationsEvaluatorsGetResponses, AutomationsEvaluatorsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -218,7 +218,7 @@ export const automationsEvaluatorsGet = <ThrowOnError extends boolean = false>(o
 /**
  * Replace evaluators
  *
- * Replace the evaluator YAML for an automation. The submitted YAML is validated before it becomes the source for future experiment scores.
+ * Replace evaluator YAML for a workflow. Agents reject YAML updates: define evaluators and a pass rule in agent.ts, then release.
  */
 export const automationsEvaluatorsUpdate = <ThrowOnError extends boolean = false>(options: Options<AutomationsEvaluatorsUpdateData, ThrowOnError>) => (options.client ?? client).put<AutomationsEvaluatorsUpdateResponses, AutomationsEvaluatorsUpdateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
