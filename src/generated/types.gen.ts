@@ -332,6 +332,7 @@ export type UpdateEmailServerRequest = {
 } | {
     name?: string;
     enabled?: boolean;
+    transport?: unknown;
 };
 
 export type TestEmailServerRequest = {

@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.20.86
+
+### Patch Changes
+
+- ab37b58: Regenerated the SDK models from the API specification. Nullable fields are now described as a list of types instead of a choice of single types, with no change in accepted values. The email server update model documents that `transport` is left out of a name or enabled-only update.
+
 ## 0.20.69
 
 ### Patch Changes
