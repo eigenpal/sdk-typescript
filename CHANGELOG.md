@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.20.91
+
+### Patch Changes
+
+- cdfc91d: Refresh CLI and SDK dependencies for continued compatibility and maintenance.
+
 ## 0.20.86
 
 ### Patch Changes
