@@ -88,6 +88,7 @@ export type {
   RunAccepted,
   RunArtifact,
   RunArtifactsResponse,
+  RunError,
   RunEvent,
   RunEventsResponse,
   RunListItem,

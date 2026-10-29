@@ -50,6 +50,33 @@ function mockFetch(
 }
 
 describe('EigenpalClient public SDK', () => {
+  test('returns HTTP 200 business rejections as structured run data without retrying', async () => {
+    const captured: { url: string; method: string; auth: string | null }[] = [];
+    const error = {
+      code: 'workflow_rejected',
+      statusCode: 422,
+      message: 'Wrong document',
+      step: 'assert_contract',
+      retryable: false,
+    };
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      fetch: mockFetch(
+        [
+          {
+            status: 200,
+            body: { id: 'exec_1', finished: true, execution: { status: 'failed' }, error },
+          },
+        ],
+        captured
+      ),
+    });
+    const run = await client.runs.get('exec_1');
+    expect(run.execution.status).toBe('failed');
+    expect(run.error).toEqual(error);
+    expect(captured).toHaveLength(1);
+  });
+
   test('attaches bearer auth and telemetry headers', async () => {
     const captured: { auth: string | null; headers?: Record<string, string> }[] = [];
     const client = new EigenpalClient({

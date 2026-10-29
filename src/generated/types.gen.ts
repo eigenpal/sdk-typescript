@@ -1873,9 +1873,9 @@ export type RunListItem = {
      */
     eval?: RunEval;
     /**
-     * Terminal failure message. Present on terminal runs; null when the run succeeded. Absent while the run is still in flight.
+     * Structured processing failure, independent of the HTTP response status. Includes control.fail statusCode and step when known. Present on terminal runs; null when no error is recorded. Absent while in flight.
      */
-    error?: RunError;
+    error?: RunError | null;
     execution: RunExecutionMeta;
 };
 
@@ -1963,7 +1963,28 @@ export type RunEval = {
     passed: boolean | null;
 };
 
-export type RunError = string | null;
+export type RunError = {
+    /**
+     * Machine-readable failure code. Do not branch on message text.
+     */
+    code: string;
+    /**
+     * Human-readable failure explanation.
+     */
+    message: string;
+    /**
+     * HTTP-style business code configured by control.fail, not the API response status. Absent for untyped failures.
+     */
+    statusCode?: number;
+    /**
+     * Name of the control.fail step that rejected the run, when known.
+     */
+    step?: string;
+    /**
+     * Whether another attempt might succeed. Does not schedule a retry.
+     */
+    retryable: boolean;
+};
 
 export type RunExecutionMeta = {
     /**
@@ -2066,9 +2087,9 @@ export type Run = {
      */
     files?: Array<RunArtifact>;
     /**
-     * Terminal failure message. Present on terminal runs; null when the run succeeded. Absent while the run is still in flight.
+     * Structured processing failure, independent of the HTTP response status. Includes control.fail statusCode and step when known. Present on terminal runs; null when no error is recorded. Absent while in flight.
      */
-    error?: RunError;
+    error?: RunError | null;
     /**
      * Present only with `expand=input`.
      */
@@ -7584,6 +7605,10 @@ export type RunsStartErrors = {
      */
     404: ApiErrorEnvelope;
     /**
+     * Organization deletion is in progress (organization_deleting), or an inline subworkflow target is unavailable (inline_invoke_target_unavailable). No run was started.
+     */
+    409: ApiErrorEnvelope;
+    /**
      * Payload too large. Upload exceeded the per-request size cap.
      */
     413: ApiErrorEnvelope;
@@ -7605,7 +7630,7 @@ export type RunsStartError = RunsStartErrors[keyof RunsStartErrors];
 
 export type RunsStartResponses = {
     /**
-     * Run completed while waiting — same body as GET /api/v1/runs/:id
+     * Run reached a terminal status while waiting, including failure. Inspect execution.status. Same body as GET /api/v1/runs/:id
      */
     200: Run;
     /**
@@ -8014,6 +8039,10 @@ export type RunsRerunErrors = {
      */
     401: ApiErrorEnvelope;
     /**
+     * Credit quota exceeded. The organization has spent its allowance; nothing was processed.
+     */
+    402: ApiErrorEnvelope;
+    /**
      * API key lacks required scope
      */
     403: ApiErrorEnvelope;
@@ -8021,6 +8050,10 @@ export type RunsRerunErrors = {
      * Resource not found
      */
     404: ApiErrorEnvelope;
+    /**
+     * Conflict. The resource is in a state that forbids the request.
+     */
+    409: ApiErrorEnvelope;
     /**
      * Payload too large. Upload exceeded the per-request size cap.
      */
@@ -8043,7 +8076,7 @@ export type RunsRerunError = RunsRerunErrors[keyof RunsRerunErrors];
 
 export type RunsRerunResponses = {
     /**
-     * Rerun completed while waiting
+     * Rerun reached a terminal status while waiting, including failure. Inspect execution.status.
      */
     200: Run;
     /**
