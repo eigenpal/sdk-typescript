@@ -6705,9 +6705,9 @@ export type FoldersListData = {
          */
         parentId?: string;
         /**
-         * When `true`, return the full tree for `type` with child counts (and workflow previews for workflow trees).
+         * When `true`, return the full tree for `type` with child counts (and workflow previews for workflow trees). Any value other than `true` or `false` is rejected.
          */
-        tree?: string;
+        tree?: 'true' | 'false';
     };
     url: '/v1/folders';
 };

@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.23.1
+
+### Patch Changes
+
+- 4690f8e: `folders.list` types `tree` as `'true' | 'false'` to match the API, which now rejects any other value.
+
 ## 0.20.99
 
 ### Minor Changes
