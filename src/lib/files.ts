@@ -292,14 +292,6 @@ export async function statUploadSize(
   );
 }
 
-export function isReplayableUploadSource(file: FileInput | Uint8Array | ArrayBuffer): boolean {
-  if (file instanceof Uint8Array || file instanceof ArrayBuffer) return true;
-  if (typeof Blob !== 'undefined' && file instanceof Blob) return true;
-  if (isPathFileInput(file) || isStreamFactoryFileInput(file) || isFileDescriptor(file))
-    return true;
-  return isReadStream(file) && typeof file.path === 'string';
-}
-
 async function pathIsFile(filePath: string): Promise<boolean> {
   try {
     const { stat } = await import('node:fs/promises');

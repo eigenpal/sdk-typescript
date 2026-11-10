@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import {
-  DIRECT_UPLOAD_BYTE_THRESHOLD,
+  DEFAULT_MULTIPART_MAX_BYTES,
   MULTIPART_ENVELOPE_HEADROOM_BYTES,
+  indicesRequiringPreUpload,
   keysRequiringPreUpload,
   multipartFileByteBudget,
 } from '../src/lib/upload-limits';
@@ -28,7 +29,7 @@ describe('keysRequiringPreUpload', () => {
     const threeMiB = 3 * 1024 * 1024;
     expect(threeMiB).toBeLessThan(multipartFileByteBudget());
     expect(threeMiB * 2 + MULTIPART_ENVELOPE_HEADROOM_BYTES).toBeGreaterThan(
-      DIRECT_UPLOAD_BYTE_THRESHOLD
+      DEFAULT_MULTIPART_MAX_BYTES
     );
 
     const keys = keysRequiringPreUpload([
@@ -42,5 +43,16 @@ describe('keysRequiringPreUpload', () => {
   test('keeps every file on multipart when the maximum is disabled', () => {
     const keys = keysRequiringPreUpload([{ key: 'large', size: 100 * 1024 * 1024 }], null);
     expect([...keys]).toEqual([]);
+  });
+});
+
+describe('indicesRequiringPreUpload', () => {
+  test('budgets repeated values for the same field independently', () => {
+    const half = Math.floor(multipartFileByteBudget() / 2) + 1;
+    expect(indicesRequiringPreUpload([{ size: half }, { size: half }])).toEqual(new Set([0]));
+  });
+
+  test('keeps every file on multipart when the maximum is disabled', () => {
+    expect(indicesRequiringPreUpload([{ size: 100 * 1024 * 1024 }], null)).toEqual(new Set());
   });
 });

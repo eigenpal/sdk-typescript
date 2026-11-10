@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.23.7
+
+### Patch Changes
+
+- 9469d09: Stop retrying run start and rerun after a lost response, keep the server message for 409, 413 and 422 errors (new `EigenpalConflictError` and `EigenpalPayloadTooLargeError`), encode dataset review request ids in URLs, and expose the upload helpers at `@eigenpal/sdk/upload`.
+
 ## 0.23.1
 
 ### Patch Changes

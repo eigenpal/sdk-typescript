@@ -3,8 +3,6 @@
  * ingress limit can override it; `null` keeps every run file on multipart.
  */
 export const DEFAULT_MULTIPART_MAX_BYTES = Math.floor(4.5 * 1024 * 1024);
-/** @deprecated Use {@link DEFAULT_MULTIPART_MAX_BYTES}. */
-export const DIRECT_UPLOAD_BYTE_THRESHOLD = DEFAULT_MULTIPART_MAX_BYTES;
 
 /**
  * Conservative allowance for multipart boundaries, `target` / `input` /
@@ -21,41 +19,54 @@ export function multipartFileByteBudget(
 }
 
 /**
- * Choose which file keys must be pre-uploaded so remaining multipart file
+ * Choose which file positions must be pre-uploaded so remaining multipart file
  * bytes plus envelope headroom stay under the configured multipart maximum.
  *
- * Prefers shedding the largest files first so smaller ones can stay on the
- * single multipart round-trip when the aggregate still fits.
+ * Uses positional identity so repeated values for the same field (CLI
+ * `--input-file field=...`) are budgeted independently. Prefers shedding the
+ * largest files first so smaller ones can stay on the single multipart
+ * round-trip when the aggregate still fits; ties go to the earlier position.
+ */
+export function indicesRequiringPreUpload(
+  files: ReadonlyArray<{ size: number }>,
+  multipartMaxBytes: number | null = DEFAULT_MULTIPART_MAX_BYTES
+): Set<number> {
+  const budget = multipartFileByteBudget(multipartMaxBytes);
+  const toPreUpload = new Set<number>();
+  if (budget === null) return toPreUpload;
+
+  files.forEach((file, index) => {
+    if (file.size > budget) toPreUpload.add(index);
+  });
+
+  let multipartTotal = 0;
+  files.forEach((file, index) => {
+    if (!toPreUpload.has(index)) multipartTotal += file.size;
+  });
+
+  const candidates = files
+    .map((file, index) => ({ size: file.size, index }))
+    .filter(({ index }) => !toPreUpload.has(index))
+    .sort((a, b) => b.size - a.size || a.index - b.index);
+
+  for (const { size, index } of candidates) {
+    if (multipartTotal <= budget) break;
+    toPreUpload.add(index);
+    multipartTotal -= size;
+  }
+
+  return toPreUpload;
+}
+
+/**
+ * Field-keyed variant of {@link indicesRequiringPreUpload} for inputs where
+ * each key appears once. Ties between equal sizes go to the lexically first key.
  */
 export function keysRequiringPreUpload(
   files: ReadonlyArray<{ key: string; size: number }>,
   multipartMaxBytes: number | null = DEFAULT_MULTIPART_MAX_BYTES
 ): Set<string> {
-  const budget = multipartFileByteBudget(multipartMaxBytes);
-  const toPreUpload = new Set<string>();
-  if (budget === null) return toPreUpload;
-
-  for (const file of files) {
-    if (file.size > budget) {
-      toPreUpload.add(file.key);
-    }
-  }
-
-  let multipartTotal = 0;
-  for (const file of files) {
-    if (!toPreUpload.has(file.key)) multipartTotal += file.size;
-  }
-
-  const candidates = files
-    .filter((file) => !toPreUpload.has(file.key))
-    .slice()
-    .sort((a, b) => b.size - a.size || a.key.localeCompare(b.key));
-
-  for (const file of candidates) {
-    if (multipartTotal <= budget) break;
-    toPreUpload.add(file.key);
-    multipartTotal -= file.size;
-  }
-
-  return toPreUpload;
+  const ordered = files.slice().sort((a, b) => a.key.localeCompare(b.key));
+  const indices = indicesRequiringPreUpload(ordered, multipartMaxBytes);
+  return new Set([...indices].map((index) => ordered[index]!.key));
 }

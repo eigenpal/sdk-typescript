@@ -2,17 +2,20 @@
 
 ## API request errors
 
-Every non-2xx response throws a typed subclass of `EigenpalError`.
+Every non-2xx response throws a typed subclass of `EigenpalError`. Other
+statuses raise the base `EigenpalError` with the server's first issue message.
 
-| HTTP            | Class                     | Notes                                                                |
-| --------------- | ------------------------- | -------------------------------------------------------------------- |
-| 400             | `EigenpalValidationError` | `.issues` carries per-field problems                                 |
-| 401             | `EigenpalAuthError`       | Bad / missing API key                                                |
-| 403             | `EigenpalForbiddenError`  | `api_trigger_disabled`, `manual_trigger_disabled`, or scope mismatch |
-| 404             | `EigenpalNotFoundError`   | Automation / run does not exist                                      |
-| 429             | `EigenpalRateLimitError`  | `.retryAfter` is the server-suggested wait (seconds)                 |
-| 5xx             | `EigenpalServerError`     | Auto-retried up to `maxRetries`                                      |
-| timeout / abort | `EigenpalTimeoutError`    |                                                                      |
+| HTTP            | Class                          | Notes                                                                |
+| --------------- | ------------------------------ | -------------------------------------------------------------------- |
+| 400             | `EigenpalValidationError`      | `.issues` carries per-field problems                                 |
+| 401             | `EigenpalAuthError`            | Bad / missing API key                                                |
+| 403             | `EigenpalForbiddenError`       | `api_trigger_disabled`, `manual_trigger_disabled`, or scope mismatch |
+| 404             | `EigenpalNotFoundError`        | Automation / run does not exist                                      |
+| 409             | `EigenpalConflictError`        | Stale `expectedUpdatedAt`, name already in use                       |
+| 413             | `EigenpalPayloadTooLargeError` | Body or file over the server limit                                   |
+| 429             | `EigenpalRateLimitError`       | `.retryAfter` is the server-suggested wait (seconds)                 |
+| 5xx             | `EigenpalServerError`          | Auto-retried up to `maxRetries`                                      |
+| timeout / abort | `EigenpalTimeoutError`         |                                                                      |
 
 ```ts
 import { EigenpalClient, EigenpalValidationError } from '@eigenpal/sdk';

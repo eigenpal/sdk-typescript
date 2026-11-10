@@ -523,7 +523,7 @@ type DatasetReviewItemAction =
   | 'edit-file';
 
 function datasetReviewRequestsBaseUrl(automationId: string): string {
-  return `/v1/automations/${automationId}/dataset-review-requests`;
+  return `/v1/automations/${encodeURIComponent(automationId)}/dataset-review-requests`;
 }
 
 function joinCsv(values: string | readonly string[] | undefined): string | undefined {
@@ -674,7 +674,7 @@ export class AutomationDatasetReviewRequestsResource {
     return this.dispatch(
       () =>
         this.client.get({
-          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}`,
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${encodeURIComponent(reviewId)}`,
           signal: options.signal,
         }) as Promise<OperationResult<AutomationsDatasetReviewRequestsGetResponse>>
     );
@@ -689,7 +689,7 @@ export class AutomationDatasetReviewRequestsResource {
     return this.dispatch(
       () =>
         this.client.patch({
-          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}`,
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${encodeURIComponent(reviewId)}`,
           body: body as never,
           signal: options.signal,
         }) as Promise<OperationResult<AutomationsDatasetReviewRequestsUpdateResponse>>
@@ -705,7 +705,7 @@ export class AutomationDatasetReviewRequestsResource {
     return this.dispatch(
       () =>
         this.client.get({
-          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items`,
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${encodeURIComponent(reviewId)}/items`,
           query: { status: joinCsv(status) },
           signal,
         }) as Promise<OperationResult<AutomationsDatasetReviewRequestsListItemsResponse>>
@@ -722,7 +722,7 @@ export class AutomationDatasetReviewRequestsResource {
     return this.dispatch(
       () =>
         this.client.patch({
-          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items/${itemId}`,
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${encodeURIComponent(reviewId)}/items/${encodeURIComponent(itemId)}`,
           body: body as never,
           signal: options.signal,
         }) as Promise<OperationResult<AutomationsDatasetReviewRequestsUpdateItemResponse>>
@@ -749,7 +749,7 @@ export class AutomationDatasetReviewRequestsResource {
     return this.dispatch(
       () =>
         this.client.get({
-          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items/${itemId}/files/${relative}${suffix}`,
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${encodeURIComponent(reviewId)}/items/${encodeURIComponent(itemId)}/files/${relative}${suffix}`,
           parseAs: 'blob',
           signal,
         }) as Promise<OperationResult<Blob>>,
@@ -772,7 +772,7 @@ export class AutomationDatasetReviewRequestsResource {
     return this.dispatch(
       () =>
         this.client.patch({
-          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items/${itemId}`,
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${encodeURIComponent(reviewId)}/items/${encodeURIComponent(itemId)}`,
           body: { action: 'file-decision', ...body } as never,
           signal: options.signal,
         }) as Promise<OperationResult<AutomationsDatasetReviewRequestsUpdateItemResponse>>
@@ -805,7 +805,7 @@ export class AutomationDatasetReviewRequestsResource {
     return this.dispatch(
       () =>
         this.client.patch({
-          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/items/${itemId}`,
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${encodeURIComponent(reviewId)}/items/${encodeURIComponent(itemId)}`,
           body: formData as never,
           bodySerializer: null,
           headers: { 'Content-Type': null },
@@ -822,7 +822,7 @@ export class AutomationDatasetReviewRequestsResource {
     return this.dispatch(
       () =>
         this.client.get({
-          url: `${datasetReviewRequestsBaseUrl(automationId)}/${reviewId}/events`,
+          url: `${datasetReviewRequestsBaseUrl(automationId)}/${encodeURIComponent(reviewId)}/events`,
           signal: options.signal,
         }) as Promise<OperationResult<AutomationsDatasetReviewRequestsListEventsResponse>>
     );

@@ -18,6 +18,7 @@ import {
   type PathFileInput,
 } from './lib/files';
 import { DEFAULT_MULTIPART_MAX_BYTES, keysRequiringPreUpload } from './lib/upload-limits';
+import { sleep } from './lib/upload-presigned-multipart';
 import { AuthResource } from './resources/auth';
 import { AutomationsResource } from './resources/automations';
 import { DatasetReviewRequestsResource } from './resources/dataset-review-requests';
@@ -83,6 +84,13 @@ export interface OperationResult<T> {
 
 export interface RequestDispatchOptions {
   responseKind?: 'json' | 'binary';
+  /**
+   * The request is not idempotent (run start, rerun): a lost response may mean
+   * the server already acted. Retry only when the server explicitly refused
+   * the request (429, or 503 with `Retry-After`); never on network errors,
+   * timeouts or other 5xx, which would create duplicate runs.
+   */
+  nonIdempotent?: boolean;
 }
 
 export type RunTarget =
@@ -266,7 +274,8 @@ export class EigenpalClient {
             bodySerializer: null,
             headers: { 'Content-Type': null },
             signal: options.signal,
-          }) as Promise<OperationResult<RunStartResponse>>
+          }) as Promise<OperationResult<RunStartResponse>>,
+        { nonIdempotent: true }
       );
     }
 
@@ -281,7 +290,8 @@ export class EigenpalClient {
           query,
           body,
           signal: options.signal,
-        }) as Promise<OperationResult<RunStartResponse>>
+        }) as Promise<OperationResult<RunStartResponse>>,
+      { nonIdempotent: true }
     );
   }
 
@@ -382,6 +392,8 @@ export class EigenpalClient {
   /**
    * Run an operation with automatic retries on 5xx / 429 / network errors,
    * and centralized error mapping into typed `EigenpalError` subclasses.
+   * Non-idempotent calls (`options.nonIdempotent`) retry only on 429 and on
+   * 503 with `Retry-After`.
    *
    * Resources call this via the bound `_request` they receive at construction.
    * The retry budget is `maxRetries`; backoff is exponential (250ms × 2^attempt)
@@ -406,7 +418,10 @@ export class EigenpalClient {
         // CDN is transient and should consume retry budget, not throw on
         // attempt zero. Only fire when we're about to surface the response
         // as a final result or final error.
-        const willRetry = isRetriableStatus(status) && attempt < this.maxRetries;
+        const retriable = options.nonIdempotent
+          ? isRefusedStatus(status, response)
+          : isRetriableStatus(status);
+        const willRetry = retriable && attempt < this.maxRetries;
         if (response && !willRetry) {
           if (options.responseKind === 'binary') assertBinaryResponse(response);
           else assertJsonResponse(response);
@@ -428,7 +443,7 @@ export class EigenpalClient {
         // Network/abort error — retry if budget allows. AbortSignal aborts
         // surface as DOMException — we treat them as terminal (don't retry).
         if (isAbortError(err)) throw err;
-        if (attempt < this.maxRetries) {
+        if (!options.nonIdempotent && attempt < this.maxRetries) {
           await sleep(backoff(attempt));
           continue;
         }
@@ -567,6 +582,12 @@ function isRetriableStatus(status: number): boolean {
   return status >= 500 || status === 429;
 }
 
+/** The server explicitly refused the request, so retrying cannot duplicate work. */
+function isRefusedStatus(status: number, response: Response | undefined): boolean {
+  if (status === 429) return true;
+  return status === 503 && response?.headers.get('retry-after') != null;
+}
+
 function retryDelay(response: Response | undefined, attempt: number): number {
   const retryAfterSec = parseRetryAfter(response?.headers.get('retry-after') ?? null);
   return retryAfterSec !== undefined ? retryAfterSec * 1000 : backoff(attempt);
@@ -580,10 +601,6 @@ function parseRetryAfter(value: string | null): number | undefined {
   if (!value) return undefined;
   const seconds = Number(value);
   return Number.isFinite(seconds) && seconds >= 0 ? seconds : undefined;
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function isAbortError(err: unknown): boolean {

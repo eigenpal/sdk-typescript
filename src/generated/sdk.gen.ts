@@ -564,7 +564,7 @@ export const automationsVersionsList = <ThrowOnError extends boolean = false>(op
 /**
  * Create a workflow version
  *
- * Create a tagged YAML workflow candidate from validated YAML or by copying an existing snapshot (`historyId`). Provide exactly one of `yaml` or `historyId`. Copy creates a new tagged row and leaves the source tag unchanged; it does not retag the original. Defaults to making the new version current. Set `activate: false` to keep it off live traffic until promote — that path requires an existing current workflow version and returns 400 if HEAD is empty. Agent automations are Git-backed and return 400. Requires a Bearer API key or a dashboard session.
+ * Create a tagged YAML workflow candidate from validated YAML or by copying an existing snapshot (`historyId`). Provide exactly one of `yaml` or `historyId`. Copy creates a new tagged row and leaves the source tag unchanged; it does not retag the original. Defaults to making the new version current. Set `activate: false` to keep it off live traffic until promote. That path requires an existing current workflow version and returns 400 if HEAD is empty. Agent automations are Git-backed and return 400. Requires a Bearer API key or a dashboard session.
  */
 export const automationsVersionsCreate = <ThrowOnError extends boolean = false>(options: Options<AutomationsVersionsCreateData, ThrowOnError>): RequestResult<AutomationsVersionsCreateResponses, AutomationsVersionsCreateErrors, ThrowOnError> => (options.client ?? client).post<AutomationsVersionsCreateResponses, AutomationsVersionsCreateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],

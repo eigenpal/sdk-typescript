@@ -30,9 +30,11 @@ export {
 
 export {
   EigenpalAuthError,
+  EigenpalConflictError,
   EigenpalError,
   EigenpalForbiddenError,
   EigenpalNotFoundError,
+  EigenpalPayloadTooLargeError,
   EigenpalRateLimitError,
   EigenpalServerError,
   EigenpalTimeoutError,

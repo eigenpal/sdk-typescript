@@ -69,7 +69,7 @@ export type UpdateDatasetReviewRequest = {
 
 export type UpdateDatasetReviewItem = {
     /**
-     * file-decision records a per-expected-file approve/remove (or a note). edit-file uploads corrected bytes and is multipart-only — JSON callers get a 400 pointing at the multipart form.
+     * file-decision records a per-expected-file approve/remove (or a note). edit-file uploads corrected bytes and is multipart-only; JSON callers get a 400 pointing at the multipart form.
      */
     action: 'approve' | 'edit' | 'remove' | 'reopen' | 'comment' | 'field-decision' | 'file-decision' | 'edit-file';
     expected?: unknown;
@@ -817,7 +817,7 @@ export type DatasetReviewItem = {
         [key: string]: DatasetReviewFieldDecision;
     };
     /**
-     * Overlay of the snapshot manifest expected files. Null means pristine — the reviewer has not corrected or uploaded any file yet.
+     * Overlay of the snapshot manifest expected files. Null means pristine: the reviewer has not corrected or uploaded any file yet.
      */
     currentExpectedFiles: Array<DatasetReviewExpectedFile> | null;
     /**
@@ -1636,7 +1636,7 @@ export type Folder = {
      */
     workflowCount?: number;
     /**
-     * Up to a handful of item names — subfolders first, then workflows — for a peek at folder contents. Present on workflow-tree listings.
+     * Up to a handful of item names (subfolders first, then workflows) for a peek at folder contents. Present on workflow-tree listings.
      */
     previewItems?: Array<{
         name: string;
@@ -1811,7 +1811,7 @@ export type PublicModel = {
     location: 'local' | 'hosted';
     limits?: PublicModelLimits;
     /**
-     * Static Eigenpal credit rates when known without a live vendor catalog. Omitted for OpenParser OCR and for LLMs (token prices are not part of this catalog).
+     * Static EigenPal credit rates when known without a live vendor catalog. Omitted for OpenParser OCR and for LLMs (token prices are not part of this catalog).
      */
     cost?: PublicModelCost;
     aliases: Array<string>;
@@ -2077,7 +2077,7 @@ export type Run = {
      */
     eval?: RunEval;
     /**
-     * Completed runs only. Per-automation business result — not a generic schema. Absent until the run completes.
+     * Completed runs only. Per-automation business result, not a generic schema. Absent until the run completes.
      */
     output?: {
         [key: string]: unknown;
@@ -2328,7 +2328,7 @@ export type RunCancelResponse = {
     };
     cancellation: {
         /**
-         * `cancelled` — the run was terminated immediately (it had not started). `requested` — the run is in-flight; cancellation was requested and the status will become `cancelled` shortly. `already_terminal` — the run had already finished; nothing changed.
+         * `cancelled`: the run was terminated immediately (it had not started). `requested`: the run is in-flight; cancellation was requested and the status will become `cancelled` shortly. `already_terminal`: the run had already finished; nothing changed.
          */
         state: 'cancelled' | 'requested' | 'already_terminal';
         /**
@@ -7638,7 +7638,7 @@ export type RunsStartResponses = {
      */
     201: RunAccepted;
     /**
-     * Wait expired with a non-terminal status — poll GET /api/v1/runs/:id
+     * Wait expired with a non-terminal status; poll GET /api/v1/runs/:id
      */
     202: RunAccepted;
 };
@@ -7718,7 +7718,7 @@ export type RunsArtifactsListData = {
     };
     query?: {
         /**
-         * When `1`, download output files as a ZIP instead of listing paths. Does not include trace, scores, or input — use `GET /runs/{id}/scores` and `GET /runs/{id}/trace` for those. Cloud deployments reject archives whose uncompressed inputs exceed 32 MiB (`413 artifacts_zip_too_large`); download files individually or pass a smaller `files=` subset.
+         * When `1`, download output files as a ZIP instead of listing paths. Does not include trace, scores, or input; use `GET /runs/{id}/scores` and `GET /runs/{id}/trace` for those. Cloud deployments reject archives whose uncompressed inputs exceed 32 MiB (`413 artifacts_zip_too_large`); download files individually or pass a smaller `files=` subset.
          */
         zip?: '1';
         /**
@@ -8084,7 +8084,7 @@ export type RunsRerunResponses = {
      */
     201: RunAccepted;
     /**
-     * Wait expired with a non-terminal status — poll GET /api/v1/runs/:id
+     * Wait expired with a non-terminal status; poll GET /api/v1/runs/:id
      */
     202: RunAccepted;
 };

@@ -3,11 +3,10 @@ import type { CreateClientConfig } from './generated/client.gen';
 /**
  * Runtime configuration hook for the generated hey-api client.
  *
- * The hand-written `EigenpalClient` class in `client.ts` calls
- * `setClientConfig()` on construction with the user's `apiKey` and
- * `baseUrl`, so the generated SDK functions automatically pick up the
- * Authorization header. This factory returns a no-op default — values
- * are populated when an `EigenpalClient` instance is created.
+ * This hook only affects direct use of the generated SDK functions in
+ * `@eigenpal/sdk/generated`. `EigenpalClient` in `client.ts` creates its own
+ * client with `createClient(config)` and does not go through this factory.
+ * The default baseUrl here is used only when a caller does not pass one.
  */
 export const createClientConfig: CreateClientConfig = (config) => ({
   ...config,

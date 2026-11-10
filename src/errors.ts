@@ -5,6 +5,7 @@ import type { ApiErrorEnvelope } from './generated/types.gen';
  *
  * Sub-classes are dispatched on HTTP status: `EigenpalAuthError` for 401,
  * `EigenpalForbiddenError` for 403, `EigenpalNotFoundError` for 404,
+ * `EigenpalConflictError` for 409, `EigenpalPayloadTooLargeError` for 413,
  * `EigenpalRateLimitError` for 429, `EigenpalServerError` for 5xx.
  * Validation failures (400) come back as `EigenpalValidationError` with
  * the parsed `issues[]` from the canonical `ApiErrorEnvelope`.
@@ -63,6 +64,22 @@ export class EigenpalValidationError extends EigenpalError {
   }
 }
 
+/** 409: the resource changed or already exists (e.g. a stale `expectedUpdatedAt`). */
+export class EigenpalConflictError extends EigenpalError {
+  constructor(envelope?: ApiErrorEnvelope) {
+    super(envelope?.issues?.[0]?.message ?? 'conflict', { status: 409, envelope });
+    this.name = 'EigenpalConflictError';
+  }
+}
+
+/** 413: the request body or uploaded file is larger than the server accepts. */
+export class EigenpalPayloadTooLargeError extends EigenpalError {
+  constructor(envelope?: ApiErrorEnvelope) {
+    super(envelope?.issues?.[0]?.message ?? 'payload too large', { status: 413, envelope });
+    this.name = 'EigenpalPayloadTooLargeError';
+  }
+}
+
 export class EigenpalRateLimitError extends EigenpalError {
   /** Seconds until the next request may succeed. From `Retry-After`. */
   readonly retryAfter?: number;
@@ -102,7 +119,12 @@ export function errorFromResponse(
   if (status === 401) return new EigenpalAuthError(envelope);
   if (status === 403) return new EigenpalForbiddenError(envelope);
   if (status === 404) return new EigenpalNotFoundError(envelope);
+  if (status === 409) return new EigenpalConflictError(envelope);
+  if (status === 413) return new EigenpalPayloadTooLargeError(envelope);
   if (status === 429) return new EigenpalRateLimitError(envelope, retryAfter);
   if (status >= 500) return new EigenpalServerError(status, envelope);
-  return new EigenpalError(`unexpected status ${status}`, { status, envelope });
+  return new EigenpalError(envelope?.issues?.[0]?.message ?? `unexpected status ${status}`, {
+    status,
+    envelope,
+  });
 }

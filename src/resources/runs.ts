@@ -1,4 +1,4 @@
-import type { OperationResult } from '../client';
+import type { OperationResult, RequestDispatchOptions } from '../client';
 import type { Client } from '../generated/client';
 import {
   runsArtifactsGet,
@@ -47,7 +47,10 @@ import type {
 } from '../generated/types.gen';
 import { buildSingleFileMultipart, type FileInput } from '../lib/files';
 
-type Dispatch = <T>(call: () => Promise<OperationResult<T>>) => Promise<T>;
+type Dispatch = <T>(
+  call: () => Promise<OperationResult<T>>,
+  options?: RequestDispatchOptions
+) => Promise<T>;
 type SignalOptions = { signal?: AbortSignal };
 
 export type ListRunsOptions = NonNullable<RunsListData['query']> & { signal?: AbortSignal };
@@ -123,8 +126,10 @@ export class RunsResource {
     query: { version?: string; wait_for_completion?: number } = {},
     options: SignalOptions = {}
   ): Promise<RunsRerunResponse> {
-    return this.dispatch(() =>
-      runsRerun({ client: this.client, path: { id: runId }, query, signal: options.signal })
+    // Rerun starts a new billed run: never retry it on a lost response.
+    return this.dispatch(
+      () => runsRerun({ client: this.client, path: { id: runId }, query, signal: options.signal }),
+      { nonIdempotent: true }
     );
   }
 
@@ -163,14 +168,6 @@ export class RunsResource {
 
 export function runOutput(run: unknown): unknown {
   return isRecord(run) ? run.output : undefined;
-}
-
-export function runUsage(run: unknown): unknown {
-  return isRecord(run) ? run.usage : undefined;
-}
-
-export function runExecutionDetails(run: unknown): unknown {
-  return isRecord(run) ? run.execution : undefined;
 }
 
 export class RunsArtifactsResource {

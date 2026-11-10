@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import {
   EigenpalAuthError,
   EigenpalClient,
+  EigenpalConflictError,
   EigenpalError,
   EigenpalNotFoundError,
   EigenpalRateLimitError,
@@ -407,7 +408,8 @@ describe('EigenpalClient public SDK', () => {
         },
         (err: unknown) => err
       );
-    expect(error).toBeInstanceOf(EigenpalError);
+    expect(error).toBeInstanceOf(EigenpalConflictError);
+    expect((error as EigenpalError).message).toBe('already in use');
     expect((error as EigenpalError).status).toBe(409);
     expect((error as EigenpalError).envelope?.conflictingWorkflowId).toBe('wf_existing');
   });
@@ -430,6 +432,61 @@ describe('EigenpalClient public SDK', () => {
     const result = await client.automations.list();
 
     expect(result.data).toEqual([]);
+    expect(captured).toHaveLength(2);
+  });
+
+  test('run start is not retried on a network error or a plain 5xx', async () => {
+    let calls = 0;
+    const failingFetch = (async () => {
+      calls += 1;
+      throw new TypeError('fetch failed');
+    }) as unknown as typeof globalThis.fetch;
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch: failingFetch,
+      maxRetries: 3,
+    });
+    await expect(client.run('workflows.test', { id: '1' })).rejects.toBeInstanceOf(Error);
+    expect(calls).toBe(1);
+
+    const captured: { url: string }[] = [];
+    const client502 = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch: mockFetch(
+        [
+          { status: 502, body: { issues: [{ field: '<root>', message: 'bad gateway' }] } },
+          { status: 201, body: { id: 'run_dup', type: 'workflow', finished: false } },
+        ],
+        captured
+      ),
+      maxRetries: 3,
+    });
+    await expect(client502.runs.rerun('run_1')).rejects.toBeInstanceOf(EigenpalError);
+    expect(captured).toHaveLength(1);
+  });
+
+  test('run start retries when the server refused with 429', async () => {
+    const captured: { url: string }[] = [];
+    const client = new EigenpalClient({
+      apiKey: 'eg_test',
+      baseUrl: 'http://localhost:3000',
+      fetch: mockFetch(
+        [
+          {
+            status: 429,
+            body: { issues: [{ field: '<root>', message: 'rate' }] },
+            headers: { 'retry-after': '0' },
+          },
+          { status: 201, body: { id: 'run_ok', type: 'workflow', finished: false } },
+        ],
+        captured
+      ),
+      maxRetries: 2,
+    });
+    const result = await client.run('workflows.test', { id: '1' });
+    expect(result.id).toBe('run_ok');
     expect(captured).toHaveLength(2);
   });
 
