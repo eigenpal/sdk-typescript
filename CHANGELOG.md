@@ -1,5 +1,11 @@
 # @eigenpal/sdk
 
+## 0.25.4
+
+### Patch Changes
+
+- 7a90341: Run targets accept workflow version ranges such as `workflows.extract-invoice@^1`, and run sources include `requestedVersion`.
+
 ## 0.23.7
 
 ### Patch Changes

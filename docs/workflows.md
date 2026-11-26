@@ -82,9 +82,19 @@ const { id } = await client.run('workflows.extract-invoice', {
 Pin a version or agent source ref by suffixing the target:
 
 ```ts
-await client.run('workflows.extract-invoice@1.2.3', input);
+await client.run('workflows.extract-invoice@1.2.3', input); // exactly 1.2.3
+await client.run('workflows.extract-invoice@^1', input); // highest released 1.x.y
 await client.run('agents.invoice-agent@main', input);
 ```
+
+Without a suffix the run uses `latest`, the workflow's current version, which
+changes with every save made current. Integrations should pin a caret range on
+the major (`@^1`): it picks up fixes and additive releases but never a breaking
+major bump. Ranges (`1`, `1.2`, `1.x`, `^1.2.3`, `~1.2.3`) pick the highest
+released tag that matches, never a candidate or a prerelease. The response's
+`source.version` is the tag that ran and `source.requestedVersion` is what you
+asked for. A range with no released match fails with a 404
+`No version matches ^1`.
 
 ## File Inputs
 

@@ -2381,10 +2381,10 @@ How to read a run: the envelope is at the root. The automation business result i
 
 **Query parameters**
 
-| Name                  | Type     | Description                                                           |
-| --------------------- | -------- | --------------------------------------------------------------------- |
-| `version`             | `string` | (optional)Release or git ref. Defaults to latest.                     |
-| `wait_for_completion` | `number` | (optional)Seconds to wait before returning (max 600). Omit for async. |
+| Name                  | Type     | Description                                                                                                                                                                                                                                                                                                              |
+| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `version`             | `string` | (optional)Version to run. Defaults to `latest` (the current version). Workflows: an exact tag (`1.2.3`), a range (`1`, `1.2`, `1.x`, `^1.2.3`, `~1.2.3`; the highest released tag that matches, never a candidate), or a version id (`wfv_...`, `wfh_...`). Agents: a git ref (`main`, `1.2.3`, `1.x`, or a commit SHA). |
+| `wait_for_completion` | `number` | (optional)Seconds to wait before returning (max 600). Omit for async.                                                                                                                                                                                                                                                    |
 
 **Request body**
 
@@ -2525,10 +2525,10 @@ Start a new run using the source run input. By default the retry uses the latest
 
 **Query parameters**
 
-| Name                  | Type     | Description                                                                            |
-| --------------------- | -------- | -------------------------------------------------------------------------------------- |
-| `version`             | `string` | (optional)Version for the new run. `original` pins the source run. Defaults to latest. |
-| `wait_for_completion` | `number` | (optional)Seconds to wait before returning (max 600). Omit for async.                  |
+| Name                  | Type     | Description                                                                                                                                                                                                                                        |
+| --------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`             | `string` | (optional)Version for the new run: `latest` (default), `original` (the source run's version), an exact workflow tag (`1.2.3`), a range (`^1`, `1.2.x`, `~1.2.3`; highest released tag that matches), or a version id. Agent reruns take a git ref. |
+| `wait_for_completion` | `number` | (optional)Seconds to wait before returning (max 600). Omit for async.                                                                                                                                                                              |
 
 **Response**
 
